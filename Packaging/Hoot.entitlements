@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Confines Hoot to its own container plus whatever the user explicitly
+         chooses. Without this, a file organizer has blanket access to every
+         document on the Mac. -->
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+
+    <!-- The watched folder is granted by the user through the open panel.
+         Read-write because organizing means moving files and creating
+         folders inside it. -->
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+
+    <!-- Lets that grant survive a relaunch via a security-scoped bookmark,
+         so the folder doesn't have to be re-picked every time Hoot starts. -->
+    <key>com.apple.security.files.bookmarks.app-scope</key>
+    <true/>
+</dict>
+</plist>

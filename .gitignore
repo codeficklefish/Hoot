@@ -1,0 +1,20 @@
+# Swift Package Manager build products (258 MB — never commit these)
+.build/
+.swiftpm/
+Package.resolved
+
+# The assembled app bundle and disk image, rebuilt by Packaging/build-app.sh
+build/
+
+# macOS
+.DS_Store
+
+# Xcode, if it ever gets opened there
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+
+# Signing material must never be committed
+*.p12
+*.cer
+*.provisionprofile
