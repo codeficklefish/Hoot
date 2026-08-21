@@ -83,6 +83,19 @@ It also checks the engine's own DEFLATE decoder against the system one over
 real archives, byte for byte — a second implementation being the only honest
 way to know a decompressor is correct.
 
+## Repository layout
+
+| | |
+|---|---|
+| `Sources/HootKit` | the engine — decides where files belong, imports only Foundation |
+| `Sources/HootPlatformMac` | Apple adapters (PDFKit, Vision, FoundationModels) |
+| `Sources/Hoot` | the macOS app |
+| `Verification` | 220 behaviour and safety checks |
+| `Evaluation` | measures accuracy against folders you organized |
+| `Packaging` | app bundle, icon, signing and notarization |
+| `Website` | the landing page source |
+| `docs` | architecture, standards, and the decisions behind them |
+
 ## Design notes
 
 [docs/pim-design-notes.md](docs/pim-design-notes.md) records why Hoot is built

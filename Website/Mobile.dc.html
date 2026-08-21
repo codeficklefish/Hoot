@@ -1,0 +1,208 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: #0e0e0d; text-decoration-color: #b9b5ad; text-underline-offset: 3px; }
+    a:hover { color: #6f6d68; text-decoration-color: #6f6d68; }
+  </style>
+</helmet>
+
+<div style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #0e0e0d; background: #f6f5f2; width: 390px; -webkit-font-smoothing: antialiased;">
+
+  <!-- hero -->
+  <div style="background: #171716; color: #f6f5f2; padding: 20px 22px 56px;">
+
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <img src="./mark-white.png" alt="Hoot" style="height: 22px; width: auto; display: block;">
+        <span style="font-size: 16px; font-weight: 500;">Hoot</span>
+      </div>
+      <a href="[GITHUB URL]" style="color: #a8a49c; text-decoration: none; font-size: 13.5px;">Source</a>
+    </div>
+
+    <div style="padding-top: 52px; display: flex; flex-direction: column; gap: 20px;">
+
+      <img src="./mark-white.png" alt="" style="height: 62px; width: auto; display: block;">
+
+      <h1 style="font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 42px; line-height: 1.05; letter-spacing: -0.02em; margin: 0; text-wrap: balance;">
+        Files sorted by meaning, not by extension.
+      </h1>
+
+      <p style="font-size: 16.5px; line-height: 1.6; color: #b5b1a9; margin: 0; text-wrap: pretty;">
+        Hoot watches a folder and works out what belongs together. A boarding pass, a hotel booking and an itinerary become one trip folder.
+      </p>
+
+      <a href="[DOWNLOAD URL]" style="display: flex; align-items: center; justify-content: center; gap: 9px; background: #f6f5f2; color: #171716; text-decoration: none; padding: 16px 24px; border-radius: 8px; font-size: 16px; font-weight: 500; min-height: 44px; box-sizing: border-box;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3v13"></path><path d="m6 11 6 6 6-6"></path><path d="M4 21h16"></path>
+        </svg>
+        Download for macOS
+      </a>
+
+      <p style="font-size: 13px; color: #83807a; margin: 0; text-align: center;">
+        [PRICE] &middot; macOS 13 or later &middot; Apple silicon
+      </p>
+    </div>
+  </div>
+
+  <!-- before / after, stacked -->
+  <div style="padding: 44px 22px 0; display: flex; flex-direction: column; gap: 16px;">
+
+    <div style="border: 1px solid #dedbd5; border-radius: 12px; background: #fffefc; overflow: hidden;">
+      <div style="padding: 12px 15px; border-bottom: 1px solid #ebe8e2; display: flex; align-items: center; gap: 8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8b8880" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 20V7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z"></path>
+        </svg>
+        <span style="font-size: 12.5px; color: #6f6d68; font-weight: 500;">Downloads</span>
+        <span style="font-size: 11.5px; color: #78756e; margin-left: auto;">before</span>
+      </div>
+      <div style="padding: 15px; display: flex; flex-direction: column; gap: 8px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11.5px; color: #57554f;">
+        <div>boarding-pass-cebu.pdf</div>
+        <div>electricity_bill_jan.pdf</div>
+        <div>cebu_itinerary.docx</div>
+        <div style="color: #78756e;">301847592_1182736…n.jpg</div>
+        <div>hotel_confirmation_cebu.pdf</div>
+        <div>DaVinci_Resolve_21.0.4_Mac.zip</div>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: center; color: #78756e;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 5v13"></path><path d="m7 13 5 5 5-5"></path>
+      </svg>
+    </div>
+
+    <div style="border: 1px solid #cfcbc3; border-radius: 12px; background: #fffefc; overflow: hidden; box-shadow: 0 10px 28px -14px rgba(14,14,13,0.2);">
+      <div style="padding: 12px 15px; border-bottom: 1px solid #ebe8e2; display: flex; align-items: center; gap: 8px;">
+        <img src="./mark-black.png" alt="" style="height: 14px; width: auto; display: block;">
+        <span style="font-size: 12.5px; color: #6f6d68; font-weight: 500;">Downloads</span>
+        <span style="font-size: 11.5px; color: #78756e; margin-left: auto;">after</span>
+      </div>
+      <div style="padding: 15px; display: flex; flex-direction: column; gap: 13px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11.5px;">
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          <div style="display: flex; align-items: center; gap: 6px; color: #0e0e0d; font-weight: 500;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 20V7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z"></path>
+            </svg>
+            Cebu Trip
+          </div>
+          <div style="padding-left: 18px; display: flex; flex-direction: column; gap: 4px; color: #57554f;">
+            <div>boarding-pass-cebu.pdf</div>
+            <div>cebu_itinerary.docx</div>
+            <div>hotel_confirmation_cebu.pdf</div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          <div style="display: flex; align-items: center; gap: 6px; color: #0e0e0d; font-weight: 500;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 20V7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z"></path>
+            </svg>
+            Electricity Bills
+          </div>
+          <div style="padding-left: 18px; color: #57554f;">electricity_bill_jan.pdf</div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          <div style="display: flex; align-items: center; gap: 6px; color: #0e0e0d; font-weight: 500;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 20V7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z"></path>
+            </svg>
+            Food
+          </div>
+          <div style="padding-left: 18px; color: #78756e;">301847592_1182736…n.jpg</div>
+        </div>
+
+      </div>
+    </div>
+
+    <p style="font-size: 13.5px; line-height: 1.6; color: #737069; margin: 4px 0 0; text-wrap: pretty;">
+      That photo has no readable name. Hoot read the words in the picture — a café menu — and filed it under Food.
+    </p>
+  </div>
+
+  <!-- safety -->
+  <div style="background: #171716; color: #f6f5f2; margin-top: 52px; padding: 52px 22px;">
+
+    <h2 style="font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 33px; line-height: 1.12; letter-spacing: -0.015em; margin: 0 0 12px;">
+      Nothing moves until you say so.
+    </h2>
+    <p style="font-size: 16px; line-height: 1.6; color: #b5b1a9; margin: 0 0 32px; text-wrap: pretty;">
+      Hoot shows you every suggestion, tells you what it based each one on, and can put everything back.
+    </p>
+
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+
+      <div style="display: flex; flex-direction: column; gap: 9px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6f5f2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 11.5 11.5 14 16 9"></path><rect x="3" y="4" width="18" height="16" rx="2"></rect>
+        </svg>
+        <h3 style="font-size: 15.5px; font-weight: 600; margin: 0;">You approve every move</h3>
+        <p style="font-size: 14px; line-height: 1.6; color: #a8a49c; margin: 0;">Untick anything you disagree with, or open a file to see the evidence behind it.</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 9px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6f5f2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 8h12a5 5 0 0 1 0 10H8"></path><path d="m7 4-4 4 4 4"></path>
+        </svg>
+        <h3 style="font-size: 15.5px; font-weight: 600; margin: 0;">Every move is reversible</h3>
+        <p style="font-size: 14px; line-height: 1.6; color: #a8a49c; margin: 0;">Each batch is logged and can be undone, today or next week.</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 9px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6f5f2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M6 6v14h12V6"></path><path d="m10 11 4 4"></path><path d="m14 11-4 4"></path>
+        </svg>
+        <h3 style="font-size: 15.5px; font-weight: 600; margin: 0;">It never deletes anything</h3>
+        <p style="font-size: 14px; line-height: 1.6; color: #a8a49c; margin: 0;">Superseded versions are moved aside rather than removed.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- privacy + close -->
+  <div style="padding: 52px 22px 60px; display: flex; flex-direction: column; gap: 20px; align-items: center; text-align: center;">
+
+    <img src="./app-icon.png" alt="" style="width: 66px; height: 66px; display: block; border-radius: 15px;">
+
+    <h2 style="font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 32px; line-height: 1.12; letter-spacing: -0.015em; margin: 0; text-wrap: balance;">
+      There is no network code in this app.
+    </h2>
+
+    <p style="font-size: 16px; line-height: 1.6; color: #57554f; margin: 0; text-wrap: pretty;">
+      The model runs on your Mac. No account, no server, nothing uploaded.
+    </p>
+
+    <a href="[DOWNLOAD URL]" style="display: flex; align-items: center; justify-content: center; gap: 9px; background: #0e0e0d; color: #f6f5f2; text-decoration: none; padding: 16px 28px; border-radius: 8px; font-size: 16px; font-weight: 500; min-height: 44px; box-sizing: border-box; align-self: stretch;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3v13"></path><path d="m6 11 6 6 6-6"></path><path d="M4 21h16"></path>
+      </svg>
+      Download for macOS
+    </a>
+
+    <p style="font-size: 13px; line-height: 1.6; color: #737069; margin: 0;">
+      [PRICE] &middot; [VERSION] &middot; [SIZE]<br>
+      Sorting by meaning needs macOS 26 with Apple Intelligence; without it, Hoot sorts by filename and tells you so.
+    </p>
+  </div>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview":{"width":390,"height":2360}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

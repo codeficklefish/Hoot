@@ -1,0 +1,426 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: #0e0e0d; text-decoration-color: #b9b5ad; text-underline-offset: 3px; }
+    a:hover { color: #6f6d68; text-decoration-color: #6f6d68; }
+    ::selection { background: #0e0e0d; color: #f6f5f2; }
+  </style>
+</helmet>
+
+<div style="font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #0e0e0d; background: #f6f5f2; -webkit-font-smoothing: antialiased;">
+
+  <!-- ============ HERO ============ -->
+  <div style="background: #171716; color: #f6f5f2; padding: 28px 40px 96px;">
+
+    <div style="max-width: 1080px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 24px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <img src="./mark-white.png" alt="Hoot" style="height: 26px; width: auto; display: block;">
+        <span style="font-size: 17px; font-weight: 500; letter-spacing: -0.01em;">Hoot</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 28px; font-size: 14px; color: #a8a49c;">
+        <a href="#how" style="color: #a8a49c; text-decoration: none;">How it works</a>
+        <a href="#privacy" style="color: #a8a49c; text-decoration: none;">Privacy</a>
+        <a href="[GITHUB URL]" style="color: #a8a49c; text-decoration: none;">Source</a>
+      </div>
+    </div>
+
+    <div style="max-width: 1080px; margin: 0 auto; padding-top: 88px; display: flex; flex-direction: column; align-items: center; gap: 28px; text-align: center;">
+
+      <img src="./mark-white.png" alt="" style="height: 88px; width: auto; display: block;">
+
+      <h1 style="font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(44px, 6vw, 78px); line-height: 1.04; letter-spacing: -0.02em; margin: 0; max-width: 16ch; text-wrap: balance;">
+        Files sorted by meaning, not by extension.
+      </h1>
+
+      <p style="font-size: 19px; line-height: 1.6; color: #b5b1a9; margin: 0; max-width: 56ch; text-wrap: pretty;">
+        Hoot watches a folder and works out what belongs together. A boarding pass, a hotel booking and an itinerary become one trip folder — not three piles sorted by file type.
+      </p>
+
+      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px; padding-top: 8px;">
+        <a href="[DOWNLOAD URL]" style="display: inline-flex; align-items: center; gap: 9px; background: #f6f5f2; color: #171716; text-decoration: none; padding: 15px 26px; border-radius: 8px; font-size: 16px; font-weight: 500;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3v13"></path><path d="m6 11 6 6 6-6"></path><path d="M4 21h16"></path>
+          </svg>
+          Download for macOS
+        </a>
+        <a href="#how" style="display: inline-flex; align-items: center; gap: 8px; color: #b5b1a9; text-decoration: none; padding: 15px 20px; font-size: 16px; border: 1px solid #3a3a37; border-radius: 8px;">
+          See how it decides
+        </a>
+      </div>
+
+      <p style="font-size: 13.5px; color: #83807a; margin: 0; letter-spacing: 0.01em;">
+        [PRICE] &middot; macOS 13 or later &middot; Apple silicon
+      </p>
+    </div>
+  </div>
+
+  <!-- ============ BEFORE / AFTER ============ -->
+  <div style="max-width: 1080px; margin: 0 auto; padding: 88px 40px 0;">
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; align-items: start;">
+
+      <!-- before -->
+      <div style="border: 1px solid #dedbd5; border-radius: 12px; background: #fffefc; overflow: hidden;">
+        <div style="padding: 14px 18px; border-bottom: 1px solid #ebe8e2; display: flex; align-items: center; gap: 9px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b8880" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 20V7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z"></path>
+          </svg>
+          <span style="font-size: 13px; color: #6f6d68; font-weight: 500;">Downloads</span>
+          <span style="font-size: 12px; color: #78756e; margin-left: auto;">before</span>
+        </div>
+        <div style="padding: 18px; display: flex; flex-direction: column; gap: 9px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12.5px; color: #57554f;">
+          <div>boarding-pass-cebu.pdf</div>
+          <div>electricity_bill_jan.pdf</div>
+          <div>cebu_itinerary.docx</div>
+          <div style="color: #78756e;">301847592_118273640591827_44729…n.jpg</div>
+          <div>hotel_confirmation_cebu.pdf</div>
+          <div>DaVinci_Resolve_21.0.4_Mac.zip</div>
+          <div>electricity_bill_feb.pdf</div>
+        </div>
+      </div>
+
+      <!-- after -->
+      <div style="border: 1px solid #cfcbc3; border-radius: 12px; background: #fffefc; overflow: hidden; box-shadow: 0 1px 2px rgba(14,14,13,0.04), 0 12px 32px -12px rgba(14,14,13,0.16);">
+        <div style="padding: 14px 18px; border-bottom: 1px solid #ebe8e2; display: flex; align-items: center; gap: 9px;">
+          <img src="./mark-black.png" alt="" style="height: 15px; width: auto; display: block;">
+          <span style="font-size: 13px; color: #6f6d68; font-weight: 500;">Downloads</span>
+          <span style="font-size: 12px; color: #78756e; margin-left: auto;">after</span>
+        </div>
+        <div style="padding: 18px; display: flex; flex-direction: column; gap: 14px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12.5px;">
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 7px; color: #0e0e0d; font-weight: 500;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 20V7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z"></path>
+              </svg>
+              Cebu Trip
+            </div>
+            <div style="padding-left: 20px; display: flex; flex-direction: column; gap: 5px; color: #57554f;">
+              <div>boarding-pass-cebu.pdf</div>
+              <div>cebu_itinerary.docx</div>
+              <div>hotel_confirmation_cebu.pdf</div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 7px; color: #0e0e0d; font-weight: 500;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 20V7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z"></path>
+              </svg>
+              Electricity Bills
+            </div>
+            <div style="padding-left: 20px; display: flex; flex-direction: column; gap: 5px; color: #57554f;">
+              <div>electricity_bill_jan.pdf</div>
+              <div>electricity_bill_feb.pdf</div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 7px; color: #0e0e0d; font-weight: 500;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 20V7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z"></path>
+              </svg>
+              Food
+            </div>
+            <div style="padding-left: 20px; display: flex; flex-direction: column; gap: 5px; color: #57554f;">
+              <div style="color: #78756e;">301847592_118273640591827_44729…n.jpg</div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 7px; color: #0e0e0d; font-weight: 500;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 20V7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z"></path>
+              </svg>
+              Software
+            </div>
+            <div style="padding-left: 20px; display: flex; flex-direction: column; gap: 5px; color: #57554f;">
+              <div>DaVinci_Resolve_21.0.4_Mac.zip</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size: 14px; color: #737069; margin: 20px 0 0; text-align: center; text-wrap: pretty;">
+      That photo has no readable name. Hoot read the words in the picture — a café menu — and filed it under Food.
+    </p>
+  </div>
+
+  <!-- ============ HOW IT DECIDES ============ -->
+  <div id="how" style="max-width: 1080px; margin: 0 auto; padding: 96px 40px 0;">
+
+    <h2 style="font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.12; letter-spacing: -0.015em; margin: 0 0 14px; max-width: 22ch;">
+      It reads what is inside.
+    </h2>
+    <p style="font-size: 17px; line-height: 1.65; color: #57554f; margin: 0 0 44px; max-width: 62ch; text-wrap: pretty;">
+      A filename is often the least informative thing about a file. Hoot opens documents, spreadsheets and archives, and reads the words in photos and scans, so a file with a meaningless name still says what it is.
+    </p>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px;">
+
+      <div style="border: 1px solid #dedbd5; border-radius: 12px; padding: 26px; background: #fffefc; display: flex; flex-direction: column; gap: 12px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0e0e0d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"></path><path d="M14 3v5h5"></path><path d="M9 13h6"></path><path d="M9 17h4"></path>
+        </svg>
+        <h3 style="font-size: 16px; font-weight: 600; margin: 0;">Documents</h3>
+        <p style="font-size: 14.5px; line-height: 1.6; color: #57554f; margin: 0;">
+          PDFs, Word files and text. A book's title page identifies it even when the filename is a hash.
+        </p>
+      </div>
+
+      <div style="border: 1px solid #dedbd5; border-radius: 12px; padding: 26px; background: #fffefc; display: flex; flex-direction: column; gap: 12px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0e0e0d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 10h18"></path><path d="M9 10v10"></path>
+        </svg>
+        <h3 style="font-size: 16px; font-weight: 600; margin: 0;">Spreadsheets</h3>
+        <p style="font-size: 14.5px; line-height: 1.6; color: #57554f; margin: 0;">
+          A sheet called <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">open case summary.xlsx</span> turns out to hold tax records. It goes to Finance, not to a folder named after its file type.
+        </p>
+      </div>
+
+      <div style="border: 1px solid #dedbd5; border-radius: 12px; padding: 26px; background: #fffefc; display: flex; flex-direction: column; gap: 12px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0e0e0d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M10 4v6l2-1.4L14 10V4"></path>
+        </svg>
+        <h3 style="font-size: 16px; font-weight: 600; margin: 0;">Archives</h3>
+        <p style="font-size: 14.5px; line-height: 1.6; color: #57554f; margin: 0;">
+          A zip is judged by what it contains. One holding a single installer is software; one holding a project's source is that project.
+        </p>
+      </div>
+
+      <div style="border: 1px solid #dedbd5; border-radius: 12px; padding: 26px; background: #fffefc; display: flex; flex-direction: column; gap: 12px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0e0e0d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9.5" r="1.5"></circle><path d="m4 18 5-5 4 4 3-2.5 4 3.5"></path>
+        </svg>
+        <h3 style="font-size: 16px; font-weight: 600; margin: 0;">Photos and scans</h3>
+        <p style="font-size: 14.5px; line-height: 1.6; color: #57554f; margin: 0;">
+          Text is read out of images. A scanned receipt with no text layer is still recognised as a receipt.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SAFETY ============ -->
+  <div style="background: #171716; color: #f6f5f2; margin-top: 96px; padding: 88px 40px;">
+    <div style="max-width: 1080px; margin: 0 auto;">
+
+      <h2 style="font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.12; letter-spacing: -0.015em; margin: 0 0 14px; max-width: 24ch;">
+        Nothing moves until you say so.
+      </h2>
+      <p style="font-size: 17px; line-height: 1.65; color: #b5b1a9; margin: 0 0 48px; max-width: 62ch; text-wrap: pretty;">
+        An app that rearranges your files has to earn that. Hoot shows you every suggestion, tells you what it based each one on, and can put everything back.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px;">
+
+        <div style="display: flex; flex-direction: column; gap: 11px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f6f5f2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 11.5 11.5 14 16 9"></path><rect x="3" y="4" width="18" height="16" rx="2"></rect>
+          </svg>
+          <h3 style="font-size: 16px; font-weight: 600; margin: 0;">You approve every move</h3>
+          <p style="font-size: 14.5px; line-height: 1.6; color: #a8a49c; margin: 0;">
+            Suggestions arrive in a review window. Untick anything you disagree with, or open a file to see the evidence behind it.
+          </p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 11px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f6f5f2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 8h12a5 5 0 0 1 0 10H8"></path><path d="m7 4-4 4 4 4"></path>
+          </svg>
+          <h3 style="font-size: 16px; font-weight: 600; margin: 0;">Every move is reversible</h3>
+          <p style="font-size: 14.5px; line-height: 1.6; color: #a8a49c; margin: 0;">
+            Each batch is logged and can be undone, today or next week. Files go back exactly where they came from.
+          </p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 11px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f6f5f2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M6 6v14h12V6"></path><path d="m10 11 4 4"></path><path d="m14 11-4 4"></path>
+          </svg>
+          <h3 style="font-size: 16px; font-weight: 600; margin: 0;">It never deletes anything</h3>
+          <p style="font-size: 14.5px; line-height: 1.6; color: #a8a49c; margin: 0;">
+            Superseded versions are moved aside rather than removed, and a file already at the destination is never overwritten.
+          </p>
+        </div>
+      </div>
+
+      <div style="margin-top: 52px; padding: 24px 26px; border: 1px solid #33322f; border-radius: 12px; display: flex; gap: 16px; align-items: flex-start;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b5b1a9" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16h.01"></path>
+        </svg>
+        <p style="font-size: 14.5px; line-height: 1.65; color: #a8a49c; margin: 0;">
+          Confidence comes from independent signals agreeing — the filename, the text inside the file, and the on-device model — never from the model rating its own answer. When Hoot is unsure, it says so and leaves the file alone.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ LEARNS ============ -->
+  <div style="max-width: 1080px; margin: 0 auto; padding: 96px 40px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 56px; align-items: center;">
+
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <h2 style="font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.12; letter-spacing: -0.015em; margin: 0; max-width: 20ch;">
+        It learns your filing, not someone else&#39;s.
+      </h2>
+      <p style="font-size: 17px; line-height: 1.65; color: #57554f; margin: 0; text-wrap: pretty;">
+        Drag a file to a different folder and Hoot remembers. Correct a few invoices into Finance and the next one from a client you have never had goes there by itself.
+      </p>
+      <p style="font-size: 17px; line-height: 1.65; color: #57554f; margin: 0; text-wrap: pretty;">
+        It also studies the folders you already made. A folder you called Books is a description of what you mean by books — far better than any general rule about file types.
+      </p>
+    </div>
+
+    <div style="border: 1px solid #dedbd5; border-radius: 12px; background: #fffefc; padding: 22px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #78756e;">Review</div>
+
+      <div style="display: flex; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid #ebe8e2; border-radius: 8px; background: #f6f5f2;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8b8880" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"></path><path d="M14 3v5h5"></path>
+        </svg>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #0e0e0d;">invoice_hooli.pdf</span>
+        <span style="margin-left: auto; font-size: 12px; color: #737069;">Documents</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px; padding-left: 6px; color: #737069; font-size: 13px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5v13"></path><path d="m7 13 5 5 5-5"></path>
+        </svg>
+        you drag it to Finance
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid #0e0e0d; border-radius: 8px; background: #fffefc;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0e0e0d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 20V7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z"></path>
+        </svg>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: #0e0e0d;">Finance</span>
+        <span style="margin-left: auto; font-size: 12px; color: #0e0e0d; font-weight: 500;">remembered</span>
+      </div>
+
+      <div style="border-top: 1px solid #ebe8e2; padding-top: 13px; font-size: 13px; line-height: 1.6; color: #57554f;">
+        Next time: <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px;">invoice_initech.pdf</span> &rarr; Finance
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PRIVACY ============ -->
+  <div id="privacy" style="max-width: 1080px; margin: 0 auto; padding: 96px 40px 0;">
+    <div style="border: 1px solid #dedbd5; border-radius: 16px; padding: 52px 48px; background: #fffefc;">
+
+      <h2 style="font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.12; letter-spacing: -0.015em; margin: 0 0 14px; max-width: 24ch;">
+        There is no network code in this app.
+      </h2>
+      <p style="font-size: 17px; line-height: 1.65; color: #57554f; margin: 0 0 40px; max-width: 62ch; text-wrap: pretty;">
+        Not &ldquo;we do not sell your data&rdquo; — there is nothing in Hoot that can send anything anywhere. The model runs on your Mac, and no part of the app knows how to reach a network.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 44px;">
+
+        <div style="display: flex; gap: 13px; align-items: flex-start;">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0e0e0d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;" aria-hidden="true">
+            <rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+          </svg>
+          <div>
+            <h3 style="font-size: 15px; font-weight: 600; margin: 0 0 4px;">No account, no server</h3>
+            <p style="font-size: 14px; line-height: 1.6; color: #57554f; margin: 0;">Nothing to sign up for. Hoot never asks who you are.</p>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 13px; align-items: flex-start;">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0e0e0d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="14" rx="2"></rect><path d="M8 21h8"></path><path d="M12 18v3"></path>
+          </svg>
+          <div>
+            <h3 style="font-size: 15px; font-weight: 600; margin: 0 0 4px;">The model is on your Mac</h3>
+            <p style="font-size: 14px; line-height: 1.6; color: #57554f; margin: 0;">Apple&#39;s on-device model does the thinking. Your files are not uploaded to be understood.</p>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 13px; align-items: flex-start;">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0e0e0d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;" aria-hidden="true">
+            <path d="M12 3 4 6v6c0 5 3.4 8.2 8 9 4.6-.8 8-4 8-9V6Z"></path>
+          </svg>
+          <div>
+            <h3 style="font-size: 15px; font-weight: 600; margin: 0 0 4px;">Sandboxed</h3>
+            <p style="font-size: 14px; line-height: 1.6; color: #57554f; margin: 0;">Hoot can reach the one folder you choose, and nothing else on your Mac.</p>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 13px; align-items: flex-start;">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0e0e0d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;" aria-hidden="true">
+            <path d="M6 16a4 4 0 0 1 .6-8 5.5 5.5 0 0 1 10.5 1.5A3.5 3.5 0 0 1 17 16"></path><path d="M12 12v8"></path><path d="m9 17 3 3 3-3"></path>
+          </svg>
+          <div>
+            <h3 style="font-size: 15px; font-weight: 600; margin: 0 0 4px;">Cloud files stay in the cloud</h3>
+            <p style="font-size: 14px; line-height: 1.6; color: #57554f; margin: 0;">Files stored online but not downloaded are never opened, so Hoot cannot start a download you did not ask for.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CLOSING CTA ============ -->
+  <div style="max-width: 1080px; margin: 0 auto; padding: 96px 40px 0;">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 22px; text-align: center;">
+
+      <img src="./app-icon.png" alt="" style="width: 76px; height: 76px; display: block; border-radius: 17px;">
+
+      <h2 style="font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(30px, 3.6vw, 46px); line-height: 1.1; letter-spacing: -0.015em; margin: 0; max-width: 18ch; text-wrap: balance;">
+        Point it at your Downloads folder.
+      </h2>
+
+      <p style="font-size: 17px; line-height: 1.6; color: #57554f; margin: 0; max-width: 50ch; text-wrap: pretty;">
+        It sits in the menu bar and stays quiet until there is something worth showing you.
+      </p>
+
+      <a href="[DOWNLOAD URL]" style="display: inline-flex; align-items: center; gap: 9px; background: #0e0e0d; color: #f6f5f2; text-decoration: none; padding: 15px 28px; border-radius: 8px; font-size: 16px; font-weight: 500; margin-top: 4px;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3v13"></path><path d="m6 11 6 6 6-6"></path><path d="M4 21h16"></path>
+        </svg>
+        Download for macOS
+      </a>
+
+      <div style="display: flex; flex-direction: column; gap: 5px; font-size: 13.5px; color: #737069; margin-top: 2px;">
+        <div>[PRICE] &middot; [VERSION] &middot; [SIZE]</div>
+        <div>Requires macOS 13 or later. Sorting by meaning needs macOS 26 with Apple Intelligence; without it, Hoot sorts by filename and tells you so.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FOOTER ============ -->
+  <div style="max-width: 1080px; margin: 0 auto; padding: 80px 40px 56px;">
+    <div style="border-top: 1px solid #dedbd5; padding-top: 26px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px;">
+      <div style="display: flex; align-items: center; gap: 9px;">
+        <img src="./mark-black.png" alt="" style="height: 19px; width: auto; display: block; opacity: 0.75;">
+        <span style="font-size: 14px; color: #737069;">Hoot</span>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 24px; font-size: 14px; color: #737069;">
+        <a href="[GITHUB URL]" style="color: #737069; text-decoration: none;">Source</a>
+        <a href="[PRIVACY POLICY URL]" style="color: #737069; text-decoration: none;">Privacy</a>
+        <a href="mailto:[SUPPORT EMAIL]" style="color: #737069; text-decoration: none;">Support</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview":{"width":1120,"height":3820}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

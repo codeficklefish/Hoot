@@ -1,0 +1,33 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1120,
+      "h": 3820,
+      "title": "Landing page"
+    },
+    {
+      "file": "Mobile.dc.html",
+      "x": 1200,
+      "y": 0,
+      "w": 390,
+      "h": 2360,
+      "title": "Phone"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "placeholders",
+      "x": 1200,
+      "y": 2440,
+      "w": 390,
+      "text": "Square-bracket text is a placeholder for you to fill in:\n[DOWNLOAD URL] · [GITHUB URL] · [PRICE]\n[VERSION] · [SIZE] · [SUPPORT EMAIL]\n[PRIVACY POLICY URL]\n\nEvery other line is real — the file names and folder\nnames come from actual Hoot runs on your Downloads."
+    }
+  ],
+  "launch": {
+    "view": "focused",
+    "file": "Main.dc.html"
+  }
+}
