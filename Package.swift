@@ -52,6 +52,14 @@ let package = Package(
             exclude: ["run.sh"]
         ),
 
+        // Measures Hoot against folders the user organized themselves.
+        .executableTarget(
+            name: "Evaluation",
+            dependencies: ["HootKit", "HootPlatformMac"],
+            path: "Evaluation",
+            exclude: ["run.sh"]
+        ),
+
         // Guards the dependency rule the ADR sets out, so a stray import
         // fails the build rather than the Windows port.
         .testTarget(

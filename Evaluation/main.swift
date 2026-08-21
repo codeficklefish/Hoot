@@ -1,4 +1,7 @@
 import Foundation
+import HootKit
+import HootPlatformMac
+import Hoot
 
 // Ground truth: the folder the user themselves put each file in.
 let downloads = URL(fileURLWithPath: NSHomeDirectory()).appending(path: "Downloads")
@@ -18,7 +21,7 @@ print("your folders: \(userFolders.joined(separator: ", "))\n")
 let sem = DispatchSemaphore(value: 0)
 Task {
     let rules = RuleBasedClassifier()
-    let extractor = TextExtractor()
+    let extractor = MacPlatform.makeTextExtractor()
 
     var rows: [(name: String, truth: String, rulePred: String, ruleConf: Double,
                 aiPred: String, finalConf: Double, evidence: String)] = []
@@ -34,8 +37,8 @@ Task {
 
     // AI refinement, given the user's own folders as candidates.
     var refined: [UUID: ClassificationResult] = [:]
-    if let provider = ProviderFactory.makeProvider(for: .default) {
-        refined = await CategoryRefiner(provider: provider, allowContentReading: true)
+    if let provider = MacPlatform.makeAIProvider(for: .default) {
+        refined = await CategoryRefiner(provider: provider, extractor: MacPlatform.makeTextExtractor(), allowContentReading: true)
             .refine(labelled.map(\.file), existing: base, preferredFolders: userFolders)
     }
 
