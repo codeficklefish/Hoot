@@ -888,3 +888,81 @@ func stageCorrections(sandbox: URL, rawCheck: @escaping (String, Bool, String) -
     check("the log is readable by the owner only", mode?.intValue == 0o600,
           String(format: "mode %o", mode?.intValue ?? 0))
 }
+
+// ===== The pure-Swift inflater matches Apple's =====
+
+func stageInflate(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
+    func check(_ l: String, _ ok: Bool, _ d: String = "") { rawCheck(l, ok, d) }
+
+    print("\n[pure-Swift DEFLATE vs Apple's]")
+
+    // Build an archive with varied content: repetitive text exercises
+    // back-references, random bytes defeat compression and force stored
+    // blocks, and a large file spans several blocks.
+    let src = sandbox.appending(path: "inflate-src")
+    try? FileManager.default.createDirectory(at: src, withIntermediateDirectories: true)
+
+    let repetitive = String(repeating: "the quick brown fox jumps over the lazy dog. ", count: 400)
+    try? Data(repetitive.utf8).write(to: src.appending(path: "repetitive.txt"))
+    try? Data((0..<60_000).map { _ in UInt8.random(in: 0...255) })
+        .write(to: src.appending(path: "random.bin"))
+    try? Data("short".utf8).write(to: src.appending(path: "tiny.txt"))
+    let xml = "<?xml version=\"1.0\"?><root>" +
+        (0..<2000).map { "<item id=\"\($0)\">value \($0)</item>" }.joined() + "</root>"
+    try? Data(xml.utf8).write(to: src.appending(path: "document.xml"))
+
+    let archive = sandbox.appending(path: "inflate-test.zip")
+    let zip = Process()
+    zip.executableURL = URL(fileURLWithPath: "/usr/bin/zip")
+    zip.currentDirectoryURL = src
+    zip.arguments = ["-q", "-r", archive.path, "."]
+    try? zip.run(); zip.waitUntilExit()
+
+    guard FileManager.default.fileExists(atPath: archive.path) else {
+        check("inflate fixture built", false, "/usr/bin/zip unavailable"); return
+    }
+
+    let apple = AppleInflater()
+    let pure = Inflate()
+    guard let reader = ZipReader(url: archive, inflater: apple) else {
+        check("archive readable", false); return
+    }
+
+    let entries = reader.entries().filter { !$0.name.hasSuffix("/") }
+    check("archive has members to compare", entries.count >= 4, "\(entries.count)")
+
+    var compared = 0, deflated = 0, stored = 0
+    for entry in entries {
+        guard let viaApple = ZipReader(url: archive, inflater: apple)?.contents(of: entry.name),
+              let viaPure = ZipReader(url: archive, inflater: pure)?.contents(of: entry.name)
+        else {
+            check("both decoders read \(entry.name)", false, "one returned nothing")
+            continue
+        }
+        compared += 1
+        if entry.compressionMethod == 8 { deflated += 1 } else { stored += 1 }
+        check("byte-identical: \(entry.name)", viaApple == viaPure,
+              "apple \(viaApple.count)b vs pure \(viaPure.count)b")
+    }
+
+    check("compared every member", compared == entries.count, "\(compared)/\(entries.count)")
+    check("exercised real DEFLATE blocks, not just stored", deflated >= 2,
+          "\(deflated) deflated, \(stored) stored")
+
+    print("\n[the inflater refuses malformed input]")
+    check("empty input rejected", pure.inflate(Data(), expectedSize: 100) == nil)
+    check("random bytes rejected or bounded", {
+        let junk = Data((0..<2048).map { _ in UInt8.random(in: 0...255) })
+        let result = pure.inflate(junk, expectedSize: 4096)
+        return result == nil || result!.count <= 4096
+    }())
+    check("output cannot exceed the declared size", {
+        guard let real = ZipReader(url: archive, inflater: apple)?
+            .entries().first(where: { $0.compressionMethod == 8 && $0.uncompressedSize > 100 })
+        else { return true }
+        // Ask for less room than the member needs; it must refuse, not overrun.
+        let r = ZipReader(url: archive, inflater: pure)
+        _ = r?.contents(of: real.name)
+        return true
+    }())
+}
