@@ -1,4 +1,5 @@
 import SwiftUI
+import HootKit
 
 /// Every move Hoot has made, newest first, each batch reversible.
 struct HistoryView: View {

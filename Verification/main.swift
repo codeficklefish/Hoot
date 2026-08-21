@@ -1,4 +1,6 @@
 import Foundation
+import HootKit
+import HootPlatformMac
 import AppKit
 
 // Exercises the real Hoot services against a throwaway sandbox folder:

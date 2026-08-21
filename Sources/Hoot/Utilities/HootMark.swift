@@ -1,4 +1,5 @@
 import AppKit
+import HootKit
 
 /// The Hoot brand mark — a folder outline whose contents read as a pair of
 /// owl eyes. Loaded from bundled artwork rather than drawn in code.

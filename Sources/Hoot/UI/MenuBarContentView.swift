@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import HootKit
 
 /// The popover content shown when the menu bar mark is clicked.
 struct MenuBarContentView: View {

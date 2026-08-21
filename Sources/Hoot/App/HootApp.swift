@@ -1,4 +1,6 @@
 import SwiftUI
+import HootKit
+import HootPlatformMac
 
 @main
 struct HootApp: App {

@@ -1,4 +1,5 @@
 import SwiftUI
+import HootKit
 
 /// Shown once, on first launch. Three things the user needs to know before
 /// handing an app permission to move their files: what it does, that it asks

@@ -1,4 +1,6 @@
 import Foundation
+import HootKit
+import HootPlatformMac
 
 // ===== Stage 3 checks: untrusted model output must never escape sandboxing =====
 
@@ -99,7 +101,7 @@ func stage3(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
     let sem = DispatchSemaphore(value: 0)
     Task {
         // A provider that always fails must still yield rule-based grouping.
-        let detector = AIProjectDetector(provider: FailingProvider(), allowContentReading: false)
+        let detector = AIProjectDetector(provider: FailingProvider(), extractor: MacPlatform.makeTextExtractor(), allowContentReading: false)
         let thesisFiles = ["thesis_a.docx", "thesis_b.docx"].compactMap { name -> FileItem? in
             try? Data("x".utf8).write(to: sandbox.appending(path: name))
             return FileAnalyzer.analyze(sandbox.appending(path: name))
@@ -113,14 +115,14 @@ func stage3(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
         }
 
         // An unavailable provider must not be consulted at all.
-        let unavailable = AIProjectDetector(provider: UnavailableProvider(), allowContentReading: false)
+        let unavailable = AIProjectDetector(provider: UnavailableProvider(), extractor: MacPlatform.makeTextExtractor(), allowContentReading: false)
         let (up, _) = await unavailable.detectProjects(in: thesisFiles)
         check("unavailable provider falls back", up.contains { $0.name == "Thesis" })
 
         print("\n[privacy boundary]")
         // A remote provider must never receive file excerpts.
         let spy = SpyProvider(isLocal: false)
-        _ = await AIProjectDetector(provider: spy, allowContentReading: true)
+        _ = await AIProjectDetector(provider: spy, extractor: MacPlatform.makeTextExtractor(), allowContentReading: true)
             .detectProjects(in: thesisFiles)
         check("remote provider gets NO excerpts",
               spy.received.allSatisfy { $0.excerpt == nil },
@@ -128,7 +130,7 @@ func stage3(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
 
         // A local provider may, but only with consent.
         let localDenied = SpyProvider(isLocal: true)
-        _ = await AIProjectDetector(provider: localDenied, allowContentReading: false)
+        _ = await AIProjectDetector(provider: localDenied, extractor: MacPlatform.makeTextExtractor(), allowContentReading: false)
             .detectProjects(in: thesisFiles)
         check("local provider gets no excerpts when disabled",
               localDenied.received.allSatisfy { $0.excerpt == nil })
