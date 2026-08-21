@@ -1,4 +1,6 @@
 import Foundation
+import HootKit
+import HootPlatformMac
 import AppKit
 
 // ===== Extraction + AI category refinement =====
@@ -20,7 +22,7 @@ func stage4(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
     try? proc.run(); proc.waitUntilExit()
 
     if FileManager.default.fileExists(atPath: zipURL.path) {
-        let reader = ZipReader(url: zipURL)
+        let reader = ZipReader(url: zipURL, inflater: AppleInflater())
         let entries = reader?.entries() ?? []
         check("zip entries listed", entries.contains { $0.name == "inner.txt" }, "\(entries.map(\.name))")
         let inflated = reader?.contents(of: "inner.txt").map { String(decoding: $0, as: UTF8.self) }
@@ -32,7 +34,7 @@ func stage4(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
     // A non-zip must be rejected cleanly rather than misparsed.
     let notZip = sandbox.appending(path: "notazip.bin")
     try? Data(repeating: 0x41, count: 4096).write(to: notZip)
-    check("non-zip yields no entries", (ZipReader(url: notZip)?.entries() ?? []).isEmpty)
+    check("non-zip yields no entries", (ZipReader(url: notZip, inflater: AppleInflater())?.entries() ?? []).isEmpty)
 
     print("\n[category refinement policy]")
     let names = ["tax_invoice_2026.pdf", "random_photo.jpg"]
@@ -52,7 +54,7 @@ func stage4(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
               existing[invoice.id]!.confidence >= 0.75,
               "\(existing[invoice.id]!.confidence)")
 
-        let refiner = CategoryRefiner(provider: OverreachingProvider(), allowContentReading: true)
+        let refiner = CategoryRefiner(provider: OverreachingProvider(), extractor: MacPlatform.makeTextExtractor(), allowContentReading: true)
         let refined = await refiner.refine(files, existing: existing, preferredFolders: ["Finance"])
 
         check("proven keyword classification left alone", refined[invoice.id] == nil,
@@ -66,7 +68,7 @@ func stage4(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
               "\(refined[photo.id]?.confidence ?? -1)")
 
         // A provider that fails must leave rule categories intact.
-        let failing = CategoryRefiner(provider: FailingProvider(), allowContentReading: true)
+        let failing = CategoryRefiner(provider: FailingProvider(), extractor: MacPlatform.makeTextExtractor(), allowContentReading: true)
         let none = await failing.refine(files, existing: existing, preferredFolders: [])
         check("provider failure keeps rule categories", none.isEmpty)
 

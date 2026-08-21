@@ -1,4 +1,6 @@
 import SwiftUI
+import HootKit
+import HootPlatformMac
 
 /// Where the user chooses how much intelligence Hoot uses, and how much it's
 /// allowed to see. The privacy consequence of each choice is stated inline
@@ -15,9 +17,9 @@ struct SettingsView: View {
                         .tag(AISettings.ProviderKind.appleOnDevice)
                 }
                 .pickerStyle(.radioGroup)
-                .disabled(!ProviderFactory.supportsAppleOnDevice)
+                .disabled(!MacPlatform.supportsOnDeviceAI)
 
-                if !ProviderFactory.supportsAppleOnDevice {
+                if !MacPlatform.supportsOnDeviceAI {
                     Label("On-device intelligence needs macOS 26 or later.",
                           systemImage: "info.circle")
                         .font(.caption)

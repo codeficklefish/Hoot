@@ -1,4 +1,5 @@
 import SwiftUI
+import HootKit
 
 /// One detected file: icon, name, basic metadata, and its (mock) classification.
 struct FileRow: View {
