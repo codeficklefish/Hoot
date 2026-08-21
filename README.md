@@ -38,9 +38,14 @@ itself — see [docs/pim-design-notes.md](docs/pim-design-notes.md).
 
 ## Requirements
 
-- macOS 13 or later
+- macOS 13 or later, Apple silicon
 - macOS 26 with Apple Intelligence for the AI features; below that Hoot falls
   back to filename rules and says so
+
+Hoot runs on macOS today. It is structured for Windows — the rules that decide
+where a file belongs are a separate module that imports nothing platform-
+specific — but the Windows adapters and interface are not written yet. See
+[docs/decisions/0001](docs/decisions/0001-engine-and-platform-adapters.md).
 
 ## Building
 
@@ -64,14 +69,19 @@ NOTARY_PROFILE=hoot-notary \
 ## Checking it works
 
 ```bash
-./Verification/run.sh   # 210 checks against a throwaway sandbox
-./Evaluation/run.sh     # measures accuracy against folders you organized
+swift test              # the engine imports nothing platform-specific
+./Verification/run.sh   # 220 behaviour and safety checks, in a sandbox
+./Evaluation/run.sh     # accuracy against folders you organized yourself
 ```
 
 The verification suite covers the safety rules directly: that a symlinked
 folder cannot move files outside the watched directory, that a malformed
 archive cannot exhaust memory, that model output cannot produce a path like
 `../../Escape`, and that undo restores a folder exactly.
+
+It also checks the engine's own DEFLATE decoder against the system one over
+real archives, byte for byte — a second implementation being the only honest
+way to know a decompressor is correct.
 
 ## Design notes
 

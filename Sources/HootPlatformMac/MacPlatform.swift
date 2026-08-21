@@ -8,8 +8,14 @@ import HootKit
 /// platforms — and it is the file a Windows port would sit beside, not edit.
 public enum MacPlatform {
 
+    /// The engine's own decoder, not Apple's.
+    ///
+    /// It is byte-identical to the system one on real archives and costs about
+    /// two milliseconds per megabyte, so there is no reason to run different
+    /// code on each platform — and every reason not to: this way macOS
+    /// exercises the same path Windows will.
     public static func makeInflater() -> ArchiveInflating {
-        AppleInflater()
+        Inflate()
     }
 
     public static func makeTextExtractor() -> TextExtracting {

@@ -247,6 +247,7 @@ stageConfidence(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 stageLearning(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 stageCloud(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 stageCorrections(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
+stageInflate(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 
 try? FileManager.default.removeItem(at: sandbox)
 print("\n\(failures == 0 ? "ALL CHECKS PASSED" : "\(failures) CHECK(S) FAILED")")

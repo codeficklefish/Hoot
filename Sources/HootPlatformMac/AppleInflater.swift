@@ -4,9 +4,10 @@ import HootKit
 
 /// DEFLATE via Apple's Compression framework.
 ///
-/// The zip parsing itself is pure Foundation and lives in the engine; this is
-/// the one step that needs a platform library. A Windows build supplies the
-/// same protocol backed by zlib.
+/// No longer used by the app: `HootKit.Inflate` decodes on every platform, so
+/// macOS runs the same code Windows will. This is kept as the reference the
+/// verification suite checks that decoder against — a second implementation is
+/// the only honest way to know a decompressor is right.
 public struct AppleInflater: ArchiveInflating {
     public init() {}
 

@@ -161,7 +161,7 @@ public struct TextExtractor: TextExtracting {
     /// Hoot did. The zip reader below is bounded and touches nothing but
     /// the file itself.
     private func wordText(at url: URL) -> String? {
-        guard let zip = ZipReader(url: url, inflater: AppleInflater()),
+        guard let zip = ZipReader(url: url, inflater: Inflate()),
               let data = zip.contents(of: "word/document.xml") else { return nil }
         let values = Self.tagValues(in: String(decoding: data, as: UTF8.self),
                                     tag: "w:t", limit: 200)
@@ -224,7 +224,7 @@ public struct TextExtractor: TextExtracting {
     /// string — headers and labels included. That's the most identifying text
     /// in a spreadsheet, and it's reachable without a spreadsheet engine.
     private func spreadsheetText(at url: URL) -> String? {
-        guard let zip = ZipReader(url: url, inflater: AppleInflater()),
+        guard let zip = ZipReader(url: url, inflater: Inflate()),
               let data = zip.contents(of: "xl/sharedStrings.xml") else { return nil }
         let xml = String(decoding: data, as: UTF8.self)
 
@@ -237,7 +237,7 @@ public struct TextExtractor: TextExtracting {
     /// Lists what an archive holds. The contents identify it far better than
     /// the name does — a zip wrapping a single .dmg is an app installer.
     private func archiveSummary(at url: URL) -> String? {
-        guard let zip = ZipReader(url: url, inflater: AppleInflater()) else { return nil }
+        guard let zip = ZipReader(url: url, inflater: Inflate()) else { return nil }
         let entries = zip.entries()
         guard !entries.isEmpty else { return nil }
 
