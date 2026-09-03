@@ -9,21 +9,32 @@ import HootPlatformMac
 /// on its own; the state itself stays in one place.
 extension AppState {
 
+    /// The one issue Hoot raises and withdraws on its own, rather than
+    /// leaving for the user to dismiss. Kept in one place so the branch that
+    /// clears it cannot drift from the branch that raises it.
+    static let smartSortingOffTitle = "Smart sorting is off."
+
     /// Reports whether the configured provider can actually run, so Settings
     /// can say "on-device model still downloading" instead of failing silently.
     func refreshProviderStatus() async {
         guard let provider = MacPlatform.makeAIProvider(for: settings) else {
             providerStatus = "Using filename rules only."
+            clearIssue(titled: Self.smartSortingOffTitle)
             return
         }
         switch await provider.availability() {
         case .available:
             providerStatus = "\(provider.displayName) is ready."
+            // The warning below outlives whatever caused it: turning Apple
+            // Intelligence on in System Settings fixes the model, but the
+            // banner would sit there claiming otherwise until the user
+            // dismissed it — which reads as the fix not having worked.
+            clearIssue(titled: Self.smartSortingOffTitle)
         case .unavailable(let reason):
             providerStatus = "\(reason) Falling back to filename rules."
             report(
                 UserFacingIssue(
-                    title: "Smart sorting is off.",
+                    title: Self.smartSortingOffTitle,
                     suggestion: "\(reason) Hoot will sort by filename instead.",
                     severity: .warning
                 )
@@ -37,6 +48,13 @@ extension AppState {
         issues.removeAll { $0.title == issue.title }
         issues.insert(issue, at: 0)
         if issues.count > 5 { issues = Array(issues.prefix(5)) }
+    }
+
+    /// Withdraws an issue Hoot raised itself, once the condition behind it
+    /// has gone. Matching on title is what `report` already does to replace
+    /// a repeated issue, so the two stay consistent.
+    func clearIssue(titled title: String) {
+        issues.removeAll { $0.title == title }
     }
 
     func dismissIssue(_ id: UUID) {

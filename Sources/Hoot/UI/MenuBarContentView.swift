@@ -36,6 +36,13 @@ struct MenuBarContentView: View {
         .frame(width: 360)
         .animation(.easeInOut(duration: 0.18), value: appState.detectedFiles.count)
         .animation(.easeInOut(duration: 0.18), value: appState.lastMessage)
+        // Apple Intelligence can be switched on while Hoot is running, and
+        // this popover is where the warning about it being off is shown. Ask
+        // again each time it opens, so the banner answers to the current
+        // state of the machine rather than the state at launch.
+        .task {
+            await appState.refreshProviderStatus()
+        }
     }
 
     private var header: some View {
