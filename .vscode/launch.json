@@ -1,0 +1,64 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Hoot}",
+            "name": "Debug Verification",
+            "target": "Verification",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug Verification"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Hoot}",
+            "name": "Release Verification",
+            "target": "Verification",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release Verification"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Hoot}",
+            "name": "Debug Hoot",
+            "target": "Hoot",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug Hoot"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Hoot}",
+            "name": "Release Hoot",
+            "target": "Hoot",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release Hoot"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Hoot}",
+            "name": "Debug Evaluation",
+            "target": "Evaluation",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug Evaluation"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Hoot}",
+            "name": "Release Evaluation",
+            "target": "Evaluation",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release Evaluation"
+        }
+    ]
+}
