@@ -1,7 +1,6 @@
 import Foundation
 import HootKit
 import HootPlatformMac
-import Hoot
 
 // Ground truth: the folder the user themselves put each file in.
 let downloads = URL(fileURLWithPath: NSHomeDirectory()).appending(path: "Downloads")
