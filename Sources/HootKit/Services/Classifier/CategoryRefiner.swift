@@ -15,6 +15,15 @@ public struct CategoryRefiner {
     /// trusted over the model.
     private static let keywordEvidenceThreshold = 0.75
 
+    /// Diagnostic trace of what the provider was asked and what came back,
+    /// off unless HOOT_TRACE_REFINER is set. Refinement drops a suggestion
+    /// whenever it cannot be matched back to a file, and silence about that
+    /// is indistinguishable from the model having nothing to say.
+    private static func trace(_ message: @autoclosure () -> String) {
+        guard ProcessInfo.processInfo.environment["HOOT_TRACE_REFINER"] != nil else { return }
+        FileHandle.standardError.write(Data("[refiner] \(message())\n".utf8))
+    }
+
     /// The model reports 95-100% for everything, so its self-scored number is
     /// ignored entirely. Confidence comes from whether independent sources
     /// agree — see `ConfidenceModel`.
@@ -42,6 +51,10 @@ public struct CategoryRefiner {
         let candidates = files.filter { file in
             guard let current = existing[file.id] else { return false }
             return current.confidence < Self.keywordEvidenceThreshold
+        }
+        Self.trace("\(files.count) files, \(candidates.count) below the \(Self.keywordEvidenceThreshold) threshold")
+        for file in candidates {
+            Self.trace("  candidate: \(file.filename)")
         }
         guard !candidates.isEmpty else { return [:] }
 
@@ -78,7 +91,13 @@ public struct CategoryRefiner {
             )
         } catch {
             NSLog("Hoot: category refinement failed (\(error.localizedDescription)); keeping rules.")
+            Self.trace("provider threw: \(error.localizedDescription)")
             return [:]
+        }
+
+        Self.trace("provider returned \(suggestions.count) suggestions")
+        for s in suggestions {
+            Self.trace("  suggestion: filename=\(s.filename) category=\(s.category)")
         }
 
         // The model's output names folders on disk, so it goes through the
@@ -88,10 +107,18 @@ public struct CategoryRefiner {
 
         var refined: [UUID: ClassificationResult] = [:]
         for suggestion in suggestions {
-            guard let file = byName[suggestion.filename],
-                  let folder = SuggestionValidator.sanitizeName(suggestion.category),
-                  let current = existing[file.id]
-            else { continue }
+            guard let file = byName[suggestion.filename] else {
+                Self.trace("  DROPPED (no file named \(suggestion.filename))")
+                continue
+            }
+            guard let folder = SuggestionValidator.sanitizeName(suggestion.category) else {
+                Self.trace("  DROPPED (category \(suggestion.category) did not sanitize)")
+                continue
+            }
+            guard let current = existing[file.id] else {
+                Self.trace("  DROPPED (no existing result for \(suggestion.filename))")
+                continue
+            }
 
             let ruleView = contentInformed[file.id] ?? current
             let agrees = ruleView.suggestedFolder.lowercased() == folder.lowercased()
