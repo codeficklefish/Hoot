@@ -111,7 +111,10 @@ public struct CategoryRefiner {
                 Self.trace("  DROPPED (no file named \(suggestion.filename))")
                 continue
             }
-            guard let folder = SuggestionValidator.sanitizeName(suggestion.category) else {
+            guard let folder = SuggestionValidator.sanitizeName(
+                suggestion.category,
+                existingFolders: preferredFolders
+            ) else {
                 Self.trace("  DROPPED (category \(suggestion.category) did not sanitize)")
                 continue
             }
