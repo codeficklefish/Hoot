@@ -174,7 +174,15 @@ public struct SuggestionValidator {
     /// Reduces a model-supplied name to a safe single path component, or nil
     /// if nothing usable survives. Guards against path traversal, hidden
     /// files, separators, control characters and meaningless labels.
-    public static func sanitizeName(_ raw: String) -> String? {
+    ///
+    /// `existingFolders` are folders the user already keeps. A name matching
+    /// one of them skips the meaningless-label checks below: "Documents" is a
+    /// placeholder when a model invents it, but not when the user has a folder
+    /// called that and Hoot asked the model to reuse it. Filing into a folder
+    /// the user made themselves is the strongest signal Hoot has, and it was
+    /// being discarded — the model's answer was thrown away precisely when it
+    /// did what the prompt asked.
+    public static func sanitizeName(_ raw: String, existingFolders: [String] = []) -> String? {
         var name = raw
 
         // Strip anything that could change where the folder lands.
@@ -192,6 +200,15 @@ public struct SuggestionValidator {
         name = name.trimmingCharacters(in: CharacterSet(charactersIn: " ."))
 
         guard !name.isEmpty else { return nil }
+
+        // The path-safety work above still applies; only the judgements about
+        // what makes a *good* name are waived. Trimming "Tax Documents" down
+        // to "Tax" would be just as wrong when "Tax Documents" is a folder the
+        // user actually has.
+        if existingFolders.contains(where: { $0.lowercased() == name.lowercased() }) {
+            return name
+        }
+
         guard !placeholders.contains(name.lowercased()) else { return nil }
 
         // Reject "Project A" / "Group 1" style names the prompt asked it to avoid.
