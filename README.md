@@ -49,6 +49,26 @@ specific — but the Windows adapters and interface are not written yet. See
 
 ## Building
 
+Full Xcode is required — the Command Line Tools alone are not enough, and
+neither is a toolchain from swift.org. `AppleOnDeviceProvider` uses the
+`@Generable` and `@Guide` macros, which Swift expands with a compiler plugin
+that Apple ships only inside Xcode. Without it the build fails on
+
+```
+external macro implementation type 'FoundationModelsMacros.GenerableMacro'
+could not be found
+```
+
+which points at the macro rather than at the missing toolchain, so it is worth
+knowing in advance. If Xcode is installed but the build still fails this way,
+check that it is the active developer directory:
+
+```bash
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+```
+
+Then:
+
 ```bash
 ./Packaging/build-app.sh release   # produces build/Hoot.app
 ```

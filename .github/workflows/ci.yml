@@ -1,0 +1,43 @@
+name: CI
+
+# Runs on every push to main and every pull request. A single unbuildable
+# target once broke the whole package — and with it the app bundle — for
+# weeks, because nothing compiled the repository except a person remembering
+# to. This is that person.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-verify:
+    # macOS 26 is required rather than merely preferred: HootPlatformMac
+    # imports FoundationModels, and its @Generable and @Guide macros are
+    # expanded by a compiler plugin that ships only inside Xcode. An older
+    # image cannot build this repository at all.
+    runs-on: macos-26
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Printed so a future build failure can be told apart from a toolchain
+      # change underneath it.
+      - name: Record the toolchain
+        run: |
+          swift --version
+          xcodebuild -version
+
+      # Builds every target, which is the point: the engine, the Apple
+      # adapters, the app, and both executables.
+      - name: Build
+        run: swift build -c release
+
+      # Includes the guard that keeps HootKit free of Apple frameworks, so a
+      # stray import fails here rather than in a future Windows port.
+      - name: Test
+        run: swift test
+
+      # The behaviour and safety checks. Works in a temporary directory and
+      # needs no model, so it runs the same on a CI machine as on a Mac.
+      - name: Verification suite
+        run: ./Verification/run.sh
