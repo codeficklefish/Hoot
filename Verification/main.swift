@@ -238,6 +238,7 @@ check("no loose substring merging", shelf.canonicalName(for: "Homework") == "Hom
 stage3(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 stage4(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 stage5(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
+stage6(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 stageSecurity(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 stageHardening(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 stagePIM(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
