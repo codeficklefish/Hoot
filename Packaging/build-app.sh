@@ -23,7 +23,21 @@ cp Packaging/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 # Artwork goes in Contents/Resources, where a macOS app bundle expects it.
 # (SwiftPM also emits a .bundle beside the binary, but that lookup path sits
 # outside the sandbox container, so it can't be relied on in a shipped app.)
-cp Sources/Hoot/Resources/*.png "$APP/Contents/Resources/" 2>/dev/null || true
+#
+# This copy must not be allowed to fail quietly. HootMark.menuBarIcon is a
+# `static let` read while the status item is built, and a missing image there
+# calls fatalError — so a silently skipped copy produces a bundle that looks
+# fine, signs, ships, and then crashes on launch on someone else's Mac.
+cp Sources/Hoot/Resources/*.png "$APP/Contents/Resources/"
+
+# The mark the app cannot start without. Checked explicitly rather than
+# trusting the glob above, so a renamed or moved asset fails the build here
+# instead of at the user's first launch.
+if [ ! -f "$APP/Contents/Resources/HootMark-Template.png" ]; then
+  echo "HootMark-Template.png is missing from the bundle."
+  echo "The app reads it while building the menu bar item and would crash on launch."
+  exit 1
+fi
 
 # Sign with the sandbox entitlements.
 #
