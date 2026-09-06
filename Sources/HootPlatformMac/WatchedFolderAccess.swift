@@ -52,7 +52,15 @@ public final class WatchedFolderAccess {
             )
 
             if isStale {
-                // The folder moved; re-issue the bookmark from the resolved URL.
+                // The folder moved, so the bookmark has to be re-issued from
+                // the resolved URL — but access must be open before that.
+                // Resolving a bookmark grants nothing on its own, and writing
+                // a new security-scoped bookmark is itself a use of the
+                // resource. Re-issuing first left `remember` logging a failure
+                // and the stale bookmark still in defaults, so the same
+                // resolve-and-fail repeated on every launch and the user was
+                // asked for the folder again each time.
+                beginAccess(to: url)
                 remember(url)
                 return url
             }
@@ -72,6 +80,11 @@ public final class WatchedFolderAccess {
     }
 
     private func beginAccess(to url: URL) {
+        // Already holding this exact folder open: starting again would need a
+        // matching extra stop to balance, and the stop-then-start in the
+        // general path would briefly drop access Hoot is relying on.
+        guard activeURL != url else { return }
+
         endAccess()
         // Outside the sandbox this is a no-op that reports false; access works
         // regardless, so a failure here shouldn't block anything.
