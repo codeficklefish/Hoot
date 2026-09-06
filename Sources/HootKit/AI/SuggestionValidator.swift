@@ -131,9 +131,12 @@ public struct SuggestionValidator {
     /// - its filename shares a distinctive word with the project name or with
     ///   another member, which is the same signal rule-based grouping uses.
     ///
-    /// Images are the common casualty, and rightly so: there is no OCR, so a
-    /// photo named `IMG_4821.jpg` carries no evidence whatsoever. Filing it
-    /// under its type is honest; filing it under a guessed project buries it.
+    /// Images are the common casualty, and rightly so. OCR and scene labelling
+    /// give many of them real content to stand on — a photographed receipt
+    /// reads as one — but a picture with no legible text and no label the
+    /// model is sure of yields nothing, and a name like `IMG_4821.jpg` adds
+    /// nothing either. Filing that under its type is honest; filing it under a
+    /// guessed project buries it.
     private static func partitionBySupport(
         _ files: [FileItem],
         projectName: String,
