@@ -1,30 +1,48 @@
 # Landing page
 
-The source of Hoot's landing page, in desktop and phone widths.
+    public/index.html   the site — this is what Netlify deploys
+    Main.dc.html        design source, desktop width
+    Mobile.dc.html      design source, phone width
+    canvas.json         canvas layout for the artboards above
+    *.png               marks and app icon, used by the artboards
 
-These are `.dc.html` artboards — plain HTML with inline styles, authored for
-Claude Design's canvas editor but readable and portable on their own. To turn
-them into a website, lift the markup out of the `<x-dc>` element; it has no
-framework and no build step.
+`public/` holds the deployed site and nothing else, so a deploy publishes the
+page alone — the artboards, this file and the loose images stay in the
+repository without being served. `netlify.toml` at the repository root points
+at it; there is no build step, and the file goes up exactly as it sits here.
 
-The published canvas:
-<https://claude.ai/code/artifact/d69a53e3-f9e3-4809-a43f-1241a149dd75>
+## The page
 
-## Before publishing it anywhere
+`public/index.html` is one self-contained file: no framework, no bundler, no
+dependencies. The only thing it fetches is its typefaces, from Google Fonts.
+It declares its own charset — without that line, any host serving `text/html`
+with no charset turns every em dash into mojibake, which is a bug this page
+has already had once.
 
-Square-bracket text is a deliberate placeholder, not a mistake:
+Serve it locally with:
 
-- `[DOWNLOAD URL]` · `[PRICE]` · `[VERSION]` · `[SIZE]` · `[SUPPORT EMAIL]`
+    python3 -m http.server 4173 --directory Website/public
 
-Resolved on 9 September 2026, when the repository was made public: the GitHub
-and privacy-policy links now point at real pages, and the privacy section ends
-with *"the source is public, so you can check"* again — the strongest line in
-it, and true once more.
+## The artboards
 
-One claim still to check against reality before it goes live:
+`.dc.html` files are plain HTML with inline styles, authored for Claude
+Design's canvas editor but readable on their own. They were the original
+source for the page and are kept as the design reference. The published
+canvas: <https://claude.ai/code/artifact/d69a53e3-f9e3-4809-a43f-1241a149dd75>
+
+They still contain the square-bracket placeholders described below. The
+deployed page no longer does.
+
+## Claims to keep honest
+
+Everything on the page is real: the filenames and folder names come from
+actual runs against a Downloads folder, and the entitlements listed in the
+privacy section are the ones in `Packaging/Hoot.entitlements`.
+
+Two things to revisit when the app changes:
 
 - **"Apple silicon"** in the hero is accurate only while the build is
   arm64-only. Build a universal binary and that line should come out.
-
-Everything else on the page is real: the filenames and folder names come from
-actual runs against a Downloads folder.
+- **The unsigned-build warning** under the download button, and the version
+  and size beside it, describe release v0.5.0. When a notarized build exists,
+  update the version, and delete the warning rather than leaving it to rot.

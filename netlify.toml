@@ -1,12 +1,12 @@
 # Netlify configuration.
 #
-# The site is a single static file with no build step — Website/index.html
+# The site is a single static file with no build step — Website/public/index.html
 # is deployed exactly as it sits in the repository. Setting `publish` here
 # rather than in Netlify's UI means the import needs no configuration, and
 # the setting is versioned alongside the page it describes.
 
 [build]
-  publish = "Website"
+  publish = "Website/public"
 
 # There is no build command on purpose. The page has no framework, no
 # bundler and no dependencies; adding a build step would only introduce a
