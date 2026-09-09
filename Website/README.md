@@ -14,16 +14,17 @@ The published canvas:
 
 Square-bracket text is a deliberate placeholder, not a mistake:
 
-- `[DOWNLOAD URL]` · `[GITHUB URL]` · `[PRIVACY POLICY URL]`
-- `[PRICE]` · `[VERSION]` · `[SIZE]` · `[SUPPORT EMAIL]`
+- `[DOWNLOAD URL]` · `[PRICE]` · `[VERSION]` · `[SIZE]` · `[SUPPORT EMAIL]`
 
-Two claims to check against reality before they go live:
+Resolved on 9 September 2026, when the repository was made public: the GitHub
+and privacy-policy links now point at real pages, and the privacy section ends
+with *"the source is public, so you can check"* again — the strongest line in
+it, and true once more.
+
+One claim still to check against reality before it goes live:
 
 - **"Apple silicon"** in the hero is accurate only while the build is
   arm64-only. Build a universal binary and that line should come out.
-- The privacy section used to end *"the source is public, so you can check."*
-  That sentence was removed while the repository was private. It is the
-  strongest line in the section — put it back if the repository becomes public.
 
 Everything else on the page is real: the filenames and folder names come from
 actual runs against a Downloads folder.
