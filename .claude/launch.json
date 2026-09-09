@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Hoot landing page",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/patrickhans/Documents/GitHub/Hoot/Website && exec /usr/bin/python3 -m http.server 4173"
+      ],
+      "port": 4173
+    }
+  ]
+}
