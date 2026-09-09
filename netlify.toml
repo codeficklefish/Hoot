@@ -1,0 +1,23 @@
+# Netlify configuration.
+#
+# The site is a single static file with no build step — Website/index.html
+# is deployed exactly as it sits in the repository. Setting `publish` here
+# rather than in Netlify's UI means the import needs no configuration, and
+# the setting is versioned alongside the page it describes.
+
+[build]
+  publish = "Website"
+
+# There is no build command on purpose. The page has no framework, no
+# bundler and no dependencies; adding a build step would only introduce a
+# way for the deploy to fail.
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Content-Type is deliberately not set here. Netlify already sends the right
+# type per file, and forcing one across "/*" would label the PNGs as HTML.
+# The page declares its own charset, which is what fixes the encoding.
