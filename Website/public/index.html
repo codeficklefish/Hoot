@@ -235,7 +235,9 @@
   @keyframes settle { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) {
     .state-after .group { animation: none; }
-    .btn, .row { transition: none; }
+    .btn, .row, .cell, .cell .ico, .cell h3, .cell p,
+    .promise, .promise h3, .promise p { transition: none; }
+    .cell:hover .ico { transform: none; }
   }
 
   .demo-note {
@@ -257,9 +259,27 @@
   .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
   @media (max-width: 940px) { .grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 580px) { .grid { grid-template-columns: 1fr; } }
-  .cell { background: var(--paper); padding: 22px; display: flex; flex-direction: column; gap: 8px; }
+  .cell {
+    background: var(--paper); padding: 22px;
+    display: flex; flex-direction: column; gap: 8px;
+    /* Deliberately no cursor:pointer, lift or shadow. These cells are not
+       links, and the three things that say "clickable" would be a lie. The
+       hover just warms the surface so the grid feels alive under the cursor. */
+    transition: background-color .22s ease;
+  }
   .band .cell { background: var(--paper-sunk); }
-  .cell .ico { color: var(--accent); }
+  /* Equal specificity to `.band .cell`, so this must stay below it — otherwise
+     the hover never applies inside a band, which is where the grid lives. */
+  .cell:hover, .band .cell:hover { background: var(--accent-wash); }
+  .cell .ico {
+    color: var(--accent);
+    transition: transform .22s cubic-bezier(.2,.7,.3,1);
+  }
+  .cell:hover .ico { transform: scale(1.18); }
+  .cell h3 { transition: color .22s ease; }
+  .cell:hover h3 { color: var(--accent-ink); }
+  .cell:hover p { color: var(--ink-soft); }
+  .cell p { transition: color .22s ease; }
   .cell p { font-size: .9rem; color: var(--muted); }
   .cell code { font-family: var(--mono); font-size: .8125em; color: var(--ink-soft); }
 
@@ -267,7 +287,12 @@
   .promises { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--rule); }
   .promise { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: clamp(12px, 4vw, 48px); padding-block: 22px; border-bottom: 1px solid var(--rule); }
   @media (max-width: 700px) { .promise { grid-template-columns: 1fr; gap: 6px; } }
-  .promise p { color: var(--muted); font-size: .9375rem; max-width: var(--measure); }
+  .promise p { color: var(--muted); font-size: .9375rem; max-width: var(--measure); transition: color .22s ease; }
+  .promise { transition: border-color .22s ease; }
+  .promise h3 { transition: color .22s ease; }
+  .promise:hover { border-bottom-color: var(--accent); }
+  .promise:hover h3 { color: var(--accent-ink); }
+  .promise:hover p { color: var(--ink-soft); }
 
   .aside {
     margin-top: 34px; padding: 20px 22px;
