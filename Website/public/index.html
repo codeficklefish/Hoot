@@ -268,16 +268,51 @@
     transition: background-color .22s ease;
   }
   .band .cell { background: var(--paper-sunk); }
+
+  /* Each kind of file gets its own tint, chosen from what it is rather than
+     from a spectrum: spreadsheets green because every spreadsheet app is,
+     archives the ochre of a cardboard box, folders the blue Finder uses for
+     them, and the on-device model the house pine. All six sit at roughly the
+     same lightness and low chroma, so the grid reads as one system rather
+     than six competing colours.
+     Cells default to the accent, so a new cell without a tint still works. */
+  .cell { --tint: var(--accent); --tint-wash: var(--accent-wash); }
+  .cell--docs     { --tint: #2A4A6B; --tint-wash: #E3EAF1; }
+  .cell--sheets   { --tint: #2E5A3A; --tint-wash: #E4EEE5; }
+  .cell--archives { --tint: #7A5320; --tint-wash: #F3EAD9; }
+  .cell--photos   { --tint: #5A3A5E; --tint-wash: #EDE5EF; }
+  .cell--folders  { --tint: #1F5486; --tint-wash: #E1EBF4; }
+  .cell--model    { --tint: #17514E; --tint-wash: #E4EEEB; }
+
+  /* Dark theme needs the pair inverted in weight: a light ink on a dark wash.
+     Declared for both the un-stamped (system) and explicitly-dark states. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .cell--docs     { --tint: #8FB3D9; --tint-wash: #1B2A38; }
+    :root:not([data-theme="light"]) .cell--sheets   { --tint: #8FC79E; --tint-wash: #1A2C1F; }
+    :root:not([data-theme="light"]) .cell--archives { --tint: #DBAE6A; --tint-wash: #33291A; }
+    :root:not([data-theme="light"]) .cell--photos   { --tint: #C295C9; --tint-wash: #2C1F2E; }
+    :root:not([data-theme="light"]) .cell--folders  { --tint: #86B6E0; --tint-wash: #17293A; }
+    :root:not([data-theme="light"]) .cell--model    { --tint: #7FBDB5; --tint-wash: #1B2E2C; }
+  }
+  :root[data-theme="dark"] .cell--docs     { --tint: #8FB3D9; --tint-wash: #1B2A38; }
+  :root[data-theme="dark"] .cell--sheets   { --tint: #8FC79E; --tint-wash: #1A2C1F; }
+  :root[data-theme="dark"] .cell--archives { --tint: #DBAE6A; --tint-wash: #33291A; }
+  :root[data-theme="dark"] .cell--photos   { --tint: #C295C9; --tint-wash: #2C1F2E; }
+  :root[data-theme="dark"] .cell--folders  { --tint: #86B6E0; --tint-wash: #17293A; }
+  :root[data-theme="dark"] .cell--model    { --tint: #7FBDB5; --tint-wash: #1B2E2C; }
+
   /* Equal specificity to `.band .cell`, so this must stay below it — otherwise
      the hover never applies inside a band, which is where the grid lives. */
-  .cell:hover, .band .cell:hover { background: var(--accent-wash); }
+  .cell:hover, .band .cell:hover { background: var(--tint-wash); }
   .cell .ico {
-    color: var(--accent);
+    /* Tinted at rest too, so the six kinds are distinguishable without having
+       to hover over each one to find out. */
+    color: var(--tint);
     transition: transform .22s cubic-bezier(.2,.7,.3,1);
   }
   .cell:hover .ico { transform: scale(1.18); }
   .cell h3 { transition: color .22s ease; }
-  .cell:hover h3 { color: var(--accent-ink); }
+  .cell:hover h3 { color: var(--tint); }
   .cell:hover p { color: var(--ink-soft); }
   .cell p { transition: color .22s ease; }
   .cell p { font-size: .9rem; color: var(--muted); }
@@ -454,32 +489,32 @@
           words in photos and scans — so a file whose name says nothing still says what it is.</p>
       </div>
       <div class="grid">
-        <div class="cell">
+        <div class="cell cell--docs">
           <span class="ico">▤</span>
           <h3>Documents</h3>
           <p>PDFs, Word files and plain text. A book's title page identifies it even when the filename is a hash.</p>
         </div>
-        <div class="cell">
+        <div class="cell cell--sheets">
           <span class="ico">▥</span>
           <h3>Spreadsheets</h3>
           <p>A sheet called <code>open case summary.xlsx</code> turns out to hold tax records. It goes to Finance, not to a folder named after its file type.</p>
         </div>
-        <div class="cell">
+        <div class="cell cell--archives">
           <span class="ico">▦</span>
           <h3>Archives</h3>
           <p>A zip is judged by what it contains. One holding a single installer is software; one holding a project's source is that project.</p>
         </div>
-        <div class="cell">
+        <div class="cell cell--photos">
           <span class="ico">▨</span>
           <h3>Photos and scans</h3>
           <p>Text is read out of images on your Mac. A scanned receipt with no text layer is still recognised as a receipt.</p>
         </div>
-        <div class="cell">
+        <div class="cell cell--folders">
           <span class="ico">◈</span>
           <h3>Your existing folders</h3>
           <p>A folder you called Books is a description of what you mean by books — better than any general rule about file types.</p>
         </div>
-        <div class="cell">
+        <div class="cell cell--model">
           <span class="ico">◐</span>
           <h3>An on-device model</h3>
           <p>Apple Intelligence groups related files and suggests folders. Without it, Hoot falls back to filename rules and says so.</p>
