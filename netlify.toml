@@ -1,16 +1,20 @@
 # Netlify configuration.
 #
-# The site is a single static file with no build step — Website/public/index.html
-# is deployed exactly as it sits in the repository. Setting `publish` here
-# rather than in Netlify's UI means the import needs no configuration, and
-# the setting is versioned alongside the page it describes.
-
+# `base` matters more than it looks. Netlify decides which language runtimes
+# to install by looking for manifests in the base directory, and this
+# repository has Package.swift at its root — so with base unset, Netlify
+# concluded it should build a Swift package, tried to fetch Swift 5.4 for
+# Ubuntu 24.04, got a 404 page instead of a tarball and failed before it
+# ever reached the site. Hoot is a macOS app; there is nothing here for a
+# Linux builder to compile.
+#
+# Pointing base at the page's own folder means Netlify sees one HTML file,
+# installs nothing, and publishes it.
 [build]
-  publish = "Website/public"
+  base = "Website/public"
+  publish = "."
 
-# There is no build command on purpose. The page has no framework, no
-# bundler and no dependencies; adding a build step would only introduce a
-# way for the deploy to fail.
+# No build command on purpose: no framework, no bundler, no dependencies.
 
 [[headers]]
   for = "/*"
@@ -18,6 +22,5 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
 
-# Content-Type is deliberately not set here. Netlify already sends the right
-# type per file, and forcing one across "/*" would label the PNGs as HTML.
-# The page declares its own charset, which is what fixes the encoding.
+# Content-Type is deliberately not set. Netlify already sends the right type
+# per file, and forcing one across "/*" would label any image as HTML.
