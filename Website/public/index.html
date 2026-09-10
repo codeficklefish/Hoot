@@ -274,8 +274,9 @@
   .cell .ico {
     color: var(--accent);
     width: 22px; height: 22px; display: block;
-    transition: transform .22s cubic-bezier(.2,.7,.3,1);
+    /* Grows from the text edge; centred origin makes it look like it shifts. */
     transform-origin: left center;
+    transition: transform .22s cubic-bezier(.2,.7,.3,1);
   }
   .cell:hover .ico { transform: scale(1.18); }
   .cell h3 { transition: color .22s ease; }
@@ -378,14 +379,14 @@
 
         <div class="listing" id="listing" data-state="before">
           <div class="state-before">
-            <div class="row"><svg class="ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.5 2.75H5.5A1.75 1.75 0 0 0 3.75 4.5v11A1.75 1.75 0 0 0 5.5 17.25h9A1.75 1.75 0 0 0 16.25 15.5V7.5z"/><path d="M11.5 2.75V7.5h4.75"/><path d="M6.75 11h6M6.75 13.75h4"/></svg><span class="name">boarding-pass-cebu.pdf</span></div>
+            <div class="row"><span class="ico">▤</span><span class="name">boarding-pass-cebu.pdf</span></div>
             <div class="row"><span class="ico">▤</span><span class="name">electricity_bill_jan.pdf</span></div>
             <div class="row"><span class="ico">▤</span><span class="name">cebu_itinerary.docx</span></div>
-            <div class="row"><svg class="ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.25" width="14" height="11.5" rx="1.75"/><circle cx="7.75" cy="8.25" r="1.25"/><path d="M3.4 14.25l3.6-3.5a1.6 1.6 0 0 1 2.2 0l4.9 4.75"/></svg><span class="name">301847592_118273640591827_44729…n.jpg</span></div>
+            <div class="row"><span class="ico">▨</span><span class="name">301847592_118273640591827_44729…n.jpg</span></div>
             <div class="row"><span class="ico">▤</span><span class="name">hotel_confirmation_cebu.pdf</span></div>
-            <div class="row"><svg class="ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7.5h12v7.75A1.75 1.75 0 0 1 14.25 17h-8.5A1.75 1.75 0 0 1 4 15.25z"/><rect x="2.75" y="3.5" width="14.5" height="4" rx="1.25"/><path d="M8.75 11h2.5"/></svg><span class="name">DaVinci_Resolve_21.0.4_Mac.zip</span></div>
+            <div class="row"><span class="ico">▦</span><span class="name">DaVinci_Resolve_21.0.4_Mac.zip</span></div>
             <div class="row"><span class="ico">▤</span><span class="name">electricity_bill_feb.pdf</span></div>
-            <div class="row"><svg class="ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.25" width="14" height="11.5" rx="1.75"/><path d="M3 8.25h14M3 12h14M8.5 8.25v7.5"/></svg><span class="name">open case summary.xlsx</span></div>
+            <div class="row"><span class="ico">▥</span><span class="name">open case summary.xlsx</span></div>
           </div>
 
           <div class="state-after">
@@ -457,22 +458,22 @@
       </div>
       <div class="grid">
         <div class="cell">
-          <span class="ico">▤</span>
+          <svg class="ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.75 2.75H6A1.75 1.75 0 0 0 4.25 4.5v11A1.75 1.75 0 0 0 6 17.25h8A1.75 1.75 0 0 0 15.75 15.5V6.75z"/><path d="M11.75 2.75v4h4"/></svg>
           <h3>Documents</h3>
           <p>PDFs, Word files and plain text. A book's title page identifies it even when the filename is a hash.</p>
         </div>
         <div class="cell">
-          <span class="ico">▥</span>
+          <svg class="ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.25" y="4.5" width="13.5" height="11" rx="1.75"/><path d="M3.25 8.75h13.5M10 8.75v6.75"/></svg>
           <h3>Spreadsheets</h3>
           <p>A sheet called <code>open case summary.xlsx</code> turns out to hold tax records. It goes to Finance, not to a folder named after its file type.</p>
         </div>
         <div class="cell">
-          <span class="ico">▦</span>
+          <svg class="ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 8.25h11v7A1.75 1.75 0 0 1 13.75 17h-7.5A1.75 1.75 0 0 1 4.5 15.25z"/><rect x="3" y="3.75" width="14" height="4.5" rx="1.25"/></svg>
           <h3>Archives</h3>
           <p>A zip is judged by what it contains. One holding a single installer is software; one holding a project's source is that project.</p>
         </div>
         <div class="cell">
-          <span class="ico">▨</span>
+          <svg class="ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.25" y="4.5" width="13.5" height="11" rx="1.75"/><circle cx="7.75" cy="8.5" r="1.25"/><path d="M3.6 14.4l3.4-3.3a1.6 1.6 0 0 1 2.2 0l4.8 4.6"/></svg>
           <h3>Photos and scans</h3>
           <p>Text is read out of images on your Mac. A scanned receipt with no text layer is still recognised as a receipt.</p>
         </div>
