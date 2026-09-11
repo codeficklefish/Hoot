@@ -31,8 +31,8 @@ public struct LearnedClassifier: Codable {
         public let folder: String
         /// 0...1, derived from how far ahead the winner is — not from the
         /// raw posterior, which is wildly overconfident for text models.
+        /// Becomes the weight of `ConfidenceModel.Signal.matchesUserHistory`.
         public let strength: Double
-        public let runnerUp: String?
     }
 
     /// One training example: the words describing a file, and where the user
@@ -127,13 +127,14 @@ public struct LearnedClassifier: Codable {
 
         // Map the margin onto a bounded strength. A runaway winner doesn't
         // justify claiming certainty.
-        let strength = min(0.5 + (margin - Self.decisiveMargin) / 12, 0.85)
+        //
+        // The floor sits above `ClassificationResult.lowConfidenceThreshold`
+        // rather than on it: this number becomes a confidence directly, and a
+        // prediction balanced exactly on the line between "file it" and "leave
+        // it alone" would be decided by floating-point luck.
+        let strength = min(0.55 + (margin - Self.decisiveMargin) / 12, 0.85)
 
-        return Prediction(
-            folder: best.folder,
-            strength: strength,
-            runnerUp: scores.count > 1 ? scores[1].folder : nil
-        )
+        return Prediction(folder: best.folder, strength: strength)
     }
 
     // MARK: - Persistence

@@ -47,7 +47,7 @@ func stage4(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
     Task {
         var existing: [UUID: ClassificationResult] = [:]
         let rules = RuleBasedClassifier()
-        for f in files { existing[f.id] = try! await rules.classify(f) }
+        for f in files { existing[f.id] = rules.classify(f, excerpt: nil) }
 
         // Strong keyword evidence must not be overridden by a model opinion.
         check("keyword match is high confidence",
@@ -150,7 +150,7 @@ func stage5(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
     Task {
         var cls: [UUID: ClassificationResult] = [:]
         let rules = RuleBasedClassifier()
-        for f in files { cls[f.id] = try! await rules.classify(f) }
+        for f in files { cls[f.id] = rules.classify(f, excerpt: nil) }
         let (projects, ungrouped) = await RuleBasedProjectDetector().detectProjects(in: files)
 
         // Without a preference, the proposed name stands.
@@ -391,66 +391,60 @@ func stagePIM(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) 
           VersionFamilies().families(in: mixedFiles).isEmpty)
 
     print("\n[folder depth pays for itself, or isn't created]")
-    let sem = DispatchSemaphore(value: 0)
-    Task {
-        let rules = RuleBasedClassifier()
+    let rules = RuleBasedClassifier()
 
-        // Small project: no role subfolders (one level costs ~21 items of scanning).
-        var smallCls: [UUID: ClassificationResult] = [:]
-        for f in files { smallCls[f.id] = try! await rules.classify(f) }
-        let smallProject = DetectedProject(name: "Thesis", files: files,
-                                           rationale: "t", confidence: 0.9, source: .rules)
-        let smallPlan = OrganizationPlanner().makePlan(
-            root: root, detectedProjects: [smallProject], ungrouped: [], classifications: smallCls)
+    // Small project: no role subfolders (one level costs ~21 items of scanning).
+    var smallCls: [UUID: ClassificationResult] = [:]
+    for f in files { smallCls[f.id] = rules.classify(f, excerpt: nil) }
+    let smallProject = DetectedProject(name: "Thesis", files: files,
+                                       rationale: "t", confidence: 0.9, source: .rules)
+    let smallPlan = OrganizationPlanner().makePlan(
+        root: root, detectedProjects: [smallProject], ungrouped: [], classifications: smallCls)
 
-        let current = smallPlan.allMoves.first { $0.file.filename == "thesis_final 3.docx" }
-        check("small project stays flat", current?.roleSubfolder == nil,
-              current?.destinationSubpath ?? "nil")
-        let old = smallPlan.allMoves.first { $0.file.filename == "thesis_final.docx" }
-        check("superseded version demoted, not deleted",
-              old?.roleSubfolder == OrganizationPlanner.demotedSubfolder,
-              old?.destinationSubpath ?? "nil")
-        check("every file still has a destination (nothing discarded)",
-              smallPlan.allMoves.count == files.count, "\(smallPlan.allMoves.count)")
+    let current = smallPlan.allMoves.first { $0.file.filename == "thesis_final 3.docx" }
+    check("small project stays flat", current?.roleSubfolder == nil,
+          current?.destinationSubpath ?? "nil")
+    let old = smallPlan.allMoves.first { $0.file.filename == "thesis_final.docx" }
+    check("superseded version demoted, not deleted",
+          old?.roleSubfolder == OrganizationPlanner.demotedSubfolder,
+          old?.destinationSubpath ?? "nil")
+    check("every file still has a destination (nothing discarded)",
+          smallPlan.allMoves.count == files.count, "\(smallPlan.allMoves.count)")
 
-        // Large project: subfolders now save more scanning than they cost.
-        let bigDir = root.appending(path: "big")
-        try? FileManager.default.createDirectory(at: bigDir, withIntermediateDirectories: true)
-        var bigFiles: [FileItem] = []
-        for index in 0..<30 {
-            let name = index.isMultiple(of: 2) ? "atlas_notes_\(index).pdf" : "atlas_data_\(index).xlsx"
-            let url = bigDir.appending(path: name)
-            try? Data("x".utf8).write(to: url)
-            if let f = FileAnalyzer.analyze(url) { bigFiles.append(f) }
-        }
-        var bigCls: [UUID: ClassificationResult] = [:]
-        for f in bigFiles { bigCls[f.id] = try! await rules.classify(f) }
-        let bigProject = DetectedProject(name: "Atlas", files: bigFiles,
-                                         rationale: "t", confidence: 0.9, source: .rules)
-        let bigPlan = OrganizationPlanner().makePlan(
-            root: bigDir, detectedProjects: [bigProject], ungrouped: [], classifications: bigCls)
-        let anyRole = bigPlan.allMoves.contains { $0.roleSubfolder != nil }
-        check("large project does split by role", anyRole,
-              "\(Set(bigPlan.allMoves.compactMap(\.roleSubfolder)))")
-
-        print("\n[active organization is preserved]")
-        // Recognizing the file type counts as evidence: re-confirming every
-        // image would be friction without benefit.
-        let loose = bigDir.appending(path: "IMG_9931.png")
-        try? Data("x".utf8).write(to: loose)
-        let looseFile = FileAnalyzer.analyze(loose)!
-        var looseCls: [UUID: ClassificationResult] = [:]
-        looseCls[looseFile.id] = try! await rules.classify(looseFile)
-        let loosePlan = OrganizationPlanner().makePlan(
-            root: bigDir, detectedProjects: [], ungrouped: [looseFile], classifications: looseCls)
-        let looseMove = loosePlan.allMoves.first
-        check("every proposed move is pre-approved",
-              looseMove != nil && looseMove?.isApproved == true,
-              "approved=\(looseMove?.isApproved.description ?? "no move")")
-
-        sem.signal()
+    // Large project: subfolders now save more scanning than they cost.
+    let bigDir = root.appending(path: "big")
+    try? FileManager.default.createDirectory(at: bigDir, withIntermediateDirectories: true)
+    var bigFiles: [FileItem] = []
+    for index in 0..<30 {
+        let name = index.isMultiple(of: 2) ? "atlas_notes_\(index).pdf" : "atlas_data_\(index).xlsx"
+        let url = bigDir.appending(path: name)
+        try? Data("x".utf8).write(to: url)
+        if let f = FileAnalyzer.analyze(url) { bigFiles.append(f) }
     }
-    sem.wait()
+    var bigCls: [UUID: ClassificationResult] = [:]
+    for f in bigFiles { bigCls[f.id] = rules.classify(f, excerpt: nil) }
+    let bigProject = DetectedProject(name: "Atlas", files: bigFiles,
+                                     rationale: "t", confidence: 0.9, source: .rules)
+    let bigPlan = OrganizationPlanner().makePlan(
+        root: bigDir, detectedProjects: [bigProject], ungrouped: [], classifications: bigCls)
+    let anyRole = bigPlan.allMoves.contains { $0.roleSubfolder != nil }
+    check("large project does split by role", anyRole,
+          "\(Set(bigPlan.allMoves.compactMap(\.roleSubfolder)))")
+
+    print("\n[active organization is preserved]")
+    // Recognizing the file type counts as evidence: re-confirming every
+    // image would be friction without benefit.
+    let loose = bigDir.appending(path: "IMG_9931.png")
+    try? Data("x".utf8).write(to: loose)
+    let looseFile = FileAnalyzer.analyze(loose)!
+    var looseCls: [UUID: ClassificationResult] = [:]
+    looseCls[looseFile.id] = rules.classify(looseFile, excerpt: nil)
+    let loosePlan = OrganizationPlanner().makePlan(
+        root: bigDir, detectedProjects: [], ungrouped: [looseFile], classifications: looseCls)
+    let looseMove = loosePlan.allMoves.first
+    check("every proposed move is pre-approved",
+          looseMove != nil && looseMove?.isApproved == true,
+          "approved=\(looseMove?.isApproved.description ?? "no move")")
 }
 
 // ===== Evidence-free files must not be swept into projects =====
@@ -525,18 +519,13 @@ func stageEvidence(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> V
     check("its files are all returned as loose", thinLoose.count == files.count)
 
     print("\n[everything is pre-approved again]")
-    let sem = DispatchSemaphore(value: 0)
-    Task {
-        var cls: [UUID: ClassificationResult] = [:]
-        let rules = RuleBasedClassifier()
-        for f in files { cls[f.id] = try! await rules.classify(f) }
-        let plan = OrganizationPlanner().makePlan(
-            root: root, detectedProjects: [], ungrouped: files, classifications: cls)
-        check("no move arrives unticked", plan.allMoves.allSatisfy(\.isApproved),
-              "\(plan.allMoves.filter { !$0.isApproved }.count) unticked")
-        sem.signal()
-    }
-    sem.wait()
+    var cls: [UUID: ClassificationResult] = [:]
+    let rules = RuleBasedClassifier()
+    for f in files { cls[f.id] = rules.classify(f, excerpt: nil) }
+    let plan = OrganizationPlanner().makePlan(
+        root: root, detectedProjects: [], ungrouped: files, classifications: cls)
+    check("no move arrives unticked", plan.allMoves.allSatisfy(\.isApproved),
+          "\(plan.allMoves.filter { !$0.isApproved }.count) unticked")
 }
 
 // ===== Reading images that filenames can't explain =====
@@ -655,6 +644,16 @@ func stageConfidence(sandbox: URL, rawCheck: @escaping (String, Bool, String) ->
                                               conflicting: true)
     check("disagreement lowers confidence", conflicting < agreeing,
           String(format: "%.2f vs %.2f", conflicting, agreeing))
+    // The personal model's margin is spent rather than replaced by a constant:
+    // a folder that barely won is worth less than one that won outright.
+    let closeCall = ConfidenceModel.combine([.matchesUserHistory(strength: 0.55)])
+    let runaway = ConfidenceModel.combine([.matchesUserHistory(strength: 0.85)])
+    check("a decisive personal match beats a marginal one", runaway > closeCall,
+          String(format: "%.2f vs %.2f", runaway, closeCall))
+    check("even a marginal personal match is still actionable",
+          closeCall > ClassificationResult.lowConfidenceThreshold,
+          String(format: "%.2f", closeCall))
+
     check("the explanation names its evidence",
           ConfidenceModel.explain([.filenameKeyword, .contentKeyword])
             .contains("text inside the file"),

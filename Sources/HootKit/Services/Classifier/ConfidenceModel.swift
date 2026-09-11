@@ -28,8 +28,15 @@ public enum ConfidenceModel {
         case corroboratedByProvider
         /// The file shares distinctive vocabulary with others in its project.
         case sharedProjectVocabulary
-        /// It resembles files the user has already filed in a folder of theirs.
-        case matchesUserHistory
+        /// It resembles files the user has already filed in a folder of
+        /// theirs, by the margin the personal model measured.
+        ///
+        /// The only signal that carries its own weight. That is not the
+        /// self-assessment this module exists to refuse — it is the distance
+        /// between the winning folder and the runner-up, measured from the
+        /// user's own filing, and a bare-margin winner genuinely is worth less
+        /// than a runaway one.
+        case matchesUserHistory(strength: Double)
 
         var weight: Double {
             switch self {
@@ -39,9 +46,11 @@ public enum ConfidenceModel {
             case .recognizedType: return 0.55
             case .corroboratedByProvider: return 0.60
             case .sharedProjectVocabulary: return 0.50
-            // The strongest single signal available: not a guess about what
-            // the file is, but evidence of what this person actually does.
-            case .matchesUserHistory: return 0.70
+            // The strongest signal available: not a guess about what the
+            // file is, but evidence of what this person actually does. Its
+            // weight is the margin the model measured rather than a constant,
+            // so a close call is not sold as a certainty.
+            case .matchesUserHistory(let strength): return strength
             }
         }
 

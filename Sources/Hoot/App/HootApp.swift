@@ -19,7 +19,11 @@ struct HootApp: App {
                     NSApp.activate(ignoringOtherApps: true)
                 }
         } label: {
+            // The menu bar item is rendered from launch, where the popover's
+            // contents are not — they wait for a click. Starting from here is
+            // what makes Hoot resume watching without being opened first.
             MenuBarLabel(pendingCount: appState.detectedFiles.count)
+                .task { appState.start() }
         }
         .menuBarExtraStyle(.window)
 

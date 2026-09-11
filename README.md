@@ -90,7 +90,7 @@ NOTARY_PROFILE=hoot-notary \
 
 ```bash
 swift test              # the engine imports nothing platform-specific
-./Verification/run.sh   # 220 behaviour and safety checks, in a sandbox
+./Verification/run.sh   # 236 behaviour and safety checks, in a sandbox
 ./Evaluation/run.sh     # accuracy against folders you organized yourself
 ```
 
@@ -110,7 +110,7 @@ way to know a decompressor is correct.
 | `Sources/HootKit` | the engine — decides where files belong, imports only Foundation |
 | `Sources/HootPlatformMac` | Apple adapters (PDFKit, Vision, FoundationModels) |
 | `Sources/Hoot` | the macOS app |
-| `Verification` | 220 behaviour and safety checks |
+| `Verification` | 236 behaviour and safety checks |
 | `Evaluation` | measures accuracy against folders you organized |
 | `Packaging` | app bundle, icon, signing and notarization |
 | `Website` | the landing page source |

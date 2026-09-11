@@ -27,8 +27,8 @@ extension AppState {
         }
 
         lastMessage = Self.summary(moved: batch.operations.count, failures: failures.count)
-        lastNotifiedCount = detectedFiles.count
-        notifications.clearPending()
+        announcer.acknowledge(pileOf: detectedFiles.count)
+        notifier.clearPending()
         for (move, error) in failures {
             report(
                 UserFacingIssue(

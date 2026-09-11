@@ -43,16 +43,11 @@ check("found 7 real files", discovered.count == 7, "got \(discovered.count)")
 
 // ---- classification ----
 print("\n[classification]")
+let classifier = RuleBasedClassifier()
 var classifications: [UUID: ClassificationResult] = [:]
-let sem = DispatchSemaphore(value: 0)
-Task {
-    let classifier = RuleBasedClassifier()
-    for file in discovered {
-        classifications[file.id] = try! await classifier.classify(file)
-    }
-    sem.signal()
+for file in discovered {
+    classifications[file.id] = classifier.classify(file, excerpt: nil)
 }
-sem.wait()
 
 let invoice = discovered.first { $0.filename == "invoice_client.pdf" }!
 check("invoice -> Finance", classifications[invoice.id]?.category == "Finance",
@@ -204,14 +199,9 @@ check("blank name but real content is KEPT, not hidden",
 check("4 real files survive filtering", realKept.count == 4, "got \(realKept.map(\.lastPathComponent))")
 
 let realFiles = realKept.compactMap { FileAnalyzer.analyze($0) }
+let c = RuleBasedClassifier()
 var realCls: [UUID: ClassificationResult] = [:]
-let rsem = DispatchSemaphore(value: 0)
-Task {
-    let c = RuleBasedClassifier()
-    for f in realFiles { realCls[f.id] = try! await c.classify(f) }
-    rsem.signal()
-}
-rsem.wait()
+for f in realFiles { realCls[f.id] = c.classify(f, excerpt: nil) }
 
 for f in realFiles {
     let r = realCls[f.id]!
@@ -249,6 +239,7 @@ stageLearning(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 stageCloud(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 stageCorrections(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 stageInflate(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
+stageAnnouncing(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 
 try? FileManager.default.removeItem(at: sandbox)
 print("\n\(failures == 0 ? "ALL CHECKS PASSED" : "\(failures) CHECK(S) FAILED")")

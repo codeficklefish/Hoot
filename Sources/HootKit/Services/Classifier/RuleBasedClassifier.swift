@@ -4,7 +4,7 @@ import Foundation
 /// read and nothing leaves the machine. This is the always-available fallback
 /// that runs when no AI provider is configured, and the safety net for when
 /// one is configured but unreachable.
-public struct RuleBasedClassifier: FileClassifier {
+public struct RuleBasedClassifier {
     public init() {}
 
 
@@ -47,11 +47,8 @@ public struct RuleBasedClassifier: FileClassifier {
              subfolder: "Documents")
     ]
 
-    public func classify(_ file: FileItem) async throws -> ClassificationResult {
-        classify(file, excerpt: nil)
-    }
-
-    /// Classifies with the file's own text when it's available.
+    /// Classifies with the file's own text when it's available; pass `nil`
+    /// for `excerpt` to classify on the filename alone.
     ///
     /// Text read from inside the file is an *independent* signal: a filename
     /// saying "invoice" and the document itself saying "invoice" are two

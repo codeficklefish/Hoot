@@ -7,7 +7,7 @@ import HootKit
 /// only for as long as the app runs. A security-scoped bookmark makes that
 /// grant durable, so Hoot can keep watching the same folder after a restart
 /// without asking again — and still has access to nothing else.
-public final class WatchedFolderAccess {
+public final class WatchedFolderAccess: FolderAccessing {
     private static let bookmarkKey = "watched.folder.bookmark"
 
     private let defaults: UserDefaults

@@ -57,29 +57,35 @@ final class AppState: ObservableObject {
     static let onboardingKey = "onboarding.completed"
 
     let watcher: FileWatching
-    let classifier: FileClassifier
+    let classifier: RuleBasedClassifier
     let planner = OrganizationPlanner()
     let organizer: Organizer
     let history: OperationHistory
-    let notifications = NotificationService()
-    let folderAccess = WatchedFolderAccess()
+    let notifier: Notifying
+    let folderAccess: FolderAccessing
 
     /// Coalesces a burst of arriving files into a single notification.
     var notificationTask: Task<Void, Never>?
-    /// How many files had already been announced, so we only speak up when
-    /// the pile actually grows.
-    var lastNotifiedCount = 0
+    /// Decides whether a settled pile is worth speaking up about.
+    var announcer = WaitingAnnouncer()
 
     init(
         watcher: FileWatching = MacPlatform.makeFileWatcher(),
-        classifier: FileClassifier = RuleBasedClassifier(),
+        classifier: RuleBasedClassifier = RuleBasedClassifier(),
         organizer: Organizer = Organizer(),
-        history: OperationHistory = OperationHistory()
+        history: OperationHistory = OperationHistory(),
+        // Defaults are built inside rather than in the parameter list:
+        // making a notifier is main-actor work, and a default argument is
+        // evaluated before the initializer's isolation applies.
+        notifier: Notifying? = nil,
+        folderAccess: FolderAccessing? = nil
     ) {
         self.watcher = watcher
         self.classifier = classifier
         self.organizer = organizer
         self.history = history
+        self.notifier = notifier ?? MacPlatform.makeNotifier()
+        self.folderAccess = folderAccess ?? MacPlatform.makeFolderAccess()
         self.batches = history.batches
         self.settings = AISettings.load()
         self.folderPreferences = FolderPreferences.load()
@@ -91,7 +97,15 @@ final class AppState: ObservableObject {
                 self?.ingest(url: url)
             }
         }
+    }
 
+    /// Picks up where the last launch left off.
+    ///
+    /// Deliberately not part of `init`: restoring a grant opens a
+    /// security-scoped resource and starts a file-system watcher on the
+    /// user's own folder, and nobody should get that merely by constructing
+    /// one of these. The app calls it once, when the menu bar item appears.
+    func start() {
         Task { await refreshProviderStatus() }
 
         // Resume the folder granted on a previous launch. Under the sandbox

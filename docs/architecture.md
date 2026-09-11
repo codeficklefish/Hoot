@@ -28,7 +28,9 @@ the macOS app: it wires one to the other and draws the interface.
   choice defers to this. Where a rule and the model disagree, the safer reading
   wins.
 - **Add structure when a second case earns it.** The three-target split was not
-  worth its cost with one platform; a second platform is what earned it.
+  worth its cost with one platform; a second platform is what earned it. The
+  converse holds too: a protocol with one implementation and a caller that steps
+  around it is deleted — see [ADR-0002](decisions/0002-no-protocol-for-rule-based-classification.md).
 
 ## Layout
 
@@ -43,7 +45,8 @@ Sources/
 │   │   ├── Curation/        which versions are superseded
 │   │   ├── Organizer/       the plan, and carrying it out safely
 │   │   ├── History/         what was moved, so it can be undone
-│   │   └── Learning/        how this person files things
+│   │   ├── Learning/        how this person files things
+│   │   └── Announcing/      when Hoot speaks up, and when it stays quiet
 │   ├── AI/                  the provider seam, and validating what it says
 │   ├── Platform/            what the engine needs an OS to do for it
 │   └── Utilities/
@@ -72,6 +75,7 @@ Declared in `HootKit/Platform/PlatformCapabilities.swift`:
 | `TextExtracting` | PDFKit + Vision OCR | a PDF library + Windows.Media.Ocr |
 | `ArchiveInflating` | Compression | zlib |
 | `FileWatching` | `DispatchSource` | `ReadDirectoryChangesW` |
+| `FolderAccessing` | a security-scoped bookmark | a stored path |
 | `Notifying` | `UserNotifications` | toast notifications |
 | `AIProvider` | Apple's on-device model | rules, or a local model |
 
@@ -82,7 +86,7 @@ does not mean editing the engine.
 
 ```bash
 swift test              # the dependency rule
-./Verification/run.sh   # 210 behaviour and safety checks
+./Verification/run.sh   # 236 behaviour and safety checks
 ./Evaluation/run.sh     # accuracy against folders you organized yourself
 ```
 
