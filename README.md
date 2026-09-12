@@ -20,6 +20,16 @@ watch folder → analyse → group → review → move (reversible)
 Nothing moves until you approve it. Every move can be undone, and Hoot never
 deletes anything.
 
+In the review window, **hold a row to preview the file** — Quick Look opens it
+the way the Finder does. The filename is often what failed to say what a file
+is, so being able to look inside is usually what settles whether a suggestion
+is right.
+
+When files settle, an **island appears under the notch**: a capsule showing how
+many are waiting, which expands on hover into what Hoot thinks they are and a
+button to review them. macOS has no Dynamic Island — that is iPhone hardware —
+so it is a floating panel built to behave like one. It never takes focus.
+
 ### What decides where a file goes
 
 Four sources of evidence, in order of how much they are trusted:
@@ -35,6 +45,17 @@ Four sources of evidence, in order of how much they are trusted:
 
 Confidence is built from agreement between these, never from a model grading
 itself — see [docs/pim-design-notes.md](docs/pim-design-notes.md).
+
+## Getting it
+
+[**Download Hoot 0.5.0**](https://github.com/codeficklefish/Hoot/releases/latest) · 1.2 MB · or read
+[the landing page](https://hoot-mac.netlify.app).
+
+**This build is not notarized by Apple.** macOS will refuse the first launch —
+open **System Settings → Privacy & Security** and click *Open Anyway*. The
+[release notes](https://github.com/codeficklefish/Hoot/releases/tag/v0.5.0)
+give the four steps. Notarizing needs an Apple Developer ID, which this project
+does not have yet.
 
 ## Requirements
 
@@ -78,7 +99,10 @@ after launching.
 
 ### Releasing
 
-Distribution needs an Apple Developer ID; Gatekeeper blocks anything else.
+Distribution needs an Apple Developer ID; Gatekeeper blocks anything else, and
+`release.sh` refuses to run without one. The current v0.5.0 download was built
+with `build-app.sh` and an ad-hoc signature, which is why it needs the
+Privacy & Security step above.
 
 ```bash
 SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
@@ -90,7 +114,7 @@ NOTARY_PROFILE=hoot-notary \
 
 ```bash
 swift test              # the engine imports nothing platform-specific
-./Verification/run.sh   # 220 behaviour and safety checks, in a sandbox
+./Verification/run.sh   # 221 behaviour and safety checks, in a sandbox
 ./Evaluation/run.sh     # accuracy against folders you organized yourself
 ```
 
@@ -110,11 +134,13 @@ way to know a decompressor is correct.
 | `Sources/HootKit` | the engine — decides where files belong, imports only Foundation |
 | `Sources/HootPlatformMac` | Apple adapters (PDFKit, Vision, FoundationModels) |
 | `Sources/Hoot` | the macOS app |
-| `Verification` | 220 behaviour and safety checks |
+| `Verification` | 221 behaviour and safety checks |
 | `Evaluation` | measures accuracy against folders you organized |
 | `Packaging` | app bundle, icon, signing and notarization |
-| `Website` | the landing page source |
-| `docs` | architecture, standards, and the decisions behind them |
+| `Website/public` | the deployed landing page — what Netlify publishes |
+| `Website` | design artboards the page was drawn from |
+| `docs` | architecture, privacy, and the decisions behind them |
+| `.github/workflows` | builds and runs both suites on every push and PR |
 
 ## Design notes
 
@@ -126,7 +152,11 @@ most valuable signal it has.
 
 ## Privacy
 
-- No network code exists in this project.
+The full policy is [docs/privacy.md](docs/privacy.md). In short:
+
+- No network code exists in this project — and the app ships without the
+  `com.apple.security.network.client` entitlement, so macOS will not let it
+  open a connection at all.
 - File contents are read only on this Mac, only by the local model, and only
   with content reading enabled in Settings.
 - Files stored in the cloud but not downloaded are never opened, so Hoot
