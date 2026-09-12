@@ -8,342 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 
-<style>
-  :root {
-    /* Ground and ink carried over from the app's own page. */
-    --paper:       #F6F5F2;
-    --paper-sunk:  #EFEDE7;
-    --card:        #FFFFFF;
-    --ink:         #0E0E0D;
-    --ink-soft:    #4A4843;
-    --muted:       #6F6D68;
-    --rule:        #DEDBD4;
-    /* Accent: pine, not terracotta. Sits quietly on warm paper. */
-    --accent:      #17514E;
-    --accent-ink:  #0F3634;
-    --accent-wash: #E4EEEB;
-    /* Semantic only — the confidence dot means the same thing in the app. */
-    --amber:       #B8761C;
-    --amber-wash:  #F6E9D6;
-
-    --shadow-lift: 0 1px 2px rgba(14,14,13,.05), 0 12px 32px -12px rgba(14,14,13,.16);
-    --shadow-flat: 0 1px 0 rgba(14,14,13,.04);
-
-    --display: "Archivo", ui-sans-serif, system-ui, -apple-system, sans-serif;
-    --body:    "Public Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
-    --mono:    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
-
-    --measure: 62ch;
-    --edge: clamp(20px, 5vw, 64px);
-  }
-
-  :root:not([data-theme="light"]) { }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --paper:       #131311;
-      --paper-sunk:  #0D0D0B;
-      --card:        #1C1C19;
-      --ink:         #F2F0EA;
-      --ink-soft:    #C9C6BE;
-      --muted:       #918E86;
-      --rule:        #2E2E29;
-      --accent:      #7FBDB5;
-      --accent-ink:  #A8D6CF;
-      --accent-wash: #1B2E2C;
-      --amber:       #E0A356;
-      --amber-wash:  #33281A;
-      --shadow-lift: 0 1px 2px rgba(0,0,0,.4), 0 16px 40px -16px rgba(0,0,0,.6);
-      --shadow-flat: 0 1px 0 rgba(0,0,0,.3);
-    }
-  }
-  :root[data-theme="dark"] {
-    --paper:       #131311;
-    --paper-sunk:  #0D0D0B;
-    --card:        #1C1C19;
-    --ink:         #F2F0EA;
-    --ink-soft:    #C9C6BE;
-    --muted:       #918E86;
-    --rule:        #2E2E29;
-    --accent:      #7FBDB5;
-    --accent-ink:  #A8D6CF;
-    --accent-wash: #1B2E2C;
-    --amber:       #E0A356;
-    --amber-wash:  #33281A;
-    --shadow-lift: 0 1px 2px rgba(0,0,0,.4), 0 16px 40px -16px rgba(0,0,0,.6);
-    --shadow-flat: 0 1px 0 rgba(0,0,0,.3);
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: var(--body);
-    font-size: 16px;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .wrap { max-width: 1120px; margin: 0 auto; padding-inline: var(--edge); }
-
-  h1, h2, h3 { font-family: var(--display); font-weight: 800; letter-spacing: -.028em; text-wrap: balance; margin: 0; line-height: 1.04; }
-  /* Capped so "Sorted by what" clears the hero column on one line; larger and
-     it wraps a third time and the authored break stops meaning anything. */
-  h1 { font-size: clamp(2.35rem, 4.6vw, 3.5rem); }
-  h2 { font-size: clamp(1.9rem, 3.9vw, 2.75rem); }
-  h3 { font-size: 1.0625rem; font-weight: 700; letter-spacing: -.012em; line-height: 1.3; }
-  p  { margin: 0; }
-
-  .eyebrow {
-    font-family: var(--mono);
-    font-size: .6875rem;
-    letter-spacing: .13em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .lede { font-size: 1.0625rem; color: var(--ink-soft); max-width: var(--measure); }
-
-  a { color: inherit; }
-
-  /* ---------- nav ---------- */
-  .nav {
-    display: flex; align-items: center; gap: 28px;
-    padding-block: 20px;
-    border-bottom: 1px solid var(--rule);
-  }
-  .brand { display: flex; align-items: center; gap: 9px; font-family: var(--display); font-weight: 800; letter-spacing: -.02em; font-size: 1.0625rem; text-decoration: none; }
-  .brand svg { display: block; }
-  .nav-links { display: flex; gap: 22px; margin-left: auto; font-size: .9375rem; }
-  .nav-links a { color: var(--muted); text-decoration: none; }
-  .nav-links a:hover { color: var(--ink); }
-  @media (max-width: 720px) { .nav-links { display: none; } }
-
-  /* ---------- buttons ---------- */
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 9px;
-    font-family: var(--body); font-size: .9375rem; font-weight: 600;
-    padding: 13px 22px; border-radius: 999px;
-    text-decoration: none; border: 1px solid transparent; cursor: pointer;
-    transition: transform .12s ease, background-color .12s ease;
-  }
-  .btn:active { transform: translateY(1px); }
-  .btn-primary { background: var(--ink); color: var(--paper); }
-  .btn-primary:hover { background: var(--accent-ink); }
-  :root[data-theme="dark"] .btn-primary,
-  .btn-primary { }
-  .btn-quiet { border-color: var(--rule); color: var(--ink); background: transparent; }
-  .btn-quiet:hover { border-color: var(--ink); }
-  .btn-sm { padding: 9px 16px; font-size: .875rem; }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
-
-  /* ---------- hero ---------- */
-  .hero {
-    display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
-    gap: clamp(32px, 5vw, 72px);
-    align-items: center;
-    padding-block: clamp(44px, 7vw, 80px);
-  }
-  @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } .hero-copy { order: -1; } }
-
-  .hero-copy { display: flex; flex-direction: column; gap: 22px; align-items: flex-start; }
-  /* The line break here is authored, not automatic — balancing fights it and
-     strands "what" on a line of its own. */
-  .hero h1 { text-wrap: initial; }
-  .hero h1 span { color: var(--accent); }
-  .hero .lede { font-size: 1.125rem; }
-  .cta-row { display: flex; flex-wrap: wrap; gap: 12px; }
-  .price {
-    font-family: var(--mono); font-size: .8125rem; color: var(--muted);
-  }
-  .price mark { background: var(--amber-wash); color: var(--ink); padding: 1px 5px; border-radius: 4px; font-family: var(--mono); }
-
-  /* The unsigned-build warning. Amber because it is a caveat the visitor has
-     to act on, not decoration — same signal the app uses for "check this". */
-  .gate {
-    display: flex; gap: 10px; align-items: flex-start;
-    max-width: var(--measure);
-    padding: 12px 15px; border-radius: 9px;
-    background: var(--amber-wash);
-    font-size: .8438rem; line-height: 1.55; color: var(--ink-soft);
-  }
-  .gate b { color: var(--ink); font-weight: 600; }
-  .gate .conf { margin-top: 6px; }
-  .gate a { color: var(--ink); }
-
-  .avail { display: inline-flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: .75rem; color: var(--muted); }
-  .dot-live { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
-
-  /* ---------- the sorting demo ---------- */
-  .demo {
-    background: var(--card);
-    border: 1px solid var(--rule);
-    border-radius: 14px;
-    box-shadow: var(--shadow-lift);
-    overflow: hidden;
-  }
-  .demo-bar {
-    display: flex; align-items: center; gap: 10px;
-    padding: 11px 14px; border-bottom: 1px solid var(--rule);
-    background: var(--paper-sunk);
-  }
-  .lights { display: flex; gap: 6px; }
-  .lights i { width: 10px; height: 10px; border-radius: 50%; background: var(--rule); display: block; }
-  .demo-path { font-family: var(--mono); font-size: .75rem; color: var(--muted); }
-  .seg {
-    margin-left: auto; display: flex; gap: 2px; padding: 2px;
-    background: var(--rule); border-radius: 999px;
-  }
-  .seg button {
-    font-family: var(--mono); font-size: .6875rem; letter-spacing: .06em; text-transform: uppercase;
-    border: 0; background: transparent; color: var(--muted);
-    padding: 4px 11px; border-radius: 999px; cursor: pointer;
-  }
-  .seg button[aria-pressed="true"] { background: var(--card); color: var(--ink); box-shadow: var(--shadow-flat); }
-
-  .listing { padding: 10px; min-height: 344px; }
-  .row {
-    display: flex; align-items: center; gap: 9px;
-    padding: 7px 9px; border-radius: 7px;
-    font-family: var(--mono); font-size: .78125rem;
-    color: var(--ink-soft);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    transition: background-color .3s ease;
-  }
-  .row .name { overflow: hidden; text-overflow: ellipsis; }
-  .ico { flex: 0 0 auto; color: var(--muted); }
-  .group { margin-bottom: 4px; }
-  .group-head {
-    display: flex; align-items: center; gap: 8px;
-    padding: 7px 9px;
-    font-family: var(--display); font-weight: 700; font-size: .84rem; letter-spacing: -.01em;
-    color: var(--ink);
-  }
-  .group-head .ico { color: var(--accent); }
-  .group .row { margin-left: 18px; padding-block: 5px; }
-  .count { font-family: var(--mono); font-weight: 400; font-size: .6875rem; color: var(--muted); margin-left: auto; letter-spacing: .02em; }
-
-  /* state swap */
-  .listing[data-state="after"] .state-before,
-  .listing[data-state="before"] .state-after { display: none; }
-  .state-after .group { animation: settle .34s cubic-bezier(.2,.7,.3,1) backwards; }
-  .state-after .group:nth-child(2) { animation-delay: .05s; }
-  .state-after .group:nth-child(3) { animation-delay: .1s; }
-  .state-after .group:nth-child(4) { animation-delay: .15s; }
-  @keyframes settle { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
-  @media (prefers-reduced-motion: reduce) {
-    .state-after .group { animation: none; }
-    .btn, .row, .cell, .cell .ico, .cell h3, .cell p,
-    .promise, .promise h3, .promise p { transition: none; }
-    .cell:hover .ico { transform: none; }
-  }
-
-  .demo-note {
-    display: flex; gap: 9px; align-items: flex-start;
-    padding: 12px 15px; border-top: 1px solid var(--rule);
-    background: var(--accent-wash);
-    font-size: .8125rem; color: var(--ink-soft);
-  }
-  .demo-note b { color: var(--ink); font-weight: 600; }
-
-  /* ---------- sections ---------- */
-  section { padding-block: clamp(52px, 8vw, 92px); }
-  .band { background: var(--paper-sunk); border-block: 1px solid var(--rule); }
-  .head { display: flex; flex-direction: column; gap: 14px; margin-bottom: 40px; max-width: var(--measure); }
-
-  /* what it reads — dense grid, Keeby-style */
-  /* Six cells, so the column count has to divide six — auto-fit gave four and
-     left a dead grey block sitting in the second row. */
-  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
-  @media (max-width: 940px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 580px) { .grid { grid-template-columns: 1fr; } }
-  .cell {
-    background: var(--paper); padding: 22px;
-    display: flex; flex-direction: column; gap: 8px;
-    /* Deliberately no cursor:pointer, lift or shadow. These cells are not
-       links, and the three things that say "clickable" would be a lie. The
-       hover just warms the surface so the grid feels alive under the cursor. */
-    transition: background-color .22s ease;
-  }
-  .band .cell { background: var(--paper-sunk); }
-  /* Equal specificity to `.band .cell`, so this must stay below it — otherwise
-     the hover never applies inside a band, which is where the grid lives. */
-  .cell:hover, .band .cell:hover { background: var(--accent-wash); }
-  .cell .ico {
-    color: var(--accent);
-    width: 22px; height: 22px; display: block;
-    /* Grows from the text edge; centred origin makes it look like it shifts. */
-    transform-origin: left center;
-    transition: transform .22s cubic-bezier(.2,.7,.3,1);
-  }
-  .cell:hover .ico { transform: scale(1.18); }
-  .cell h3 { transition: color .22s ease; }
-  .cell:hover h3 { color: var(--accent-ink); }
-  .cell:hover p { color: var(--ink-soft); }
-  .cell p { transition: color .22s ease; }
-  .cell p { font-size: .9rem; color: var(--muted); }
-  .cell code { font-family: var(--mono); font-size: .8125em; color: var(--ink-soft); }
-
-  /* trust — a list, not cards; these are promises, not features */
-  .promises { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--rule); }
-  .promise { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: clamp(12px, 4vw, 48px); padding-block: 22px; border-bottom: 1px solid var(--rule); }
-  @media (max-width: 700px) { .promise { grid-template-columns: 1fr; gap: 6px; } }
-  .promise p { color: var(--muted); font-size: .9375rem; max-width: var(--measure); transition: color .22s ease; }
-  .promise { transition: border-color .22s ease; }
-  .promise h3 { transition: color .22s ease; }
-  .promise:hover { border-bottom-color: var(--accent); }
-  .promise:hover h3 { color: var(--accent-ink); }
-  .promise:hover p { color: var(--ink-soft); }
-
-  .aside {
-    margin-top: 34px; padding: 20px 22px;
-    border-left: 2px solid var(--accent);
-    background: var(--accent-wash);
-    border-radius: 0 10px 10px 0;
-    font-size: .9375rem; color: var(--ink-soft); max-width: var(--measure);
-  }
-
-  /* learning */
-  .learn { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,.85fr); gap: clamp(28px, 5vw, 64px); align-items: center; }
-  @media (max-width: 860px) { .learn { grid-template-columns: 1fr; } }
-  .card {
-    background: var(--card); border: 1px solid var(--rule);
-    border-radius: 12px; box-shadow: var(--shadow-lift); overflow: hidden;
-  }
-  .card-head { padding: 11px 15px; border-bottom: 1px solid var(--rule); background: var(--paper-sunk); font-family: var(--mono); font-size: .75rem; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
-  .card-body { padding: 15px; display: flex; flex-direction: column; gap: 11px; }
-  .file-line { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: .8125rem; }
-  .chip { font-family: var(--mono); font-size: .6875rem; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--rule); color: var(--muted); }
-  .chip-was { text-decoration: line-through; }
-  .chip-now { background: var(--accent-wash); border-color: transparent; color: var(--accent); font-weight: 500; }
-  .arrow-note { font-family: var(--mono); font-size: .75rem; color: var(--muted); padding-left: 2px; }
-  .conf { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
-  .conf-amber { background: var(--amber); }
-  .conf-green { background: var(--accent); }
-
-  /* privacy */
-  .claim {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 26px; margin-top: 36px;
-  }
-  .claim div { display: flex; flex-direction: column; gap: 7px; }
-  .claim p { font-size: .9rem; color: var(--muted); }
-  .entitlements { font-family: var(--mono); font-size: .75rem; color: var(--ink-soft); line-height: 1.9; word-break: break-all; }
-
-  /* close */
-  .close { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 20px; }
-  .close .lede { text-align: center; }
-
-  footer { border-top: 1px solid var(--rule); padding-block: 30px; }
-  .foot { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; font-size: .875rem; color: var(--muted); }
-  .foot nav { display: flex; gap: 18px; margin-left: auto; }
-  .foot a { color: var(--muted); text-decoration: none; }
-  .foot a:hover { color: var(--ink); }
-
-  .todo { color: var(--amber); font-family: var(--mono); }
-</style>
+<link rel="stylesheet" href="styles.css">
 
 <div class="wrap">
   <header class="nav">
@@ -366,62 +31,7 @@
 
   <main id="top">
     <!-- ================= hero ================= -->
-    <section class="hero" style="padding-top:clamp(36px,6vw,64px)">
-      <div class="demo">
-        <div class="demo-bar">
-          <div class="lights"><i></i><i></i><i></i></div>
-          <span class="demo-path">~/Downloads</span>
-          <div class="seg" role="group" aria-label="Folder view">
-            <button type="button" data-view="before" aria-pressed="true">Before</button>
-            <button type="button" data-view="after" aria-pressed="false">After</button>
-          </div>
-        </div>
-
-        <div class="listing" id="listing" data-state="before">
-          <div class="state-before">
-            <div class="row"><span class="ico">▤</span><span class="name">boarding-pass-cebu.pdf</span></div>
-            <div class="row"><span class="ico">▤</span><span class="name">electricity_bill_jan.pdf</span></div>
-            <div class="row"><span class="ico">▤</span><span class="name">cebu_itinerary.docx</span></div>
-            <div class="row"><span class="ico">▨</span><span class="name">301847592_118273640591827_44729…n.jpg</span></div>
-            <div class="row"><span class="ico">▤</span><span class="name">hotel_confirmation_cebu.pdf</span></div>
-            <div class="row"><span class="ico">▦</span><span class="name">DaVinci_Resolve_21.0.4_Mac.zip</span></div>
-            <div class="row"><span class="ico">▤</span><span class="name">electricity_bill_feb.pdf</span></div>
-            <div class="row"><span class="ico">▥</span><span class="name">open case summary.xlsx</span></div>
-          </div>
-
-          <div class="state-after">
-            <div class="group">
-              <div class="group-head"><span class="ico">▸</span>Cebu Trip<span class="count">3 files</span></div>
-              <div class="row"><span class="ico">▤</span><span class="name">boarding-pass-cebu.pdf</span></div>
-              <div class="row"><span class="ico">▤</span><span class="name">cebu_itinerary.docx</span></div>
-              <div class="row"><span class="ico">▤</span><span class="name">hotel_confirmation_cebu.pdf</span></div>
-            </div>
-            <div class="group">
-              <div class="group-head"><span class="ico">▸</span>Electricity Bills<span class="count">2 files</span></div>
-              <div class="row"><span class="ico">▤</span><span class="name">electricity_bill_jan.pdf</span></div>
-              <div class="row"><span class="ico">▤</span><span class="name">electricity_bill_feb.pdf</span></div>
-            </div>
-            <div class="group">
-              <div class="group-head"><span class="ico">▸</span>Finance<span class="count">1 file</span></div>
-              <div class="row"><span class="ico">▥</span><span class="name">open case summary.xlsx</span></div>
-            </div>
-            <div class="group">
-              <div class="group-head"><span class="ico">▸</span>Food<span class="count">1 file</span></div>
-              <div class="row"><span class="ico">▨</span><span class="name">301847592_118273640591827_44729…n.jpg</span></div>
-            </div>
-            <div class="group">
-              <div class="group-head"><span class="ico">▸</span>Software<span class="count">1 file</span></div>
-              <div class="row"><span class="ico">▦</span><span class="name">DaVinci_Resolve_21.0.4_Mac.zip</span></div>
-            </div>
-          </div>
-        </div>
-
-        <p class="demo-note">
-          <span class="conf conf-amber" style="margin-top:6px"></span>
-          <span>That photo has no readable name. Hoot read the words in the picture — a café menu — and filed it under <b>Food</b>. The spreadsheet is called <code style="font-family:var(--mono)">open case summary</code>, but it holds tax records, so it went to <b>Finance</b>.</span>
-        </p>
-      </div>
-
+    <section class="hero">
       <div class="hero-copy">
         <span class="avail"><span class="dot-live"></span>Runs entirely on your Mac</span>
         <h1>Sorted by what<br>they're <span>about</span>.</h1>
@@ -446,6 +56,26 @@
           <a href="https://github.com/codeficklefish/Hoot/releases/tag/v0.5.0">The four steps are here</a>.</span>
         </p>
       </div>
+    </section>
+
+    <!-- ================= the recording ================= -->
+    <section class="demo-band" style="margin-inline:calc(var(--edge) * -1); padding-inline:var(--edge)">
+      <figure class="demo">
+        <video
+          class="demo-video"
+          src="demo.mp4"
+          poster="demo-poster.jpg"
+          preload="none"
+          controls
+          playsinline
+          width="1920" height="1080">
+          Your browser cannot play this video. <a href="demo.mp4">Download the recording</a> instead.
+        </video>
+        <figcaption class="demo-note">
+          <span class="conf conf-amber" style="margin-top:6px"></span>
+          <span>That photo has no readable name. Hoot read the words in the picture — a café menu — and filed it under <b>Food</b>. The spreadsheet is called <code style="font-family:var(--mono)">open case summary</code>, but it holds tax records, so it went to <b>Finance</b>.</span>
+        </figcaption>
+      </figure>
     </section>
 
     <!-- ================= what it reads ================= -->
@@ -619,25 +249,4 @@
   </footer>
 </div>
 
-<script>
-  (function () {
-    var listing = document.getElementById("listing");
-    var buttons = document.querySelectorAll(".seg button");
-
-    function show(view) {
-      listing.setAttribute("data-state", view);
-      buttons.forEach(function (b) {
-        b.setAttribute("aria-pressed", String(b.dataset.view === view));
-      });
-    }
-
-    buttons.forEach(function (b) {
-      b.addEventListener("click", function () { show(b.dataset.view); });
-    });
-
-    // Sort itself once, so the first thing a visitor sees is the thing it does.
-    // The "before" state is fully legible at rest; this only advances it.
-    var calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!calm) { setTimeout(function () { show("after"); }, 1100); }
-  })();
-</script>
+<script src="app.js" defer></script>
