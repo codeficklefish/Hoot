@@ -61,6 +61,8 @@
   --space-6:12px; --space-7:16px; --space-8:20px; --space-9:24px; --space-10:32px;
   --space-11:40px; --space-12:56px; --space-13:80px; --space-14:120px;
   --site-max:1180px; --site-gutter:32px;
+  /* nav = 20px padding + 38px pill + 20px padding; stable at every width */
+  --nav-h:78px;
 
   --radius-sm:5px; --radius-md:7px; --radius-lg:10px;
   --radius-xl:14px; --radius-2xl:20px; --radius-pill:999px;
@@ -101,6 +103,42 @@ p { margin: 0; text-wrap: pretty; }
 .lede { font: var(--text-body); color: var(--text-secondary); }
 .band { background: var(--paper-1); box-shadow: inset 0 1px 0 var(--border-subtle), inset 0 -1px 0 var(--border-subtle); }
 section > .wrap { padding-block: var(--space-14); }
+
+/* ---------- full-screen scenes ----------
+   Each major section fills the viewport and centres its own content, so one
+   scene is on screen at a time and the next never peeks above the fold.
+
+   min-height, never height: a section whose content is taller than the screen
+   grows rather than clipping. That is what keeps the six feature cards and the
+   long safety copy whole on a short phone, where a fixed height would cut them.
+
+   svh rather than vh because mobile browsers collapse their chrome as you
+   scroll; vh measures the taller state and leaves every scene overshooting by
+   the toolbar's height.
+
+   The existing padding is left exactly as it was — the centring does the work,
+   not extra space. */
+/* A column flexbox, not a grid: a grid's implicit track sizes itself to the
+   item's min-content width, so on a narrow phone the wrapper was measured at
+   394px inside a 375px screen and the page scrolled sideways. A column flex
+   stretches its children to the container instead of measuring them. */
+main > section {
+  min-height: 100vh;   /* for engines without svh */
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+main > section > * { min-width: 0; }
+
+/* The hero shares the first screen with the nav above it, so it takes the
+   viewport less the nav's height. A full 100svh here would push the hero 78px
+   past the fold and put the nav on a screen of its own. */
+.hero {
+  min-height: calc(100vh - var(--nav-h));
+  min-height: calc(100svh - var(--nav-h));
+  align-content: center;
+}
 
 /* ---------- nav ---------- */
 .nav { display: flex; align-items: center; gap: var(--space-9); padding-block: var(--space-8); }
