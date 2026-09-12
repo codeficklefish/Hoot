@@ -23,18 +23,34 @@ APP="build/Hoot.app"
 DMG="build/Hoot.dmg"
 STAGING="build/dmg-staging"
 
-if [ -z "${SIGN_IDENTITY:-}" ]; then
+# Refusing by default is the point: a DMG that looks finished and is refused
+# by Gatekeeper wastes the time of everyone who downloads it. ALLOW_UNSIGNED
+# is the deliberate exception — it produces the same disk image without the
+# signature, for a release that says so in its own notes.
+UNSIGNED="${ALLOW_UNSIGNED:-}"
+
+if [ -z "${SIGN_IDENTITY:-}" ] && [ -z "$UNSIGNED" ]; then
   echo "SIGN_IDENTITY is not set."
   echo "Without it the build is ad-hoc signed and will not open on other Macs."
   echo "Find yours with:  security find-identity -v -p codesigning"
+  echo ""
+  echo "To build one anyway, knowing Gatekeeper will refuse it:"
+  echo "  ALLOW_UNSIGNED=1 ./Packaging/release.sh"
   exit 1
 fi
 
-echo "==> Building and signing"
-SIGN_IDENTITY="$SIGN_IDENTITY" ./Packaging/build-app.sh release
+if [ -n "$UNSIGNED" ]; then
+  echo "==> Building WITHOUT a Developer ID"
+  echo "    Gatekeeper will refuse this on other Macs. They will need"
+  echo "    System Settings -> Privacy & Security -> Open Anyway."
+  ./Packaging/build-app.sh release
+else
+  echo "==> Building and signing"
+  SIGN_IDENTITY="$SIGN_IDENTITY" ./Packaging/build-app.sh release
 
-echo "==> Verifying the signature Gatekeeper will see"
-codesign --verify --deep --strict --verbose=2 "$APP"
+  echo "==> Verifying the signature Gatekeeper will see"
+  codesign --verify --deep --strict --verbose=2 "$APP"
+fi
 
 echo "==> Staging disk image"
 rm -rf "$STAGING" "$DMG"
@@ -46,6 +62,14 @@ ln -s /Applications "$STAGING/Applications"
 echo "==> Building $DMG"
 hdiutil create -volname "Hoot" -srcfolder "$STAGING" -ov -format UDZO "$DMG" >/dev/null
 rm -rf "$STAGING"
+
+if [ -n "$UNSIGNED" ]; then
+  echo ""
+  echo "==> Built $DMG, unsigned and not notarized."
+  echo "    Say so in the release notes, with the Open Anyway steps."
+  ls -lh "$DMG" | awk '{print "    " $5, $NF}'
+  exit 0
+fi
 
 # The disk image is signed too, so it isn't flagged before it's even opened.
 codesign --force --sign "$SIGN_IDENTITY" "$DMG"

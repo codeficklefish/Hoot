@@ -68,20 +68,14 @@ itself — see [docs/pim-design-notes.md](docs/pim-design-notes.md).
 
 ## Getting it
 
-[**Download Hoot 0.5.0**](https://github.com/codeficklefish/Hoot/releases/latest) · 1.2 MB · or read
+[**Download Hoot 0.6.0**](https://github.com/codeficklefish/Hoot/releases/latest) · 1.2 MB · or read
 [the landing page](https://hoot-mac.netlify.app).
 
-**The download is older than this page.** 0.5.0 was built on 9 September and
-`main` is 24 commits past it — sorting by type and hold-to-preview are both
-described above and neither is in that build. Until there is a release that
-includes them, [building from source](#building) is the way to get what this
-README describes.
-
-**It is also not notarized by Apple.** macOS will refuse the first launch —
+**This build is not notarized by Apple.** macOS will refuse the first launch —
 open **System Settings → Privacy & Security** and click *Open Anyway*. The
-[release notes](https://github.com/codeficklefish/Hoot/releases/tag/v0.5.0)
-give the four steps. Notarizing needs an Apple Developer ID, which this project
-does not have yet.
+[release notes](https://github.com/codeficklefish/Hoot/releases/tag/v0.6.0)
+give the steps. Notarizing needs an Apple Developer ID, which this project does
+not have yet.
 
 ## Requirements
 
@@ -125,16 +119,25 @@ after launching.
 
 ### Releasing
 
-Distribution needs an Apple Developer ID; Gatekeeper blocks anything else, and
-`release.sh` refuses to run without one. The current v0.5.0 download was built
-with `build-app.sh` and an ad-hoc signature, which is why it needs the
-Privacy & Security step above.
+Distribution needs an Apple Developer ID; Gatekeeper blocks anything else, so
+`release.sh` refuses to run without one rather than produce a download that
+looks finished and is then refused.
 
 ```bash
 SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
 NOTARY_PROFILE=hoot-notary \
 ./Packaging/release.sh            # signs, notarizes, staples, builds a DMG
 ```
+
+Until there is one, releases are built through the deliberate exception, which
+makes the same disk image without the signature:
+
+```bash
+ALLOW_UNSIGNED=1 ./Packaging/release.sh
+```
+
+That is how v0.6.0 was built, and why it needs the Privacy & Security step
+above.
 
 ## Checking it works
 
