@@ -16,12 +16,6 @@ struct HootApp: App {
         MenuBarExtra {
             MenuBarContentView(appState: appState)
                 .task {
-                    // The island is AppKit and cannot reach SwiftUI's
-                    // environment, so it is handed the one thing it needs from
-                    // here rather than opening windows its own way.
-                    appState.presentWindow = { openWindow(id: $0) }
-                    if island == nil { island = IslandController(appState: appState) }
-
                     // First launch: introduce the app before it's handed a
                     // folder, rather than showing an empty popover.
                     guard appState.needsOnboarding else { return }
@@ -30,10 +24,20 @@ struct HootApp: App {
                 }
         } label: {
             // The menu bar item is rendered from launch, where the popover's
-            // contents are not — they wait for a click. Starting from here is
-            // what makes Hoot resume watching without being opened first.
+            // contents are not — they wait for a click. Everything that has to
+            // work before anyone clicks belongs here, and that is why the
+            // island is built here rather than beside the popover it is meant
+            // to save you from opening: an ambient indicator that first
+            // requires the click it exists to replace has announced nothing.
             MenuBarLabel(pendingCount: appState.detectedFiles.count)
-                .task { appState.start() }
+                .task {
+                    appState.start()
+                    // The island is AppKit and cannot reach SwiftUI's
+                    // environment, so it is handed the one thing it needs from
+                    // here rather than opening windows its own way.
+                    appState.presentWindow = { openWindow(id: $0) }
+                    if island == nil { island = IslandController(appState: appState) }
+                }
         }
         .menuBarExtraStyle(.window)
 
