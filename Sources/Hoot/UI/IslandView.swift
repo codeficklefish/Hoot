@@ -1,6 +1,37 @@
 import SwiftUI
 import HootKit
 
+/// What the top of a display looks like, so the island can meet it rather
+/// than float below it.
+///
+/// The notch is a hole in the panel, not a dark rectangle: nothing drawn
+/// inside it reaches a pixel. So the island covers that region deliberately —
+/// its black runs to the very top of the screen and is simply invisible where
+/// the camera housing is, which is what makes the visible part below read as
+/// the same object rather than a window parked underneath one.
+struct NotchMetrics: Equatable {
+    /// Height of the cutout. Zero on a display without one.
+    let height: CGFloat
+    /// Width of the cutout, measured between the two strips of menu bar the
+    /// system leaves usable on either side of it.
+    let width: CGFloat
+    /// Centre of the cutout in screen coordinates — which is not the centre
+    /// of the screen. On a 1710pt display the midpoint is 855, and the notch
+    /// is centred on 855.5; aligning to the screen instead of the camera left
+    /// the island a point to the left of the housing it is meant to continue.
+    let centerX: CGFloat
+
+    static let none = NotchMetrics(height: 0, width: 0, centerX: 0)
+
+    var hasNotch: Bool { height > 0 }
+
+    /// Half a point of overlap each side, so rounding can never leave a
+    /// hairline of desktop between the island and the bezel. It hides behind
+    /// the housing, which is the one place a couple of stray points cost
+    /// nothing.
+    static let bleed: CGFloat = 2
+}
+
 /// One destination folder in the island's preview.
 struct IslandGroup: Equatable, Identifiable {
     let name: String
@@ -37,6 +68,7 @@ enum IslandState: Equatable {
 struct IslandView: View {
     let state: IslandState
     let mode: SortingMode
+    var notch: NotchMetrics = .none
     var onSelectMode: (SortingMode) -> Void
     var onReview: () -> Void
     var onUndo: () -> Void
@@ -73,9 +105,19 @@ struct IslandView: View {
             }
         }
         .padding(.horizontal, expanded ? 16 : 14)
-        .padding(.vertical, expanded ? 14 : 8)
-        .background(.black, in: RoundedRectangle(cornerRadius: expanded ? 26 : 18, style: .continuous))
-        .shadow(color: .black.opacity(0.35), radius: 16, y: 8)
+        .padding(.bottom, expanded ? 14 : 8)
+        // Nothing drawn behind the camera housing is visible, so the content
+        // starts below it. Without this the collapsed island would lose its
+        // first line to a piece of aluminium.
+        .padding(.top, (expanded ? 14 : 8) + notch.height)
+        // At least as wide as the cutout, or the shape would pinch in at the
+        // very point it is meant to continue from.
+        .frame(minWidth: notch.hasNotch ? notch.width + NotchMetrics.bleed : 0)
+        .background(.black, in: shape)
+        // No shadow along the top edge on a notched display: there is nothing
+        // above it to cast onto, and the blur would show as a grey seam
+        // against the bezel.
+        .shadow(color: .black.opacity(notch.hasNotch ? 0.28 : 0.35), radius: 16, y: notch.hasNotch ? 10 : 8)
         .fixedSize()
         .onHover { hovering in
             // The spring is the whole point: the island is recognisable by how
@@ -107,6 +149,20 @@ struct IslandView: View {
                     .background(.white, in: Capsule())
             }
         }
+    }
+
+    /// Square at the top when it meets the notch, because a rounded corner
+    /// there would open a sliver of desktop between the island and the bezel
+    /// and give the join away.
+    private var shape: UnevenRoundedRectangle {
+        let radius: CGFloat = expanded ? 26 : 18
+        return UnevenRoundedRectangle(
+            topLeadingRadius: notch.hasNotch ? 0 : radius,
+            bottomLeadingRadius: radius,
+            bottomTrailingRadius: radius,
+            topTrailingRadius: notch.hasNotch ? 0 : radius,
+            style: .continuous
+        )
     }
 
     private var headline: String {

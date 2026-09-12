@@ -74,6 +74,7 @@ final class IslandController {
         let view = IslandView(
             state: state,
             mode: appState.sortingMode,
+            notch: Self.notchMetrics(for: NSScreen.main),
             onSelectMode: { [weak self] mode in
                 // Deliberately not a dismissal: the person is adjusting what
                 // they are looking at, not saying they are done with it.
@@ -140,21 +141,49 @@ final class IslandController {
         }
     }
 
+    /// Reads the shape of the display's top edge.
+    ///
+    /// `safeAreaInsets.top` gives the cutout's height. Its width is not
+    /// published directly, but the system reports the two strips of menu bar
+    /// it leaves usable either side of it — so the gap between them is the
+    /// notch.
+    static func notchMetrics(for screen: NSScreen?) -> NotchMetrics {
+        guard let screen, screen.safeAreaInsets.top > 0,
+              let left = screen.auxiliaryTopLeftArea,
+              let right = screen.auxiliaryTopRightArea
+        else { return .none }
+        return NotchMetrics(
+            height: screen.safeAreaInsets.top,
+            width: max(0, right.minX - left.maxX),
+            centerX: (left.maxX + right.minX) / 2
+        )
+    }
+
     private func resize(_ panel: NSPanel, to size: NSSize) {
         guard let screen = NSScreen.main else { return }
-        // Below the menu bar, and below the notch where there is one —
-        // safeAreaInsets.top is how a notched display says how tall it is.
-        let notch = screen.safeAreaInsets.top
-        let top = screen.frame.maxY - max(notch, screen.frame.maxY - screen.visibleFrame.maxY)
+        let notch = Self.notchMetrics(for: screen)
+
+        // With a notch, the island's top edge is the top of the display: the
+        // black continues out of the camera housing instead of hanging under
+        // it. Without one there is nothing to continue from, so it sits below
+        // the menu bar as before, with a gap that reads as deliberate.
+        let top = notch.hasNotch
+            ? screen.frame.maxY
+            : screen.visibleFrame.maxY
+        let gap: CGFloat = notch.hasNotch ? 0 : 6
+
+        // Centred on the camera, not on the screen. They are half a point
+        // apart on this hardware, which is enough to show as a seam.
+        let centerX = notch.hasNotch ? notch.centerX : screen.frame.midX
         let origin = NSPoint(
-            x: screen.frame.midX - size.width / 2,
-            y: top - size.height - 6
+            x: centerX - size.width / 2,
+            y: top - size.height - gap
         )
         panel.setFrame(NSRect(origin: origin, size: size), display: true)
     }
 
     private func makePanel() -> NSPanel {
-        let panel = NSPanel(
+        let panel = IslandWindow(
             contentRect: .zero,
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
@@ -186,5 +215,17 @@ final class IslandController {
         if let frameObserver {
             NotificationCenter.default.removeObserver(frameObserver)
         }
+    }
+}
+
+/// A panel allowed to reach the top of the screen.
+///
+/// AppKit constrains window frames so they cannot cover the menu bar. That is
+/// right for windows and wrong for this one: the island's whole premise is
+/// that it continues from the camera housing, and a frame stopped 34pt short
+/// of the display's top edge leaves it floating under the notch instead.
+private final class IslandWindow: NSPanel {
+    override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {
+        frameRect
     }
 }
