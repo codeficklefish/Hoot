@@ -1,10 +1,14 @@
 import SwiftUI
 import HootKit
 
-/// One detected file: icon, name, basic metadata, and its (mock) classification.
+/// One detected file: icon, name, basic metadata, and where it is headed.
 struct FileRow: View {
     let file: FileItem
     let classification: ClassificationResult?
+    /// The mode decides which answer is the true one for this row. Showing a
+    /// meaning badge while the plan files by type would have the popover and
+    /// the review window disagreeing about the same file.
+    var mode: SortingMode = .byMeaning
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -26,7 +30,9 @@ struct FileRow: View {
 
             Spacer(minLength: 8)
 
-            if let classification {
+            if mode == .byType {
+                TypeBadge(folder: TypeSorter.folder(for: file))
+            } else if let classification {
                 ClassificationBadge(classification: classification)
             } else {
                 ProgressView()
@@ -75,5 +81,21 @@ private struct ClassificationBadge: View {
         if classification.isLowConfidence { return .secondary }
         if classification.confidence >= 0.8 { return .green }
         return .orange
+    }
+}
+
+/// Where a file goes when Hoot is sorting by type.
+///
+/// No percentage: the extension either identifies the file or it doesn't, and
+/// a confidence score on a fact reads as hedging about something that isn't
+/// in doubt.
+private struct TypeBadge: View {
+    let folder: String?
+
+    var body: some View {
+        Text(folder ?? "Left alone")
+            .font(.caption.weight(.medium))
+            .foregroundStyle(folder == nil ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+            .lineLimit(1)
     }
 }

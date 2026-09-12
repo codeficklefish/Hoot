@@ -61,11 +61,26 @@ extension AppState {
         let prefs = folderPreferences.entries
             .map { "\($0.proposed)>\($0.preferred)" }
             .joined(separator: ",")
-        return "\(files)#\(prefs)#\(settings.provider.rawValue)"
+        return "\(files)#\(prefs)#\(settings.provider.rawValue)#\(sortingMode.rawValue)"
     }
 
     func performAnalysis(signature: String) async {
         guard let root = watchedFolder else { return }
+
+        // Sorting by type is a loop over filenames, so it returns before the
+        // spinner would be worth showing — and never reaches the model, the
+        // text extractor or the personal classifier. That is the promise the
+        // mode makes, and the cheapest way to keep it is to leave before any
+        // of them exist.
+        if sortingMode == .byType {
+            plan = planner.makeTypePlan(
+                root: root,
+                files: detectedFiles,
+                preferences: folderPreferences
+            )
+            planSignature = signature
+            return
+        }
 
         isAnalyzing = true
         defer { isAnalyzing = false }
