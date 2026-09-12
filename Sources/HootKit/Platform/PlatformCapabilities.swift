@@ -65,6 +65,30 @@ public protocol FileWatching: AnyObject {
     func stop()
 }
 
+// MARK: - Holding on to the folder the user chose
+
+/// Keeps the one folder Hoot was given, across launches.
+///
+/// Every platform makes this its own problem. macOS sandboxes the grant, so the
+/// folder has to be stored as a security-scoped bookmark and re-opened on each
+/// launch; Windows has no equivalent and a stored path is enough. The engine
+/// only needs to know that a folder can be remembered, asked for again, and
+/// given back.
+///
+/// Class-bound because an implementation may hold an operating-system resource
+/// open for as long as the grant lasts, and has to balance that when it goes.
+public protocol FolderAccessing: AnyObject {
+    /// Stores a durable reference to `url`, and opens access to it.
+    func remember(_ url: URL)
+
+    /// The folder granted on a previous launch, with access opened, or nil when
+    /// there was none or it is no longer reachable.
+    func restore() -> URL?
+
+    /// Discards the grant and closes access.
+    func forget()
+}
+
 // MARK: - Telling the user
 
 /// Posts a notification when files are waiting. Deliberately narrow: Hoot has

@@ -18,3 +18,8 @@ xcuserdata/
 *.p12
 *.cer
 *.provisionprofile
+
+# The seeded design canvas — a ~2.4 MB generated page with the canvas editor
+# baked in, rebuilt from Website/Main.dc.html, Website/Phone.dc.html and
+# Website/canvas.json. Those are the source; this is the output.
+Website/hoot-landing-page.html

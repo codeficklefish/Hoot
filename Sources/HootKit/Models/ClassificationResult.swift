@@ -1,8 +1,11 @@
 import Foundation
 
-/// The output of any FileClassifier (rule-based, local LLM, or remote API).
-/// This is the one shape every classifier implementation must produce,
-/// which is what lets the AI provider be swapped out later.
+/// Where one file belongs, and how much that answer is trusted.
+///
+/// Every source of an answer produces this same shape — the filename rules,
+/// the personal model learned from the user's folders, and a provider's
+/// suggestion once `CategoryRefiner` has arbitrated it — so a later stage can
+/// replace an earlier one's answer without the caller knowing which spoke.
 public struct ClassificationResult: Identifiable, Hashable {
     public let id: UUID
     public let fileID: UUID

@@ -64,8 +64,8 @@ extension AppState {
         detectedFiles = []
         classifications = [:]
         plan = nil
-        lastNotifiedCount = 0
-        notifications.clearPending()
+        announcer.reset()
+        notifier.clearPending()
 
         do {
             try watcher.start(watching: folder)
@@ -106,24 +106,9 @@ extension AppState {
         detectedFiles.sort { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) }
         scheduleWaitingNotification()
 
-        Task {
-            do {
-                let result = try await classifier.classify(item)
-                await MainActor.run {
-                    self.classifications[item.id] = result
-                }
-            } catch {
-                await MainActor.run {
-                    self.report(
-                        UserFacingIssue(
-                            title: "Couldn't work out what “\(item.filename)” is.",
-                            suggestion: "It will still appear, sorted by file type.",
-                            severity: .warning
-                        ),
-                        underlying: error
-                    )
-                }
-            }
-        }
+        // Filename rules tokenize against ten keyword lists — microseconds per
+        // file — so this runs inline rather than hopping to a task and back.
+        // The badge then appears in the same frame as the row it belongs to.
+        classifications[item.id] = classifier.classify(item, excerpt: nil)
     }
 }

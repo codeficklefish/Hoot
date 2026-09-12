@@ -132,7 +132,7 @@ extension AppState {
                     project: nil,
                     suggestedFolder: folder,
                     suggestedName: classifications[file.id]?.suggestedName ?? file.filename,
-                    confidence: ConfidenceModel.combine([.matchesUserHistory]),
+                    confidence: ConfidenceModel.combine([.matchesUserHistory(strength: prediction.strength)]),
                     reason: "You usually file files like this under “\(folder)”."
                 )
                 settled.append(file.id)

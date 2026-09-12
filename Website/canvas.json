@@ -1,33 +1,16 @@
 {
   "artboards": [
-    {
-      "file": "Main.dc.html",
-      "x": 0,
-      "y": 0,
-      "w": 1120,
-      "h": 3820,
-      "title": "Landing page"
-    },
-    {
-      "file": "Mobile.dc.html",
-      "x": 1200,
-      "y": 0,
-      "w": 390,
-      "h": 2360,
-      "title": "Phone"
-    }
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1120, "h": 5400, "title": "Landing page — desktop" },
+    { "file": "Phone.dc.html", "x": 1280, "y": 0, "w": 390, "h": 5000, "title": "Landing page — phone" }
   ],
   "annotations": [
     {
-      "id": "placeholders",
-      "x": 1200,
-      "y": 2440,
-      "w": 390,
-      "text": "Square-bracket text is a placeholder for you to fill in:\n[DOWNLOAD URL] · [GITHUB URL] · [PRICE]\n[VERSION] · [SIZE] · [SUPPORT EMAIL]\n[PRIVACY POLICY URL]\n\nEvery other line is real — the file names and folder\nnames come from actual Hoot runs on your Downloads."
+      "id": "sketchpad",
+      "x": 1780,
+      "y": 0,
+      "w": 300,
+      "text": "Sketchpad, not the live site.\n\nThe deployed page is Website/public/index.html on hoot-mac.netlify.app. Changes made here do not flow back to it — tell Claude what you settled on and it gets ported across.\n\nNot represented here: the Before/After toggle, hover states, and the dark theme. Artboards are static and light-only."
     }
   ],
-  "launch": {
-    "view": "focused",
-    "file": "Main.dc.html"
-  }
+  "launch": { "view": "canvas" }
 }

@@ -83,31 +83,40 @@ extension AppState {
     /// an archive can produce dozens of files in a second, and each one
     /// shouldn't be its own notification.
     func scheduleWaitingNotification() {
-        guard !isScanning else { return } // the initial sweep isn't news
+        guard announcer.shouldStartQuietPeriod(sweepInProgress: isScanning) else { return }
         notificationTask?.cancel()
         notificationTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(4))
+            try? await Task.sleep(for: WaitingAnnouncer.quietPeriod)
             guard !Task.isCancelled, let self else { return }
-            await self.notifyIfPileGrew()
+            self.folderSettled()
+            await self.announceIfPileGrew()
         }
     }
 
-    func notifyIfPileGrew() async {
-        // The folder has stopped changing: a good moment to do the expensive
-        // analysis, so it's finished before Review is ever clicked. Sorting by
-        // type has no expensive part, so waking a model for it would be work
-        // done purely to be thrown away.
+    /// The folder has stopped changing: a good moment to do the expensive
+    /// analysis, so it's finished before Review is ever clicked.
+    ///
+    /// Kept apart from announcing because it is a different job that happens
+    /// to want the same moment — and because it runs whether or not there is
+    /// anything worth saying.
+    func folderSettled() {
+        // Sorting by type has no expensive part, so waking a model for it
+        // would be work done purely to be thrown away.
         if sortingMode.usesModel {
             MacPlatform.makeAIProvider(for: settings)?.prewarm()
         }
         precomputePlan()
+    }
 
-        let count = detectedFiles.count
-        guard count > lastNotifiedCount else { return }
-        lastNotifiedCount = count
-        await notifications.notifyFilesWaiting(
-            count: count,
+    func announceIfPileGrew() async {
+        guard let announcement = announcer.announcement(
+            forPileOf: detectedFiles.count,
             topGroup: summaryByCategory.first?.label
+        ) else { return }
+
+        await notifier.notifyFilesWaiting(
+            count: announcement.count,
+            topGroup: announcement.topGroup
         )
     }
 }
