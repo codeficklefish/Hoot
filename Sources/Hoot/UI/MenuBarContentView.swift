@@ -96,13 +96,7 @@ struct MenuBarContentView: View {
         VStack(alignment: .leading, spacing: 7) {
             SectionLabel("Sorting")
 
-            Picker("", selection: $appState.sortingMode) {
-                ForEach(SortingMode.allCases) { mode in
-                    Text(mode.title).tag(mode)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
+            ModeSelector(selection: $appState.sortingMode)
 
             Text(appState.sortingMode.tradeoff)
                 .font(.caption)
@@ -260,6 +254,62 @@ private struct SectionLabel: View {
             .textCase(.uppercase)
             .tracking(0.5)
             .foregroundStyle(.secondary)
+    }
+}
+
+/// The two sorting modes, as a segmented control.
+///
+/// Not `.pickerStyle(.segmented)`. AppKit fills the selected segment with the
+/// accent colour, which on a dark appearance puts a saturated blue block in the
+/// middle of a quiet popover and makes the choice look like the most important
+/// thing on screen. It is a preference, not an alarm — so the selected segment
+/// is a raised neutral pill, the way the control reads in light mode, in both
+/// appearances.
+private struct ModeSelector: View {
+    @Binding var selection: SortingMode
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(SortingMode.allCases) { mode in
+                Segment(
+                    title: mode.title,
+                    isSelected: selection == mode
+                ) {
+                    withAnimation(.easeOut(duration: 0.16)) { selection = mode }
+                }
+            }
+        }
+        .padding(2)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(.quaternary)
+        )
+    }
+
+    private struct Segment: View {
+        let title: String
+        let isSelected: Bool
+        let action: () -> Void
+
+        var body: some View {
+            Button(action: action) {
+                Text(title)
+                    .font(.callout)
+                    .fontWeight(isSelected ? .semibold : .regular)
+                    .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 4)
+                    .background {
+                        if isSelected {
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .fill(Color(nsColor: .controlColor))
+                                .shadow(color: .black.opacity(0.16), radius: 1, y: 0.5)
+                        }
+                    }
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
     }
 }
 
