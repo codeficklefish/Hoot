@@ -117,16 +117,26 @@ final class IslandController {
         resize(panel, to: hosting.fittingSize)
         panel.orderFrontRegardless()
 
-        // The hosting view resizes itself when the SwiftUI content grows, so
-        // this is what tells the panel to follow — and, because the panel is
-        // anchored under the notch rather than by its bottom-left corner, to
-        // grow downward instead of upward.
+        // The hosting view resizes itself when the SwiftUI content grows. AppKit
+        // stretches the panel to match, but keeps its bottom-left corner fixed,
+        // so an island that grew would climb into the menu bar instead of
+        // hanging below it. This is what puts the top edge back.
+        //
+        // Deferred to the next turn of the run loop, and that is not a
+        // nicety. The notification arrives *inside* AppKit's layout pass, and
+        // setting a window frame from within one re-enters it: NSHostingView
+        // invalidates its size constraints, AppKit reaches
+        // -[NSWindow _postWindowNeedsUpdateConstraints] while it is already
+        // updating them, and throws. The exception is uncaught, so the app
+        // does not misbehave — it dies, every time the island changes size.
         hosting.postsFrameChangedNotifications = true
         frameObserver = NotificationCenter.default.addObserver(
             forName: NSView.frameDidChangeNotification, object: hosting, queue: .main
         ) { [weak self, weak panel, weak hosting] _ in
             guard let panel, let hosting else { return }
-            MainActor.assumeIsolated { self?.resize(panel, to: hosting.fittingSize) }
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated { self?.resize(panel, to: hosting.fittingSize) }
+            }
         }
     }
 
