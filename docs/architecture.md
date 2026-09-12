@@ -86,7 +86,7 @@ does not mean editing the engine.
 
 ```bash
 swift test              # the dependency rule
-./Verification/run.sh   # 236 behaviour and safety checks
+./Verification/run.sh   # 270 behaviour and safety checks
 ./Evaluation/run.sh     # accuracy against folders you organized yourself
 ```
 

@@ -16,6 +16,8 @@ struct MenuBarContentView: View {
             if appState.watchedFolder == nil {
                 emptyState
             } else {
+                modePicker
+                Divider()
                 if !appState.summaryByCategory.isEmpty {
                     summaryRow
                     Divider()
@@ -79,6 +81,24 @@ struct MenuBarContentView: View {
         .frame(maxWidth: .infinity)
     }
 
+    /// The choice, where people already are.
+    ///
+    /// It lives in Settings too, but sending someone to a settings window to
+    /// answer "do I want folders named after subjects or file types" puts the
+    /// question two clicks from the files it applies to.
+    private var modePicker: some View {
+        Picker("", selection: $appState.sortingMode) {
+            ForEach(SortingMode.allCases) { mode in
+                Text(mode.title).tag(mode)
+            }
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .help(appState.sortingMode.tradeoff)
+    }
+
     private var summaryRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
@@ -103,7 +123,11 @@ struct MenuBarContentView: View {
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         ForEach(appState.detectedFiles) { file in
-                            FileRow(file: file, classification: appState.classifications[file.id])
+                            FileRow(
+                                file: file,
+                                classification: appState.classifications[file.id],
+                                mode: appState.sortingMode
+                            )
                             if file.id != appState.detectedFiles.last?.id {
                                 Divider().padding(.leading, 40)
                             }

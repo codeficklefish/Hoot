@@ -11,6 +11,10 @@ struct MoveRow: View {
     let move: PlannedMove
     @ObservedObject var appState: AppState
 
+    /// The file Quick Look is showing, owned by the review screen so only one
+    /// panel exists however many rows are on screen.
+    @Binding var previewURL: URL?
+
     /// Evidence is hidden until asked for: most of the time the destination is
     /// all anyone wants, but when a suggestion looks wrong the reasoning is
     /// the difference between correcting it and distrusting the whole app.
@@ -73,6 +77,18 @@ struct MoveRow: View {
         .onDrag {
             NSItemProvider(object: move.id.uuidString as NSString)
         }
+        // Hold still to look inside the file. Deciding whether a suggestion is
+        // right often means checking what the file actually is, and the
+        // filename is the thing that failed to say.
+        //
+        // Simultaneous, and long-press cancels once the pointer moves: holding
+        // still previews, holding and moving drags. The two gestures start the
+        // same way, so a plain onLongPressGesture would swallow the drag.
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.45)
+                .onEnded { _ in previewURL = move.file.url }
+        )
+        .help("Hold to preview")
     }
 }
 

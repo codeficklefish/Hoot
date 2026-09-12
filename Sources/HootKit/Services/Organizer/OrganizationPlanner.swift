@@ -139,6 +139,84 @@ public struct OrganizationPlanner {
         return OrganizationPlan(root: root, groups: groups, skipped: skipped)
     }
 
+    /// Builds a plan that files everything by type, with no interpretation.
+    ///
+    /// Shares nothing with `makePlan` beyond the shape of its result, which
+    /// is the point: there are no projects to detect, no confidence to weigh
+    /// and no model to wait for. A file's folder follows from its name and
+    /// extension, so this returns in the time it takes to loop over them.
+    ///
+    /// It still honours the two things the user has said out loud — folders
+    /// they already keep, and names they have corrected before — because
+    /// those are their decisions, not Hoot's inferences.
+    public func makeTypePlan(
+        root: URL,
+        files: [FileItem],
+        preferences: FolderPreferences = FolderPreferences()
+    ) -> OrganizationPlan {
+
+        let existing = ExistingFolders(in: root)
+        func resolveFolder(_ proposed: String) -> String {
+            existing.canonicalName(for: preferences.preferredName(for: proposed))
+        }
+
+        var skipped: [(file: FileItem, reason: String)] = []
+        var byFolder: [String: [PlannedMove]] = [:]
+        // The name Hoot proposed before the user's own vocabulary was applied,
+        // kept so a rename here can be remembered the same way it is anywhere
+        // else: "when you say Images, I mean Photos".
+        var proposedNames: [String: String] = [:]
+
+        for file in files {
+            guard let bucket = TypeSorter.folder(for: file) else {
+                skipped.append((file, "Hoot doesn’t recognize .\(file.fileExtension) files, so this one stays where it is."))
+                continue
+            }
+
+            let folder = resolveFolder(bucket)
+            proposedNames[folder] = bucket
+
+            byFolder[folder, default: []].append(
+                PlannedMove(
+                    file: file,
+                    classification: ClassificationResult(
+                        fileID: file.id,
+                        category: bucket,
+                        project: nil,
+                        suggestedFolder: folder,
+                        suggestedName: file.filename,
+                        // The extension is the evidence, and it is the only
+                        // evidence. Nothing was read, so nothing else can
+                        // corroborate it — and nothing needs to.
+                        confidence: ConfidenceModel.combine([.recognizedType]),
+                        reason: TypeSorter.reason(for: file)
+                    ),
+                    destinationFolder: folder,
+                    // Flat on purpose. Someone who asked not to have their
+                    // files interpreted has not asked for a folder tree either.
+                    roleSubfolder: nil,
+                    destinationName: file.filename,
+                    isApproved: true
+                )
+            )
+        }
+
+        let groups = byFolder
+            .sorted { $0.key < $1.key }
+            .map { folder, moves in
+                PlannedGroup(
+                    name: folder,
+                    proposedName: proposedNames[folder] ?? folder,
+                    rationale: existing.allNames.contains(folder)
+                        ? "Filed into your existing “\(folder)” folder, by type."
+                        : "Sorted by file type.",
+                    moves: moves.sorted { $0.file.filename < $1.file.filename }
+                )
+            }
+
+        return OrganizationPlan(root: root, groups: groups, skipped: skipped)
+    }
+
     /// Within a project folder, split files by the role they play.
     private static func roleSubfolder(for file: FileItem, classification: ClassificationResult) -> String? {
         switch classification.category {

@@ -7,6 +7,10 @@ struct ReviewView: View {
     @ObservedObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
 
+    /// One Quick Look panel for the whole screen, driven by whichever row was
+    /// held. Setting it opens the panel; the panel clears it when dismissed.
+    @State private var previewURL: URL?
+
     var body: some View {
         VStack(spacing: 0) {
             if appState.isAnalyzing, appState.plan == nil {
@@ -22,6 +26,14 @@ struct ReviewView: View {
             }
         }
         .frame(minWidth: 520, minHeight: 420)
+        // Quick Look is what the Finder shows for the same gesture, so a file
+        // opens the way people already expect. Cleared straight after, so
+        // holding the same row twice opens it again rather than doing nothing.
+        .onChange(of: previewURL) { url in
+            guard let url else { return }
+            QuickLookPanel.shared.show(url)
+            previewURL = nil
+        }
     }
 
     private func header(plan: OrganizationPlan) -> some View {
@@ -53,11 +65,11 @@ struct ReviewView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 14) {
                 ForEach(plan.groups) { group in
-                    GroupSection(group: group, appState: appState)
+                    GroupSection(group: group, appState: appState, previewURL: $previewURL)
                 }
 
                 if !plan.skipped.isEmpty {
-                    SkippedSection(skipped: plan.skipped)
+                    SkippedSection(skipped: plan.skipped, previewURL: $previewURL)
                 }
             }
             .padding(14)
@@ -127,6 +139,7 @@ struct ReviewView: View {
 private struct GroupSection: View {
     let group: PlannedGroup
     @ObservedObject var appState: AppState
+    @Binding var previewURL: URL?
 
     /// Local copy so typing doesn't rebuild the plan on every keystroke;
     /// the rename is committed on Return or when focus leaves.
@@ -189,7 +202,7 @@ private struct GroupSection: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(group.moves) { move in
-                    MoveRow(move: move, appState: appState)
+                    MoveRow(move: move, appState: appState, previewURL: $previewURL)
                 }
             }
             .padding(.leading, 20)
@@ -237,6 +250,7 @@ private struct GroupSection: View {
 /// than silent, but they carry no checkbox — low confidence means hands off.
 private struct SkippedSection: View {
     let skipped: [(file: FileItem, reason: String)]
+    @Binding var previewURL: URL?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -260,7 +274,12 @@ private struct SkippedSection: View {
                 }
                 .font(.callout)
                 .foregroundStyle(.secondary)
-                .help(item.reason)
+                .contentShape(Rectangle())
+                .simultaneousGesture(
+                    LongPressGesture(minimumDuration: 0.45)
+                        .onEnded { _ in previewURL = item.file.url }
+                )
+                .help("\(item.reason)\n\nHold to preview.")
             }
         }
         .padding(10)

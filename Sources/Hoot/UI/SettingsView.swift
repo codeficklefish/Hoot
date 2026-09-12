@@ -10,6 +10,25 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            Section("Sorting") {
+                HStack(spacing: 10) {
+                    ForEach(SortingMode.allCases) { mode in
+                        SortingModeCard(
+                            mode: mode,
+                            isSelected: appState.sortingMode == mode
+                        ) {
+                            appState.sortingMode = mode
+                        }
+                    }
+                }
+                .padding(.vertical, 2)
+
+                Text(appState.sortingMode.tradeoff)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             Section("Intelligence") {
                 Picker("Analyze with", selection: $appState.settings.provider) {
                     Text("Filename rules only").tag(AISettings.ProviderKind.rulesOnly)
@@ -35,6 +54,10 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            // Greyed rather than hidden: a person who picked "By type" should
+            // still be able to see what the other mode would use, without
+            // having to switch to it to find out.
+            .disabled(!appState.sortingMode.usesModel)
 
             Section("Learning from your folders") {
                 if let learned = appState.learned, learned.isUsable {
@@ -129,7 +152,8 @@ struct SettingsView: View {
             Section("Privacy") {
                 Toggle("Let the on-device model read a short excerpt from files",
                        isOn: $appState.settings.allowLocalContentReading)
-                    .disabled(appState.settings.provider == .rulesOnly)
+                    .disabled(appState.settings.provider == .rulesOnly
+                              || !appState.sortingMode.usesModel)
 
                 Text(privacyExplanation)
                     .font(.caption)
@@ -142,9 +166,15 @@ struct SettingsView: View {
         .task(id: appState.settings) {
             await appState.refreshProviderStatus()
         }
+        .task(id: appState.sortingMode) {
+            await appState.refreshProviderStatus()
+        }
     }
 
     private var privacyExplanation: String {
+        guard appState.sortingMode.usesModel else {
+            return "Sorting by type reads filenames and extensions. No file is opened and no model runs, whatever is set above."
+        }
         switch appState.settings.provider {
         case .rulesOnly:
             return "Hoot only looks at filenames, sizes and dates. No file is ever opened."
@@ -153,5 +183,80 @@ struct SettingsView: View {
                 ? "Excerpts stay on this Mac — Apple's model runs locally and nothing is uploaded. Only the first page or so of text documents is read."
                 : "Only filenames, sizes and dates are analyzed. Files are never opened."
         }
+    }
+}
+
+/// One sorting mode, shown as the folders it would produce.
+///
+/// A radio button would have fitted the form, but the choice is between two
+/// pictures of a folder, and a picture is the thing being chosen. The card
+/// shows three folder names in that mode's own vocabulary, which is a more
+/// honest preview than either label alone.
+private struct SortingModeCard: View {
+    let mode: SortingMode
+    let isSelected: Bool
+    let onSelect: () -> Void
+
+    @State private var isHovered = false
+
+    private var sampleFolders: [String] {
+        switch mode {
+        case .byMeaning: return ["Cebu Trip", "Finance", "Thesis"]
+        case .byType: return ["Screenshots", "Images", "Spreadsheets"]
+        }
+    }
+
+    var body: some View {
+        Button(action: onSelect) {
+            VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(sampleFolders, id: \.self) { name in
+                        HStack(spacing: 5) {
+                            Image(systemName: "folder.fill")
+                                .font(.system(size: 8))
+                                .foregroundStyle(.tint)
+                            Text(name)
+                                .font(.system(size: 10))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(8)
+                .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 7))
+
+                HStack(spacing: 5) {
+                    Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
+                        .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.tertiary))
+                        .font(.system(size: 11))
+                    Text(mode.title)
+                        .font(.callout.weight(.medium))
+                }
+
+                Text(mode.summary)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(isHovered ? AnyShapeStyle(.quinary) : AnyShapeStyle(Color.clear))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .strokeBorder(
+                        isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.separator),
+                        lineWidth: isSelected ? 2 : 1
+                    )
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 10))
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
+        .help(mode.tradeoff)
     }
 }

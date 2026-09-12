@@ -1,0 +1,372 @@
+/* Hoot landing page.
+ *
+ * The tokens below are the Hoot design system's own, copied verbatim from
+ * _ds/hoot-design-system-bec63090/tokens/*.css rather than re-derived, so the
+ * shipped page and the design project agree on every value. Comments that
+ * explain where a value came from are the design system's.
+ *
+ * They are inlined rather than linked because the design system's stylesheets
+ * are served inside the design canvas; this page has to stand on its own on a
+ * static host with no build step.
+ */
+
+/* ---------- colours ----------
+   Ink + charcoal sampled from AppIcon.icns. Orange sampled from the product
+   site screenshots (rgb 255,140,20). Neutrals follow the macOS light greys. */
+:root {
+  --ink-1:#171717;   --ink-2:#3C3C3C;   --ink-3:#696969;
+  --ink-4:#8E8E93;   --ink-5:#B4B4B8;
+  --charcoal:#2D2B2B; --charcoal-deep:#1A1919;
+
+  --paper-0:#FFFFFF; --paper-1:#FBFBFB; --paper-2:#F5F5F5;
+  --paper-3:#EDEDED; --paper-4:#E3E3E3;
+
+  --line-1:rgba(0,0,0,.07); --line-2:rgba(0,0,0,.12); --line-3:rgba(0,0,0,.20);
+
+  --orange-50:#FFF3E6;  --orange-100:#FFE1C2; --orange-300:#FFB264;
+  --orange-500:#FF8C14; --orange-600:#E67900; --orange-700:#B85F00;
+
+  --green-500:#2FA94B; --yellow-500:#E8A600; --red-500:#D7372F; --blue-500:#0A6CFF;
+
+  --mac-window:#ECECEC; --mac-separator:rgba(0,0,0,.09);
+
+  /* semantic aliases — consume these, not the ramps above */
+  --text-primary:var(--ink-1);   --text-secondary:var(--ink-3);
+  --text-tertiary:var(--ink-4);  --text-link:var(--ink-1);
+  --text-link-hover:var(--orange-600);
+  --surface-page:var(--paper-2); --surface-card:var(--paper-0);
+  --border-subtle:var(--line-1);
+  --accent:var(--orange-500);    --accent-hover:var(--orange-600);
+
+  /* type */
+  --font-system:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",system-ui,sans-serif;
+  --font-display:"Figtree",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --font-script:"Caveat",ui-rounded,cursive;
+  --font-mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,monospace;
+
+  --text-display-1:800 76px/1.02 var(--font-display);
+  --text-display-2:800 56px/1.06 var(--font-display);
+  --text-display-3:800 40px/1.1 var(--font-display);
+  --text-heading:700 20px/1.25 var(--font-display);
+  --text-subhead:500 19px/1.45 var(--font-display);
+  --text-body:400 16px/1.55 var(--font-display);
+  --text-small:400 14px/1.5 var(--font-display);
+  --text-micro:500 12px/1.4 var(--font-display);
+  --text-app-caption:400 11px/14px var(--font-system);
+  --text-app-caption2:400 10px/13px var(--font-system);
+  --tracking-display:-0.025em; --tracking-tight:-0.012em; --tracking-wide:0.04em;
+
+  /* 4-pt ramp */
+  --space-1:2px;  --space-2:4px;  --space-3:6px;  --space-4:8px;  --space-5:10px;
+  --space-6:12px; --space-7:16px; --space-8:20px; --space-9:24px; --space-10:32px;
+  --space-11:40px; --space-12:56px; --space-13:80px; --space-14:120px;
+  --site-max:1180px; --site-gutter:32px;
+  /* nav = 20px padding + 38px pill + 20px padding; stable at every width */
+  --nav-h:78px;
+
+  --radius-sm:5px; --radius-md:7px; --radius-lg:10px;
+  --radius-xl:14px; --radius-2xl:20px; --radius-pill:999px;
+
+  --shadow-card:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05);
+  --shadow-card-hover:0 2px 4px rgba(0,0,0,.05),0 14px 36px rgba(0,0,0,.08);
+  --shadow-pill:0 1px 2px rgba(0,0,0,.08),0 6px 18px rgba(0,0,0,.10);
+  --shadow-cta:0 1px 1px rgba(255,255,255,.18) inset,0 2px 6px rgba(0,0,0,.28);
+
+  --ease-standard:cubic-bezier(.32,.72,0,1);
+  --dur-fast:140ms; --dur-base:220ms; --press-scale:.97;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--surface-page);
+  color: var(--text-primary);
+  font: var(--text-body);
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--text-link); text-decoration: none; }
+a:hover { color: var(--text-link-hover); }
+:focus-visible { outline: 2px solid var(--blue-500); outline-offset: 3px; border-radius: var(--radius-sm); }
+
+h1, h2, h3 { margin: 0; letter-spacing: var(--tracking-display); color: var(--ink-1); text-wrap: balance; }
+p { margin: 0; text-wrap: pretty; }
+
+.wrap { max-width: var(--site-max); margin: 0 auto; padding-inline: var(--site-gutter); }
+.eyebrow {
+  display: block; font: var(--text-micro);
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--ink-4); margin-bottom: var(--space-8);
+}
+.lede { font: var(--text-body); color: var(--text-secondary); }
+.band { background: var(--paper-1); box-shadow: inset 0 1px 0 var(--border-subtle), inset 0 -1px 0 var(--border-subtle); }
+section > .wrap { padding-block: var(--space-14); }
+
+/* ---------- full-screen scenes ----------
+   Each major section fills the viewport and centres its own content, so one
+   scene is on screen at a time and the next never peeks above the fold.
+
+   min-height, never height: a section whose content is taller than the screen
+   grows rather than clipping. That is what keeps the six feature cards and the
+   long safety copy whole on a short phone, where a fixed height would cut them.
+
+   svh rather than vh because mobile browsers collapse their chrome as you
+   scroll; vh measures the taller state and leaves every scene overshooting by
+   the toolbar's height.
+
+   The existing padding is left exactly as it was — the centring does the work,
+   not extra space. */
+/* A column flexbox, not a grid: a grid's implicit track sizes itself to the
+   item's min-content width, so on a narrow phone the wrapper was measured at
+   394px inside a 375px screen and the page scrolled sideways. A column flex
+   stretches its children to the container instead of measuring them. */
+main > section {
+  min-height: 100vh;   /* for engines without svh */
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+main > section > * { min-width: 0; }
+
+/* The hero shares the first screen with the nav above it, so it takes the
+   viewport less the nav's height. A full 100svh here would push the hero 78px
+   past the fold and put the nav on a screen of its own. */
+.hero {
+  min-height: calc(100vh - var(--nav-h));
+  min-height: calc(100svh - var(--nav-h));
+  align-content: center;
+}
+
+/* ---------- nav ---------- */
+.nav { display: flex; align-items: center; gap: var(--space-9); padding-block: var(--space-8); }
+.wordmark { display: flex; align-items: center; gap: var(--space-4); }
+.wordmark img { display: block; width: 26px; height: 26px; }
+.wordmark span { font: 800 19px/1 var(--font-display); letter-spacing: var(--tracking-tight); }
+.nav-links { display: flex; align-items: center; gap: var(--space-9); margin-left: auto; }
+.nav-links a { font: var(--text-small); font-weight: 600; color: var(--ink-3); }
+.nav-links a:hover { color: var(--ink-1); }
+/* `.nav-links a` is (0,2,0) and `.pill` is (0,1,0), so the nav's grey wins over
+   the pill's white however the rules are ordered — which put grey text on a
+   charcoal pill. Match the specificity rather than reordering. */
+.nav-links a.pill { color: #FFFFFF; }
+.nav-links a.pill:hover { color: #FFFFFF; }
+@media (max-width: 720px) { .nav-links a:not(.pill) { display: none; } }
+
+/* ---------- pill buttons ---------- */
+.pill {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-5);
+  font: var(--text-small); font-weight: 600;
+  border: none; border-radius: var(--radius-pill); cursor: pointer;
+  background: var(--charcoal); color: #FFFFFF;
+  box-shadow: var(--shadow-cta);
+  transition: transform var(--dur-fast) var(--ease-standard), background var(--dur-fast) var(--ease-standard);
+}
+.pill:hover { background: var(--charcoal-deep); color: #FFFFFF; }
+.pill:active { transform: scale(var(--press-scale)); }
+.pill-sm { height: 38px; padding-inline: var(--space-8); }
+.pill-lg { height: 64px; padding-inline: var(--space-10); font-size: 16px; }
+.pill-secondary {
+  background: var(--paper-0); color: var(--ink-1);
+  box-shadow: 0 0 0 1px var(--line-2), var(--shadow-card);
+}
+.pill-secondary:hover { background: var(--paper-0); color: var(--ink-1); box-shadow: 0 0 0 1px var(--line-3), var(--shadow-card-hover); }
+
+/* ---------- hero ---------- */
+.hero {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: var(--space-12); align-items: center;
+  padding-block: var(--space-11) var(--space-14);
+}
+.hero-copy { display: grid; gap: var(--space-8); justify-items: start; max-width: 520px; }
+.hero h1 { font: var(--text-display-1); font-size: clamp(44px, 5.4vw, 76px); }
+.hero h1 em { font-style: normal; color: var(--orange-500); }
+.hero .lede { font: var(--text-subhead); color: var(--text-secondary); }
+.status-dot {
+  display: inline-flex; align-items: center; gap: var(--space-3);
+  font: var(--text-micro); letter-spacing: var(--tracking-wide);
+  text-transform: uppercase; color: var(--ink-3);
+}
+.status-dot::before { content: ""; width: 6px; height: 6px; border-radius: var(--radius-pill); background: var(--accent); }
+.cta-row { display: flex; flex-wrap: wrap; gap: var(--space-5); }
+.meta { font: var(--text-small); color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+
+.notice {
+  display: flex; gap: var(--space-5);
+  padding: var(--space-7) var(--space-8);
+  background: var(--orange-50); border-radius: var(--radius-xl);
+}
+.notice svg { flex: 0 0 auto; margin-top: 2px; }
+.notice p { font: var(--text-small); color: var(--ink-2); }
+.notice a { text-decoration: underline; text-underline-offset: 2px; }
+
+/* ---------- the Finder mock ----------
+   The design's own hero object: a macOS window whose listing flips between the
+   loose files and the folders Hoot proposes. Chrome colours are the real
+   traffic lights and the system window grey from the design system. */
+.demo { margin: 0; position: relative; }
+.demo-frame {
+  background: var(--surface-card); border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-card); overflow: hidden;
+  font-family: var(--font-system);
+}
+.demo-bar {
+  display: flex; align-items: center; gap: var(--space-5);
+  padding: var(--space-5) var(--space-6);
+  background: var(--mac-window); box-shadow: inset 0 -1px 0 var(--mac-separator);
+}
+.lights { display: flex; gap: 6px; }
+.lights i { width: 11px; height: 11px; border-radius: var(--radius-pill); display: block; }
+.lights i:nth-child(1) { background: #FF5F57; }
+.lights i:nth-child(2) { background: #FEBC2E; }
+.lights i:nth-child(3) { background: #28C840; }
+.demo-path { font: var(--text-app-caption); color: var(--ink-3); margin-left: var(--space-2); }
+
+.seg { display: flex; gap: 2px; padding: 2px; margin-left: auto; background: rgba(0,0,0,.06); border-radius: var(--radius-md); }
+.seg button {
+  font: 600 10px/1 var(--font-display); letter-spacing: var(--tracking-wide);
+  text-transform: uppercase; padding: 5px 10px;
+  border: none; border-radius: var(--radius-sm); cursor: pointer;
+  background: transparent; color: var(--ink-3);
+  transition: background var(--dur-fast) var(--ease-standard);
+}
+.seg button[aria-pressed="true"] { background: var(--paper-0); color: var(--ink-1); box-shadow: 0 1px 2px rgba(0,0,0,.10); }
+
+.listing { padding: var(--space-7) var(--space-7) var(--space-6); display: grid; gap: var(--space-7); min-height: 372px; align-content: start; }
+.listing[data-view="after"] .state-before,
+.listing[data-view="before"] .state-after { display: none; }
+.state-after { display: grid; gap: var(--space-7); }
+.state-before { display: grid; gap: 2px; }
+
+.group-head {
+  display: flex; align-items: center; gap: var(--space-4);
+  font: 600 13px/16px var(--font-system); color: var(--ink-1);
+  padding-bottom: var(--space-3);
+}
+.group-head .tri { color: var(--accent); font-size: 11px; }
+.group-head .count { margin-left: auto; font: var(--text-app-caption); color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.group .row { padding-left: var(--space-8); }
+
+.row {
+  display: flex; align-items: center; gap: var(--space-5);
+  height: var(--row-height-app, 28px);
+  padding-inline: var(--space-3); border-radius: var(--radius-sm);
+}
+.row:hover { background: rgba(0,0,0,.045); }
+.kind { display: block; width: 16px; height: 16px; flex: 0 0 auto; color: var(--ink-4); }
+.kind svg { display: block; width: 16px; height: 16px; }
+.fname { font: 400 13px/17px var(--font-system); color: var(--ink-2); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.when { margin-left: auto; flex: 0 0 auto; font: var(--text-app-caption); color: var(--ink-4); font-variant-numeric: tabular-nums; }
+
+.demo-note {
+  display: flex; gap: var(--space-5);
+  padding: var(--space-6) var(--space-7) var(--space-7);
+  background: var(--paper-1); box-shadow: inset 0 1px 0 var(--border-subtle);
+  font-family: var(--font-display);
+}
+.demo-note::before {
+  content: ""; width: 7px; height: 7px; border-radius: var(--radius-pill);
+  background: var(--accent); flex: 0 0 auto; margin-top: 7px;
+}
+.demo-note p { font: var(--text-small); color: var(--text-secondary); }
+.demo-note strong { color: var(--text-primary); font-weight: 600; }
+.demo-note code { font-family: var(--font-mono); font-size: 13px; }
+
+/* Handwritten marker, as in the design system's annotation component. */
+.annotation {
+  font: 500 24px/1 var(--font-script);
+  color: var(--ink-3);
+  position: absolute; left: var(--space-9); bottom: -30px;
+}
+
+/* ---------- feature cards ---------- */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(272px, 1fr)); gap: var(--space-9); }
+.card {
+  background: var(--surface-card); border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-card); padding: var(--space-10);
+  display: grid; gap: var(--space-6); align-content: start;
+  transition: box-shadow var(--dur-base) var(--ease-standard), transform var(--dur-base) var(--ease-standard);
+}
+.card:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-2px); }
+.card h3 { font: var(--text-heading); font-size: 17px; letter-spacing: var(--tracking-tight); }
+.card p { font: var(--text-small); color: var(--text-secondary); }
+.card svg { color: var(--ink-1); }
+
+/* ---------- promises ---------- */
+.promise {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-9); padding-block: var(--space-10);
+  box-shadow: inset 0 1px 0 var(--border-subtle);
+}
+.promises > .promise:last-child { box-shadow: inset 0 1px 0 var(--border-subtle), inset 0 -1px 0 var(--border-subtle); }
+.promise h3 { font: var(--text-heading); font-size: 17px; letter-spacing: var(--tracking-tight); }
+.promise p { grid-column: span 2; min-width: 0; font: var(--text-body); color: var(--text-secondary); }
+@media (max-width: 640px) { .promise p { grid-column: auto; } }
+
+.aside {
+  margin-top: var(--space-11); max-width: 760px;
+  display: flex; gap: var(--space-7);
+  padding: var(--space-9) var(--space-10);
+  background: var(--surface-card); border-radius: var(--radius-2xl); box-shadow: var(--shadow-card);
+}
+.aside svg { flex: 0 0 auto; margin-top: 2px; }
+.aside p { font: var(--text-body); color: var(--ink-2); }
+
+/* ---------- corrections ---------- */
+.split { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-12); align-items: center; }
+.review {
+  background: var(--surface-card); border-radius: var(--radius-2xl); box-shadow: var(--shadow-card);
+  padding: var(--space-9); font-family: var(--font-system);
+  display: grid; gap: var(--space-6); position: relative;
+}
+.review-label { font: var(--text-app-caption2); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--ink-4); }
+.move-row {
+  display: flex; align-items: center; gap: var(--space-5);
+  padding: var(--space-6); border-radius: var(--radius-lg); background: var(--paper-1);
+  box-shadow: inset 0 0 0 1px var(--line-1);
+}
+.move-row .name { font: var(--text-app-caption); font-size: 12px; color: var(--ink-1); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.move-row .dest {
+  margin-left: auto; flex: 0 0 auto;
+  font: var(--text-app-caption); padding: 3px var(--space-5);
+  border-radius: var(--radius-pill); background: var(--paper-3); color: var(--ink-3);
+}
+.move-row .dest.is-final { background: var(--orange-50); color: var(--orange-700); font-weight: 600; }
+.conf { width: 8px; height: 8px; border-radius: var(--radius-pill); flex: 0 0 auto; }
+.conf-low { background: var(--yellow-500); }
+.conf-high { background: var(--green-500); }
+.review .annotation { position: static; padding-left: var(--space-8); }
+.next-time { display: flex; align-items: center; gap: var(--space-5); padding-top: var(--space-6); box-shadow: inset 0 1px 0 var(--mac-separator); }
+.next-time > span { font: var(--text-app-caption); color: var(--ink-4); white-space: nowrap; }
+.next-time .move-row { flex: 1; min-width: 0; }
+
+/* ---------- privacy ---------- */
+.entitlements {
+  list-style: none; margin: 0 0 var(--space-9); padding: 0;
+  display: grid; gap: var(--space-3);
+  font-family: var(--font-mono); font-size: 13px; color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.claims { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-10); }
+.claims > div { display: grid; gap: var(--space-5); align-content: start; }
+.claims h3 { font: var(--text-heading); font-size: 17px; letter-spacing: var(--tracking-tight); }
+.claims p { font: var(--text-small); color: var(--text-secondary); }
+.claims svg { color: var(--ink-3); }
+
+/* ---------- close + footer ---------- */
+.close { max-width: 760px; margin: 0 auto; padding-block: var(--space-14); padding-inline: var(--site-gutter); display: grid; gap: var(--space-8); justify-items: center; text-align: center; }
+.close img { border-radius: 22%; display: block; }
+.close h2 { font: var(--text-display-2); font-size: clamp(32px, 4.2vw, 56px); }
+.close p { font: var(--text-body); color: var(--text-secondary); max-width: 520px; }
+footer { box-shadow: inset 0 1px 0 var(--border-subtle); }
+.foot { display: flex; flex-wrap: wrap; gap: var(--space-9); align-items: center; padding-block: var(--space-10); font: var(--text-small); color: var(--ink-4); }
+.foot a { color: var(--ink-4); }
+.foot a:hover { color: var(--ink-1); }
+.foot nav { display: flex; gap: var(--space-9); margin-left: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pill, .card, .seg button { transition: none; }
+  .card:hover { transform: none; }
+}

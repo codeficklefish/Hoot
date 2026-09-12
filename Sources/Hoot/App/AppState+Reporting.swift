@@ -17,6 +17,15 @@ extension AppState {
     /// Reports whether the configured provider can actually run, so Settings
     /// can say "on-device model still downloading" instead of failing silently.
     func refreshProviderStatus() async {
+        // Sorting by type is a decision not to use a model, so a banner
+        // announcing that no model is running would be reporting the setting
+        // back to the person who chose it.
+        guard sortingMode.usesModel else {
+            providerStatus = "Sorting by type — no model is used."
+            clearIssue(titled: Self.smartSortingOffTitle)
+            return
+        }
+
         guard let provider = MacPlatform.makeAIProvider(for: settings) else {
             providerStatus = "Using filename rules only."
             clearIssue(titled: Self.smartSortingOffTitle)
@@ -91,7 +100,11 @@ extension AppState {
     /// to want the same moment — and because it runs whether or not there is
     /// anything worth saying.
     func folderSettled() {
-        MacPlatform.makeAIProvider(for: settings)?.prewarm()
+        // Sorting by type has no expensive part, so waking a model for it
+        // would be work done purely to be thrown away.
+        if sortingMode.usesModel {
+            MacPlatform.makeAIProvider(for: settings)?.prewarm()
+        }
         precomputePlan()
     }
 
