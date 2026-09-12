@@ -37,6 +37,20 @@ final class AppState: ObservableObject {
     @Published var settings: AISettings {
         didSet { settings.save() }
     }
+    /// Whether folders are named after what files are about, or what they are.
+    ///
+    /// Changing this invalidates the current proposal rather than editing it:
+    /// the two modes reach their answers by different routes, and a plan that
+    /// is half one and half the other would be a third thing nobody chose.
+    @Published var sortingMode: SortingMode = SortingMode.load() {
+        didSet {
+            guard oldValue != sortingMode else { return }
+            sortingMode.save()
+            plan = nil
+            planSignature = nil
+            Task { await buildPlan(force: true) }
+        }
+    }
     /// Folder names the user has corrected before.
     @Published var folderPreferences: FolderPreferences
     /// What Hoot has learned from folders the user organized themselves.
@@ -107,7 +121,17 @@ final class AppState: ObservableObject {
         var counts: [String: Int] = [:]
         var order: [String] = []
         for file in detectedFiles {
-            let label = classifications[file.id]?.project ?? classifications[file.id]?.category ?? "Sorting…"
+            let label: String
+            switch sortingMode {
+            case .byType:
+                // No waiting, and no "Sorting…": the answer is already known
+                // from the filename, so the summary can be right immediately.
+                label = TypeSorter.folder(for: file) ?? "Left alone"
+            case .byMeaning:
+                label = classifications[file.id]?.project
+                    ?? classifications[file.id]?.category
+                    ?? "Sorting…"
+            }
             if counts[label] == nil { order.append(label) }
             counts[label, default: 0] += 1
         }

@@ -8,6 +8,9 @@ A spreadsheet of tax records goes to Finance even though its name says nothing.
 A photo with a meaningless camera-roll name is read with OCR to find out what
 it shows.
 
+If that is more than you want, it will also just put the screenshots in
+Screenshots.
+
 Everything runs on this Mac. There is no account, no server, and no network
 code in the project at all.
 
@@ -26,13 +29,34 @@ is, so being able to look inside is usually what settles whether a suggestion
 is right.
 
 When files settle, an **island appears under the notch**: a capsule showing how
-many are waiting, which expands on hover into what Hoot thinks they are and a
-button to review them. macOS has no Dynamic Island — that is iPhone hardware —
-so it is a floating panel built to behave like one. It never takes focus.
+many are waiting, which expands on hover into the folders they are about to go
+into, the choice between sorting by meaning and by type, and a button to review
+them. macOS has no Dynamic Island — that is iPhone hardware — so it is a
+floating panel built to behave like one. It never takes focus.
+
+### Two ways to sort
+
+**By meaning** is the one above: folders named after subjects. It reads inside
+files and takes a few seconds.
+
+**By type** names folders after what files are — Screenshots, Images, PDFs,
+Spreadsheets, Videos, Audio, Archives, Installers. It decides from the filename
+and extension alone, which means it is instant, never opens a file, and reaches
+no model at all. Screenshots get their own folder because nothing but the name
+separates one from a photograph, and they arrive in volume.
+
+Files whose type Hoot doesn't recognize are left where they are rather than
+swept into an "Other" folder. Moving something into a junk drawer named by the
+app is worse than not moving it.
+
+Switch between them in the popover, in Settings, or from the island itself —
+where the folders the choice would produce are listed beside it, so the
+difference can be seen rather than guessed at.
 
 ### What decides where a file goes
 
-Four sources of evidence, in order of how much they are trusted:
+Sorting by meaning draws on four sources of evidence, in order of how much
+they are trusted:
 
 1. **Your corrections.** Drag a file to a different folder in the review
    window and Hoot records it, weighted more heavily than anything inferred.
@@ -114,7 +138,7 @@ NOTARY_PROFILE=hoot-notary \
 
 ```bash
 swift test              # the engine imports nothing platform-specific
-./Verification/run.sh   # 221 behaviour and safety checks, in a sandbox
+./Verification/run.sh   # 257 behaviour and safety checks, in a sandbox
 ./Evaluation/run.sh     # accuracy against folders you organized yourself
 ```
 
@@ -134,7 +158,7 @@ way to know a decompressor is correct.
 | `Sources/HootKit` | the engine — decides where files belong, imports only Foundation |
 | `Sources/HootPlatformMac` | Apple adapters (PDFKit, Vision, FoundationModels) |
 | `Sources/Hoot` | the macOS app |
-| `Verification` | 221 behaviour and safety checks |
+| `Verification` | 257 behaviour and safety checks |
 | `Evaluation` | measures accuracy against folders you organized |
 | `Packaging` | app bundle, icon, signing and notarization |
 | `Website/public` | the deployed landing page — what Netlify publishes |
@@ -159,6 +183,8 @@ The full policy is [docs/privacy.md](docs/privacy.md). In short:
   open a connection at all.
 - File contents are read only on this Mac, only by the local model, and only
   with content reading enabled in Settings.
+- Sorting by type reads filenames and extensions and nothing else. No file is
+  opened and no model runs, whatever else is set.
 - Files stored in the cloud but not downloaded are never opened, so Hoot
   cannot trigger a download you did not ask for.
 - The operation log and learned model live in the app's container, readable

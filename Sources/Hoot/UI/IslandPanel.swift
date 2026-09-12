@@ -13,6 +13,10 @@ import HootKit
 @MainActor
 final class IslandController {
     private var panel: NSPanel?
+    /// Created once and then fed new root views, so the island's hover state
+    /// survives every refresh that isn't about hovering.
+    private var hosting: NSHostingView<IslandView>?
+    private var frameObserver: NSObjectProtocol?
     private var cancellables: Set<AnyCancellable> = []
     private let appState: AppState
 
@@ -27,13 +31,16 @@ final class IslandController {
 
     private func observe() {
         // One republish for any of the inputs the island reads.
-        Publishers.CombineLatest3(
+        Publishers.CombineLatest4(
             appState.$detectedFiles,
             appState.$lastMessage,
-            appState.$batches
+            appState.$batches,
+            // The mode is one of the island's inputs now, so changing it from
+            // the island has to redraw the island.
+            appState.$sortingMode
         )
         .receive(on: RunLoop.main)
-        .sink { [weak self] _, _, _ in self?.refresh() }
+        .sink { [weak self] _, _, _, _ in self?.refresh() }
         .store(in: &cancellables)
     }
 
@@ -43,7 +50,8 @@ final class IslandController {
         }
         let waiting = appState.detectedFiles.count
         guard waiting > 0 else { return nil }
-        let groups = appState.summaryByCategory.map(\.label)
+        let groups = appState.summaryByCategory
+            .map { IslandGroup(name: $0.label, count: $0.count) }
         return .waiting(count: waiting, groups: groups)
     }
 
@@ -51,7 +59,7 @@ final class IslandController {
     /// that situation and not to the next one.
     private func signature(of state: IslandState) -> String {
         switch state {
-        case .waiting(let count, _): return "waiting-\(count)"
+        case .waiting(let count, _): return "waiting-\(count)-\(appState.sortingMode.rawValue)"
         case .organized(let message, _): return "organized-\(message)"
         }
     }
@@ -65,6 +73,12 @@ final class IslandController {
     private func show(_ state: IslandState) {
         let view = IslandView(
             state: state,
+            mode: appState.sortingMode,
+            onSelectMode: { [weak self] mode in
+                // Deliberately not a dismissal: the person is adjusting what
+                // they are looking at, not saying they are done with it.
+                self?.appState.sortingMode = mode
+            },
             onReview: { [weak self] in
                 NSApp.activate(ignoringOtherApps: true)
                 self?.appState.presentWindow?(WindowID.review)
@@ -77,8 +91,21 @@ final class IslandController {
             onDismiss: { [weak self] in self?.dismiss(state) }
         )
 
+        // Replacing the root view rather than the hosting view keeps the
+        // island's own `@State` alive. It matters as soon as the panel has
+        // anything to click: choosing a sorting mode changes app state, which
+        // comes straight back here as a refresh — and a fresh hosting view
+        // would arrive collapsed, snapping shut under the pointer that just
+        // used it. It also stops a frame observer being added per refresh.
+        if let hosting {
+            hosting.rootView = view
+            panel?.orderFrontRegardless()
+            return
+        }
+
         let hosting = NSHostingView(rootView: view)
         hosting.setFrameSize(hosting.fittingSize)
+        self.hosting = hosting
 
         let panel = self.panel ?? makePanel()
         panel.contentView = hosting
@@ -90,8 +117,12 @@ final class IslandController {
         resize(panel, to: hosting.fittingSize)
         panel.orderFrontRegardless()
 
+        // The hosting view resizes itself when the SwiftUI content grows, so
+        // this is what tells the panel to follow — and, because the panel is
+        // anchored under the notch rather than by its bottom-left corner, to
+        // grow downward instead of upward.
         hosting.postsFrameChangedNotifications = true
-        NotificationCenter.default.addObserver(
+        frameObserver = NotificationCenter.default.addObserver(
             forName: NSView.frameDidChangeNotification, object: hosting, queue: .main
         ) { [weak self, weak panel, weak hosting] _ in
             guard let panel, let hosting else { return }
@@ -139,5 +170,11 @@ final class IslandController {
 
     private func hide() {
         panel?.orderOut(nil)
+    }
+
+    deinit {
+        if let frameObserver {
+            NotificationCenter.default.removeObserver(frameObserver)
+        }
     }
 }
