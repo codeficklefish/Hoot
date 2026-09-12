@@ -20,6 +20,11 @@ struct MoveRow: View {
     /// the difference between correcting it and distrusting the whole app.
     @State private var isShowingEvidence = false
 
+    /// Whether the pointer is on this row. Drives the highlight and the
+    /// disclosure chevron, which stays out of the way until there is a reason
+    /// to think about this particular file.
+    @State private var isHovered = false
+
     private var isDemoted: Bool {
         move.roleSubfolder == OrganizationPlanner.demotedSubfolder
     }
@@ -54,11 +59,16 @@ struct MoveRow: View {
                 ConfidenceDot(confidence: move.classification.confidence)
 
                 Button {
-                    withAnimation(.easeInOut(duration: 0.15)) { isShowingEvidence.toggle() }
+                    withAnimation(Motion.state) { isShowingEvidence.toggle() }
                 } label: {
-                    Image(systemName: isShowingEvidence ? "chevron.down" : "chevron.right")
+                    Image(systemName: "chevron.right")
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
+                        // Rotated rather than swapped: the same mark turning
+                        // reads as one control changing state, where two
+                        // different glyphs read as the row being replaced.
+                        .rotationEffect(.degrees(isShowingEvidence ? 90 : 0))
+                        .opacity(isHovered || isShowingEvidence ? 1 : 0.35)
                 }
                 .buttonStyle(.plain)
                 .help("Why here?")
@@ -67,11 +77,20 @@ struct MoveRow: View {
             if isShowingEvidence {
                 EvidencePanel(move: move, excerpt: appState.evidence[move.file.id])
                     .padding(.leading, 22)
+                    // Opens downward from the row it belongs to rather than
+                    // fading in over whatever is beneath it.
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .font(.callout)
         .opacity(isDemoted ? 0.55 : 1)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
         .contentShape(Rectangle())
+        .hoverHighlight(isHovered)
+        .onHover { hovering in
+            withAnimation(Motion.hover) { isHovered = hovering }
+        }
         // Dragging a file to another folder is the natural way to say "not
         // there, here" — and it is the correction Hoot learns from.
         .onDrag {
