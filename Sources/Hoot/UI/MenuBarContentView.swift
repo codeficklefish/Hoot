@@ -116,8 +116,13 @@ struct MenuBarContentView: View {
             FlowLayout(spacing: 8, lineSpacing: 8) {
                 ForEach(appState.summaryByCategory, id: \.label) { entry in
                     CategoryChip(label: entry.label, count: entry.count)
+                        .transition(.opacity.combined(with: .scale(scale: 0.9)))
                 }
             }
+            // Switching modes replaces every chip. Animating the set makes
+            // that one movement rather than a flicker, and it is the clearest
+            // demonstration of what the choice above actually does.
+            .animation(Motion.move, value: appState.summaryByCategory.map(\.label))
         }
     }
 
@@ -318,6 +323,8 @@ private struct CategoryChip: View {
     let label: String
     let count: Int
 
+    @State private var isHovered = false
+
     var body: some View {
         HStack(spacing: 5) {
             Text(label)
@@ -325,12 +332,19 @@ private struct CategoryChip: View {
             Text("\(count)")
                 .font(.caption.weight(.medium))
                 .monospacedDigit()
+                .rollingDigits()
                 .foregroundStyle(.secondary)
         }
         .padding(.horizontal, 11)
         .padding(.vertical, 5)
         .background(Color(nsColor: .controlBackgroundColor), in: Capsule())
-        .overlay(Capsule().strokeBorder(Color(nsColor: .separatorColor)))
+        .overlay(Capsule().strokeBorder(
+            isHovered ? Color.accentColor.opacity(0.65) : Color(nsColor: .separatorColor)
+        ))
+        .animation(Motion.state, value: count)
+        .onHover { hovering in
+            withAnimation(Motion.hover) { isHovered = hovering }
+        }
     }
 }
 
@@ -369,7 +383,9 @@ private struct MenuRow: View {
             .background(isHovered ? AnyShapeStyle(.quaternary) : AnyShapeStyle(Color.clear))
         }
         .buttonStyle(.plain)
-        .onHover { isHovered = $0 }
+        .onHover { hovering in
+            withAnimation(Motion.hover) { isHovered = hovering }
+        }
     }
 }
 

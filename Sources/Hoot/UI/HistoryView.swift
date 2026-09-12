@@ -32,9 +32,14 @@ struct HistoryView: View {
                     LazyVStack(alignment: .leading, spacing: 12) {
                         ForEach(appState.batches) { batch in
                             BatchSection(batch: batch, appState: appState)
+                                .scrollReveal()
+                                .transition(.opacity.combined(with: .scale(scale: 0.97)))
                         }
                     }
                     .padding(14)
+                    // Undoing a batch takes it out of the list; it should
+                    // leave visibly, since that is the confirmation.
+                    .animation(Motion.move, value: appState.batches.map(\.id))
                 }
             }
         }

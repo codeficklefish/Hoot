@@ -66,13 +66,21 @@ struct ReviewView: View {
             LazyVStack(alignment: .leading, spacing: 14) {
                 ForEach(plan.groups) { group in
                     GroupSection(group: group, appState: appState, previewURL: $previewURL)
+                        .scrollReveal()
+                        // A group emptied by a drag should leave, not vanish.
+                        .transition(.asymmetric(
+                            insertion: .opacity.combined(with: .scale(scale: 0.97)),
+                            removal: .opacity.combined(with: .scale(scale: 0.94))
+                        ))
                 }
 
                 if !plan.skipped.isEmpty {
                     SkippedSection(skipped: plan.skipped, previewURL: $previewURL)
+                        .scrollReveal()
                 }
             }
             .padding(14)
+            .animation(Motion.move, value: plan.groups.map(\.id))
         }
     }
 
@@ -81,6 +89,9 @@ struct ReviewView: View {
             Text("\(plan.approvedMoves.count) selected")
                 .font(.callout)
                 .foregroundStyle(.secondary)
+                .monospacedDigit()
+                .rollingDigits()
+                .animation(Motion.state, value: plan.approvedMoves.count)
 
             Button("All") { appState.setApprovalForAll(true) }
                 .controlSize(.small)
@@ -180,6 +191,8 @@ private struct GroupSection: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
+                    .rollingDigits()
+                    .animation(Motion.state, value: group.approvedCount)
             }
             .onAppear { draftName = group.name }
             .onChange(of: group.name) { newValue in
@@ -216,6 +229,10 @@ private struct GroupSection: View {
             RoundedRectangle(cornerRadius: 8)
                 .strokeBorder(Color.accentColor, lineWidth: isTargeted ? 2 : 0)
         )
+        // The card lifts slightly under a dragged file, so the drop target is
+        // obvious while the pointer is still moving.
+        .scaleEffect(isTargeted ? 1.01 : 1)
+        .animation(Motion.state, value: isTargeted)
         // Dropping a file here says "this one belongs in this folder", which
         // both fixes the plan and teaches Hoot for next time.
         .onDrop(of: [.text], isTargeted: $isTargeted) { providers in
@@ -223,7 +240,7 @@ private struct GroupSection: View {
             _ = provider.loadObject(ofClass: NSString.self) { value, _ in
                 guard let raw = value as? String, let moveID = UUID(uuidString: raw) else { return }
                 Task { @MainActor in
-                    withAnimation(.easeInOut(duration: 0.18)) {
+                    withAnimation(Motion.move) {
                         appState.moveFile(moveID, toGroup: group.id)
                     }
                 }
