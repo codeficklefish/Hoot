@@ -71,7 +71,13 @@ itself — see [docs/pim-design-notes.md](docs/pim-design-notes.md).
 [**Download Hoot 0.5.0**](https://github.com/codeficklefish/Hoot/releases/latest) · 1.2 MB · or read
 [the landing page](https://hoot-mac.netlify.app).
 
-**This build is not notarized by Apple.** macOS will refuse the first launch —
+**The download is older than this page.** 0.5.0 was built on 9 September and
+`main` is 24 commits past it — sorting by type and hold-to-preview are both
+described above and neither is in that build. Until there is a release that
+includes them, [building from source](#building) is the way to get what this
+README describes.
+
+**It is also not notarized by Apple.** macOS will refuse the first launch —
 open **System Settings → Privacy & Security** and click *Open Anyway*. The
 [release notes](https://github.com/codeficklefish/Hoot/releases/tag/v0.5.0)
 give the four steps. Notarizing needs an Apple Developer ID, which this project
@@ -157,9 +163,10 @@ way to know a decompressor is correct.
 | `Verification` | 270 behaviour and safety checks |
 | `Evaluation` | measures accuracy against folders you organized |
 | `Packaging` | app bundle, icon, signing and notarization |
+| `CONTEXT.md` | what each term in the code means, in one place |
 | `Website/public` | the deployed landing page — what Netlify publishes |
 | `Website` | design artboards the page was drawn from |
-| `docs` | architecture, privacy, and the decisions behind them |
+| `docs` | architecture, privacy, coding standards, and the decisions behind them |
 | `.github/workflows` | builds and runs both suites on every push and PR |
 
 ## Design notes
@@ -169,6 +176,17 @@ the way it is, drawing on Bergman & Whittaker's *The Science of Managing Our
 Digital Stuff* — including the finding that people retrieve badly from folders
 someone else organized, which is the reason correcting Hoot is treated as the
 most valuable signal it has.
+
+Decisions that shaped the code are recorded as they were made, with the reason
+rather than the conclusion:
+
+- [0001](docs/decisions/0001-engine-and-platform-adapters.md) — why the engine
+  is a separate module that imports nothing platform-specific.
+- [0002](docs/decisions/0002-no-protocol-for-rule-based-classification.md) —
+  why a protocol with one implementation was deleted rather than kept for a
+  second that never came.
+
+[docs/coding-standards.md](docs/coding-standards.md) covers the rest.
 
 ## Privacy
 
