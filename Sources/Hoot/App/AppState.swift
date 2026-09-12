@@ -154,13 +154,6 @@ final class AppState: ObservableObject {
 
     var canUndo: Bool { history.mostRecentUndoable != nil }
 
-    /// How a non-SwiftUI surface asks for a window.
-    ///
-    /// SwiftUI's `openWindow` lives in the environment, which AppKit code — the
-    /// island panel — has no way to reach. The app scene hands this over at
-    /// launch so there is one way in rather than a second window system.
-    var presentWindow: ((String) -> Void)?
-
     // MARK: - Watching
 
     // MARK: - Review
