@@ -164,19 +164,69 @@ section > .wrap { padding-block: var(--space-14); }
 .notice p { font: var(--text-small); color: var(--ink-2); }
 .notice a { text-decoration: underline; text-underline-offset: 2px; }
 
-/* ---------- the recording ----------
-   Takes the slot the mock Finder window held in the design: same card, same
-   20px radius, same shadow, so the hero composition is unchanged. */
+/* ---------- the Finder mock ----------
+   The design's own hero object: a macOS window whose listing flips between the
+   loose files and the folders Hoot proposes. Chrome colours are the real
+   traffic lights and the system window grey from the design system. */
 .demo { margin: 0; position: relative; }
 .demo-frame {
   background: var(--surface-card); border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-card); overflow: hidden;
+  font-family: var(--font-system);
 }
-.demo-video { display: block; width: 100%; height: auto; background: var(--mac-window); }
+.demo-bar {
+  display: flex; align-items: center; gap: var(--space-5);
+  padding: var(--space-5) var(--space-6);
+  background: var(--mac-window); box-shadow: inset 0 -1px 0 var(--mac-separator);
+}
+.lights { display: flex; gap: 6px; }
+.lights i { width: 11px; height: 11px; border-radius: var(--radius-pill); display: block; }
+.lights i:nth-child(1) { background: #FF5F57; }
+.lights i:nth-child(2) { background: #FEBC2E; }
+.lights i:nth-child(3) { background: #28C840; }
+.demo-path { font: var(--text-app-caption); color: var(--ink-3); margin-left: var(--space-2); }
+
+.seg { display: flex; gap: 2px; padding: 2px; margin-left: auto; background: rgba(0,0,0,.06); border-radius: var(--radius-md); }
+.seg button {
+  font: 600 10px/1 var(--font-display); letter-spacing: var(--tracking-wide);
+  text-transform: uppercase; padding: 5px 10px;
+  border: none; border-radius: var(--radius-sm); cursor: pointer;
+  background: transparent; color: var(--ink-3);
+  transition: background var(--dur-fast) var(--ease-standard);
+}
+.seg button[aria-pressed="true"] { background: var(--paper-0); color: var(--ink-1); box-shadow: 0 1px 2px rgba(0,0,0,.10); }
+
+.listing { padding: var(--space-7) var(--space-7) var(--space-6); display: grid; gap: var(--space-7); min-height: 372px; align-content: start; }
+.listing[data-view="after"] .state-before,
+.listing[data-view="before"] .state-after { display: none; }
+.state-after { display: grid; gap: var(--space-7); }
+.state-before { display: grid; gap: 2px; }
+
+.group-head {
+  display: flex; align-items: center; gap: var(--space-4);
+  font: 600 13px/16px var(--font-system); color: var(--ink-1);
+  padding-bottom: var(--space-3);
+}
+.group-head .tri { color: var(--accent); font-size: 11px; }
+.group-head .count { margin-left: auto; font: var(--text-app-caption); color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.group .row { padding-left: var(--space-8); }
+
+.row {
+  display: flex; align-items: center; gap: var(--space-5);
+  height: var(--row-height-app, 28px);
+  padding-inline: var(--space-3); border-radius: var(--radius-sm);
+}
+.row:hover { background: rgba(0,0,0,.045); }
+.kind { display: block; width: 16px; height: 16px; flex: 0 0 auto; color: var(--ink-4); }
+.kind svg { display: block; width: 16px; height: 16px; }
+.fname { font: 400 13px/17px var(--font-system); color: var(--ink-2); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.when { margin-left: auto; flex: 0 0 auto; font: var(--text-app-caption); color: var(--ink-4); font-variant-numeric: tabular-nums; }
+
 .demo-note {
   display: flex; gap: var(--space-5);
   padding: var(--space-6) var(--space-7) var(--space-7);
   background: var(--paper-1); box-shadow: inset 0 1px 0 var(--border-subtle);
+  font-family: var(--font-display);
 }
 .demo-note::before {
   content: ""; width: 7px; height: 7px; border-radius: var(--radius-pill);
@@ -279,6 +329,6 @@ footer { box-shadow: inset 0 1px 0 var(--border-subtle); }
 .foot nav { display: flex; gap: var(--space-9); margin-left: auto; }
 
 @media (prefers-reduced-motion: reduce) {
-  .pill, .card { transition: none; }
+  .pill, .card, .seg button { transition: none; }
   .card:hover { transform: none; }
 }
