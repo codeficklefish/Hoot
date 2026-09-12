@@ -28,11 +28,8 @@ the way the Finder does. The filename is often what failed to say what a file
 is, so being able to look inside is usually what settles whether a suggestion
 is right.
 
-When files settle, an **island appears under the notch**: a capsule showing how
-many are waiting, which expands on hover into the folders they are about to go
-into, the choice between sorting by meaning and by type, and a button to review
-them. macOS has no Dynamic Island — that is iPhone hardware — so it is a
-floating panel built to behave like one. It never takes focus.
+The menu bar mark carries the count, so a folder filling up is visible without
+opening anything.
 
 ### Two ways to sort
 
@@ -49,9 +46,8 @@ Files whose type Hoot doesn't recognize are left where they are rather than
 swept into an "Other" folder. Moving something into a junk drawer named by the
 app is worse than not moving it.
 
-Switch between them in the popover, in Settings, or from the island itself —
-where the folders the choice would produce are listed beside it, so the
-difference can be seen rather than guessed at.
+Switch between them in the menu bar popover or in Settings, where each mode is
+shown as the folders it would produce rather than described.
 
 ### What decides where a file goes
 
