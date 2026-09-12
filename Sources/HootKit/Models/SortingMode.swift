@@ -42,9 +42,9 @@ public enum SortingMode: String, Codable, CaseIterable, Identifiable, Sendable {
     public var tradeoff: String {
         switch self {
         case .byMeaning:
-            return "Reads inside files and takes a few seconds. Best when names say nothing."
+            return "Groups by project, not file type. Analysis runs on this Mac and nothing is uploaded."
         case .byType:
-            return "Instant, and never opens a file. Nothing is read and no model runs."
+            return "Sorts by file type alone. Nothing is opened and no model runs."
         }
     }
 
