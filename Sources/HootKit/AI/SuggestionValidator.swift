@@ -13,14 +13,14 @@ public struct SuggestionValidator {
 
     /// Names that carry no meaning and would produce junk folders, even
     /// though the prompt forbids them.
-    private static let placeholders: Set<String> = [
+    static let placeholders: Set<String> = [
         "untitled", "unnamed", "misc", "miscellaneous", "other", "others",
         "folder", "new folder", "files", "documents", "project", "projects",
         "group", "unsorted", "general", "stuff", "temp", "various"
     ]
 
     /// A single path component can't exceed 255 bytes on APFS; stay well under.
-    private static let maximumNameLength = 60
+    static let maximumNameLength = 60
 
     /// A project needs at least this many files to be worth a folder.
     private static let minimumFilesPerProject = 2

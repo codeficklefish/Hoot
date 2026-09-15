@@ -29,6 +29,14 @@ struct MoveRow: View {
         move.roleSubfolder == OrganizationPlanner.demotedSubfolder
     }
 
+    /// Whether this move also changes the file's name. Shown separately from
+    /// the destination because it is a different kind of claim: where a file
+    /// goes can be undone by dragging it back, but a name the user recognises
+    /// is how they find it again at all.
+    private var isRenamed: Bool {
+        move.destinationName != move.file.filename
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 8) {
@@ -74,8 +82,36 @@ struct MoveRow: View {
                 .help("Why here?")
             }
 
+            if isRenamed {
+                HStack(spacing: 5) {
+                    Image(systemName: "character.cursor.ibeam")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                    Text(move.destinationName)
+                        .font(.caption)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Button("Keep name") {
+                        withAnimation(Motion.state) {
+                            appState.keepOriginalName(ofMove: move.id)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .opacity(isHovered ? 1 : 0)
+                    .help("Leave this file called \(move.file.filename)")
+                }
+                .padding(.leading, 22)
+                .help("Hoot suggested this name. The file's own name says nothing about what it is.")
+            }
+
             if isShowingEvidence {
-                EvidencePanel(move: move, excerpt: appState.evidence[move.file.id])
+                EvidencePanel(
+                    move: move,
+                    excerpt: appState.evidence[move.file.id]?.excerpt,
+                    renameNote: isRenamed ? appState.renameNotes[move.file.id] : nil
+                )
                     .padding(.leading, 22)
                     // Opens downward from the row it belongs to rather than
                     // fading in over whatever is beneath it.
@@ -133,6 +169,10 @@ struct ConfidenceDot: View {
 struct EvidencePanel: View {
     let move: PlannedMove
     let excerpt: String?
+    /// Why the proposed name was chosen. Only present when this move renames
+    /// the file — a name with no stated source is a guess, and the user is
+    /// being asked to accept it.
+    var renameNote: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
@@ -140,6 +180,13 @@ struct EvidencePanel: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+
+            if let renameNote, !renameNote.isEmpty {
+                Label(renameNote, systemImage: "character.cursor.ibeam")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
 
             if let excerpt, !excerpt.isEmpty {
                 VStack(alignment: .leading, spacing: 2) {

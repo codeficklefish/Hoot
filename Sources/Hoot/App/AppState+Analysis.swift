@@ -93,10 +93,10 @@ extension AppState {
         // Gather what was read from inside each file, for the review screen.
         if settings.allowLocalContentReading {
             let extractor = MacPlatform.makeTextExtractor()
-            var gathered: [UUID: String] = [:]
+            var gathered: [UUID: ExtractedEvidence] = [:]
             for file in files {
-                if let excerpt = extractor.evidence(for: file)?.excerpt {
-                    gathered[file.id] = excerpt
+                if let found = extractor.evidence(for: file) {
+                    gathered[file.id] = found
                 }
             }
             evidence = gathered
@@ -185,6 +185,30 @@ extension AppState {
         }
 
         guard !Task.isCancelled else { return }
+
+        // Naming runs last, on the whole set. It needs the text that was read
+        // out of each file, which is gathered above, and it is the one step
+        // that changes something the user typed — so it happens after every
+        // folder decision is settled, never as a side effect of one.
+        if settings.renameMeaninglessFiles {
+            let proposals = await proposedNames(for: files)
+            guard !Task.isCancelled else { return }
+            for (id, proposal) in proposals {
+                guard let current = effective[id] else { continue }
+                effective[id] = ClassificationResult(
+                    fileID: current.fileID,
+                    category: current.category,
+                    project: current.project,
+                    suggestedFolder: current.suggestedFolder,
+                    suggestedName: proposal.name,
+                    confidence: current.confidence,
+                    reason: current.reason
+                )
+                renameNotes[id] = proposal.reason
+            }
+        }
+
+        guard !Task.isCancelled else { return }
         plan = planner.makePlan(
             root: root,
             detectedProjects: projects,
@@ -193,6 +217,40 @@ extension AppState {
             preferences: folderPreferences
         )
         planSignature = signature
+    }
+
+    /// Names for the files that need one, consulting the cache first.
+    ///
+    /// A file whose signature is already known is not sent again — including
+    /// when the answer last time was "no name", which is the common case and
+    /// the expensive one to keep re-asking.
+    private func proposedNames(for files: [FileItem]) async -> [UUID: ProposedName] {
+        guard let provider = MacPlatform.makeAIProvider(for: settings),
+              settings.allowLocalContentReading
+        else { return [:] }
+
+        var proposals: [UUID: ProposedName] = [:]
+        var pending: [FileItem] = []
+
+        for file in files {
+            if let remembered = renameCache[file.signature] {
+                if let name = remembered { proposals[file.id] = name }
+            } else {
+                pending.append(file)
+            }
+        }
+
+        guard !pending.isEmpty else { return proposals }
+
+        let fresh = await FileRenamer(provider: provider)
+            .proposeNames(for: pending, evidence: evidence)
+
+        for file in pending {
+            // Written even when nothing came back, so the refusal sticks.
+            renameCache[file.signature] = fresh[file.id]
+            if let proposal = fresh[file.id] { proposals[file.id] = proposal }
+        }
+        return proposals
     }
 
     /// Uses the configured provider when one is available, and plain rules

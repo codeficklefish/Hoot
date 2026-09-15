@@ -46,6 +46,8 @@ Sources/
 │   │   ├── Organizer/       the plan, and carrying it out safely
 │   │   ├── History/         what was moved, so it can be undone
 │   │   ├── Learning/        how this person files things
+│   │   ├── Naming/          which names say nothing, and what to call them
+│   │   ├── HUD/             the tidy walk the notch panel offers, and where it goes
 │   │   └── Announcing/      when Hoot speaks up, and when it stays quiet
 │   ├── AI/                  the provider seam, and validating what it says
 │   ├── Platform/            what the engine needs an OS to do for it
@@ -82,11 +84,35 @@ Declared in `HootKit/Platform/PlatformCapabilities.swift`:
 Adding Windows means adding a target of adapters beside `HootPlatformMac`. It
 does not mean editing the engine.
 
+### Why the HUD's logic is in the engine
+
+`Services/HUD` looks misplaced — the engine draws nothing, and the panel it
+describes is AppKit. It is there because of how the previous version failed.
+
+That one lived entirely in the app target. `Verification` links `HootKit` and
+`HootPlatformMac`, and cannot import the `Hoot` executable at all, so nothing
+the island did was reachable by a check. The app crash-looped all evening
+while 270 of them passed, and a one-point seam against the bezel went
+unnoticed until someone looked at the screen.
+
+So the split is by *what can be checked*, not by what looks tidy:
+
+| In `HootKit` | In the app target |
+|---|---|
+| `HUDPlacement` — where the panel goes, in plain `Double` | measuring the notch from `NSScreen` |
+| `TidyFlow` — which group is up, what each label says, what was tallied | the `NSPanel`, the SwiftUI, the spring |
+| `SwipeTracker` — how far a flick must travel to count as one page | turning `scrollWheel` events into deltas |
+| `OrganizationPlan.waiting` — what is waiting, counted once for every surface | drawing it as chips, tiles or a bar |
+
+The app target keeps only what genuinely needs a screen. Everything that is
+a number or a decision is arithmetic the suite drives directly, and a seam
+is now a failing check rather than something you have to notice.
+
 ## Checking it
 
 ```bash
 swift test              # the dependency rule
-./Verification/run.sh   # 270 behaviour and safety checks
+./Verification/run.sh   # 481 behaviour and safety checks
 ./Evaluation/run.sh     # accuracy against folders you organized yourself
 ```
 

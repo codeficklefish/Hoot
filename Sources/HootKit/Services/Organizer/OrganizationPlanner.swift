@@ -76,7 +76,12 @@ public struct OrganizationPlanner {
                         classification: classification,
                         destinationFolder: resolveFolder(project.name),
                         roleSubfolder: role,
-                        destinationName: file.filename,
+                        // The classification carries the name, which is
+                        // `file.filename` unless something proposed a better
+                        // one. A file in a project is as likely to be called
+                        // `IMG_4821.jpg` as a loose one, and the category
+                        // branch below has always honoured this.
+                        destinationName: classification.suggestedName,
                         isApproved: true
                     )
                 )
@@ -234,13 +239,24 @@ public struct OrganizationPlanner {
         }
     }
 
+    /// Why these files are together, and where that reading came from.
+    ///
+    /// The two sources get different treatment on purpose. A rule-based
+    /// group's number is `ProjectGrouper`'s cohesion — measured overlap
+    /// between the filenames, a fact about the files — so it is printed.
+    ///
+    /// A model's number is the model's opinion of itself, and `ConfidenceModel`
+    /// discards those entirely: in testing the on-device model reported
+    /// 95–100% for every answer, including the wrong ones. Showing it would
+    /// put the one number the project calls worthless in front of the user,
+    /// dressed as the reason to trust the suggestion. The provider's name
+    /// stays — where a file was read is a real fact, and a private one.
     private static func rationale(for project: DetectedProject) -> String {
-        let percent = Int(project.confidence * 100)
         switch project.source {
         case .rules:
-            return "\(project.rationale) (\(percent)% match)"
+            return "\(project.rationale) (\(Int(project.confidence * 100))% match)"
         case .ai(let providerName):
-            return "\(project.rationale) — \(providerName), \(percent)% confident"
+            return "\(project.rationale) — \(providerName)"
         }
     }
 }

@@ -55,6 +55,39 @@ public struct CategorySuggestion: Hashable {
     public let confidence: Double
 }
 
+/// A name the provider thinks a file should have, as raw model output.
+/// Nothing here is trusted yet — see `SuggestionValidator.sanitizeFilename`.
+public struct NameSuggestion: Hashable {
+    public init(
+        filename: String,
+        proposedName: String,
+        reason: String,
+        requestIndex: Int? = nil
+    ) {
+        self.filename = filename
+        self.proposedName = proposedName
+        self.reason = reason
+        self.requestIndex = requestIndex
+    }
+
+    /// The file's current name, as the provider echoed it back.
+    public let filename: String
+    /// Which file in the request this answers, counting from 1.
+    ///
+    /// Filenames turned out to be a poor way to identify a file to a model.
+    /// Asked to copy `------.txt` verbatim it returned `-----.txt`, one dash
+    /// short — and the population this feature exists for is precisely the
+    /// filenames that are hard to copy: runs of one character, long digit
+    /// strings, keyboard mashes. A number survives the round trip.
+    ///
+    /// Optional because a provider is free not to number anything; matching
+    /// falls back to the filename then.
+    public let requestIndex: Int?
+    public let proposedName: String
+    /// One sentence saying what in the file's text the name came from.
+    public let reason: String
+}
+
 public enum AIProviderError: LocalizedError {
     case unavailable(String)
     case failed(String)
@@ -96,6 +129,13 @@ public protocol AIProvider {
         for files: [FileDescriptor],
         preferredFolders: [String]
     ) async throws -> [CategorySuggestion]
+
+    /// Proposes a name for each file whose current one says nothing.
+    ///
+    /// Only ever called with files that have a readable excerpt, because a
+    /// name can only come from what is inside the file. A provider that
+    /// cannot do this returns nothing and the files keep their names.
+    func suggestNames(for files: [FileDescriptor]) async throws -> [NameSuggestion]
 }
 
 extension AIProvider {
@@ -108,6 +148,14 @@ extension AIProvider {
         for files: [FileDescriptor],
         preferredFolders: [String]
     ) async throws -> [CategorySuggestion] {
+        []
+    }
+
+    /// Renaming is opt-in for a provider. Answering with nothing is a
+    /// complete answer: every file keeps the name it arrived with, which is
+    /// what a rule-based provider should do — it can only read the name, and
+    /// the name is the thing that failed.
+    public func suggestNames(for files: [FileDescriptor]) async throws -> [NameSuggestion] {
         []
     }
 }

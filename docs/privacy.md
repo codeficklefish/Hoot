@@ -70,9 +70,38 @@ governed by [Apple's privacy policy](https://www.apple.com/legal/privacy/).
 
 Select "Filename rules only" and no model is used at all.
 
+## Renaming
+
+Hoot can rename files whose names say nothing — a camera number, a row of
+digits, a keyboard mash. **It is off until you turn it on**, in Settings, and
+it changes what file content is used for, so it is worth saying exactly what
+it does.
+
+- A name comes **only from text actually read out of the file**. Never from
+  the old filename, which is the thing that failed, and never from a guess
+  about a picture: words read off a photographed receipt can become a name,
+  "appears to show: outdoor, sky, water" cannot.
+- **A name you chose is never touched**, and never even sent. Files whose
+  names already say something are filtered out before the model sees the
+  request.
+- It needs the on-device model and needs excerpt reading enabled. With
+  filename rules only, or with content reading off, nothing is renamed and
+  Settings says which one is missing.
+- **Sorting by type never renames anything.** It does not open files, so it
+  has nothing to name them from.
+- Every rename is shown before it happens — the old name, the new one, and
+  the sentence saying what in the text it came from. You can refuse one on
+  its own and keep the move.
+- A rename is a move, so it is in the operation history and **undo puts the
+  original name back**.
+
+The file never leaves your Mac, and the model that reads it is the same local
+one described above.
+
 ## What Hoot does to your files
 
-It moves them, and only after you approve the plan. It never copies-and-
+It moves them, and renames them if you asked it to, and only after you
+approve. It never copies-and-
 deletes, never overwrites — a name collision gets a free variant instead — and
 **it never deletes anything.** Every batch can be undone, and undo refuses to
 put a file back on top of something that has since taken its place.
@@ -89,4 +118,4 @@ Hoot collects nothing from anyone, of any age.
 This page is versioned in the repository alongside the code it describes, so
 its history is public and any change is visible in the commit log.
 
-_Last reviewed: 6 September 2026._
+_Last reviewed: 14 September 2026._

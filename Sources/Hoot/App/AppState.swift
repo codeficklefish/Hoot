@@ -59,9 +59,31 @@ final class AppState: ObservableObject {
     @Published var learnedAccuracy: Double?
     /// Times the user overruled Hoot, fed back into the personal model.
     @Published var corrections = CorrectionLog.load()
-    /// Text read from inside each file, so the review screen can show *why*
-    /// a suggestion was made rather than asking for blind trust.
-    @Published var evidence: [UUID: String] = [:]
+    /// What was read from inside each file, so the review screen can show
+    /// *why* a suggestion was made rather than asking for blind trust.
+    ///
+    /// The whole `ExtractedEvidence` rather than just its text, because
+    /// renaming turns on `isTextual`: words on a photographed receipt may
+    /// become a filename, "appears to show: outdoor, sky" may not.
+    @Published var evidence: [UUID: ExtractedEvidence] = [:]
+    /// Why each proposed name was chosen, keyed by file, so a rename can be
+    /// shown with its source rather than asserted.
+    @Published var renameNotes: [UUID: String] = [:]
+    /// Proposed names keyed by file signature. The value is itself optional
+    /// so that a *refusal* is remembered too — without that, every scan
+    /// re-asks the model about the files it has already declined to name.
+    var renameCache: [String: ProposedName?] = [:]
+
+    /// The walk through the plan the HUD is offering, one folder at a time.
+    /// nil when there is nothing to file.
+    @Published var tidyFlow: TidyFlow?
+    /// True while a group's files are actually being moved.
+    @Published var isTidyWorking = false
+    /// 0...1 across the current group's files, so the bar reflects work
+    /// rather than a timer.
+    @Published var tidyProgress: Double = 0
+    /// Batches this walk created, so Undo can take back all of them.
+    var tidyBatches: [OperationBatch] = []
     /// What the AI layer is currently able to do, for display in Settings.
     @Published var providerStatus: String = "Checking…"
 
@@ -129,9 +151,17 @@ final class AppState: ObservableObject {
         }
     }
 
-    /// Groups current files by project or category, for the compact summary
-    /// shown in the menu bar (e.g. "Thesis  4").
-    var summaryByCategory: [(label: String, count: Int)] {
+    /// What is waiting, as the plan sees it (e.g. "Thesis  4").
+    ///
+    /// Read from the plan, not from the classifier, because the plan is what
+    /// will actually happen — see `OrganizationPlan.waiting`, which the
+    /// verification suite drives. The review window and the notch HUD both
+    /// count the plan; this is the surface that used to disagree with them.
+    var summaryByCategory: [OrganizationPlan.WaitingEntry] {
+        if let plan { return plan.waiting }
+
+        // No plan yet. Nothing better can be said than what the filename
+        // rules already know, which is exactly what this said before.
         var counts: [String: Int] = [:]
         var order: [String] = []
         for file in detectedFiles {
@@ -140,7 +170,7 @@ final class AppState: ObservableObject {
             case .byType:
                 // No waiting, and no "Sorting…": the answer is already known
                 // from the filename, so the summary can be right immediately.
-                label = TypeSorter.folder(for: file) ?? "Left alone"
+                label = TypeSorter.folder(for: file) ?? OrganizationPlan.leftAloneLabel
             case .byMeaning:
                 label = classifications[file.id]?.project
                     ?? classifications[file.id]?.category
@@ -149,7 +179,13 @@ final class AppState: ObservableObject {
             if counts[label] == nil { order.append(label) }
             counts[label, default: 0] += 1
         }
-        return order.map { ($0, counts[$0] ?? 0) }
+        return order.map { OrganizationPlan.WaitingEntry(label: $0, count: counts[$0] ?? 0) }
+    }
+
+    /// How many files the Review button offers to show: the moves the plan
+    /// proposes, which is what the review window's own header counts.
+    var reviewableCount: Int {
+        plan?.allMoves.count ?? detectedFiles.count
     }
 
     var canUndo: Bool { history.mostRecentUndoable != nil }

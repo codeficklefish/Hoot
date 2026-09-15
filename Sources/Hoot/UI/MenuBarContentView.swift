@@ -13,6 +13,7 @@ import HootKit
 /// between light and dark without a second palette to keep in step.
 struct MenuBarContentView: View {
     @ObservedObject var appState: AppState
+    @ObservedObject var hud: HUDController
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -153,7 +154,10 @@ struct MenuBarContentView: View {
                 NSApp.activate(ignoringOtherApps: true)
                 Task { await appState.buildPlan() }
             } label: {
-                Text("Review \(appState.detectedFiles.count) \(appState.detectedFiles.count == 1 ? "File" : "Files")…")
+                // Counts the moves the plan proposes, which is what the review
+                // window's own header says when it opens. Before a plan exists
+                // it counts what was found, which is all anything knows yet.
+                Text("Review \(appState.reviewableCount) \(appState.reviewableCount == 1 ? "File" : "Files")…")
                     .fontWeight(.medium)
             }
             .buttonStyle(.borderedProminent)
@@ -216,6 +220,13 @@ struct MenuBarContentView: View {
 
     // MARK: - Footer
 
+    /// What the HUD will do, said in the tooltip rather than assumed.
+    private var hudExplanation: String {
+        appState.settings.renameMeaninglessFiles
+            ? "Files one folder at a time from the notch, renaming as it goes."
+            : "Files one folder at a time from the notch. Turn on renaming in Settings and it can fix names in the same pass."
+    }
+
     private var footer: some View {
         VStack(spacing: 0) {
             MenuRow(
@@ -223,6 +234,21 @@ struct MenuBarContentView: View {
                 title: appState.watchedFolder == nil ? "Choose Folder…" : "Change Folder…"
             ) {
                 appState.presentFolderPicker()
+            }
+
+            // Only on a Mac that has a camera housing to grow out of.
+            // Elsewhere there is nothing to continue from, and this popover
+            // is the whole interface.
+            if HUDController.isSupported {
+                MenuRow(
+                    symbol: "macwindow",
+                    title: hud.isEnabled ? "Hide Notch HUD" : "Notch HUD",
+                    shortcut: "⌘J"
+                ) {
+                    hud.toggle(appState: appState)
+                }
+                .keyboardShortcut("j", modifiers: .command)
+                .help(hudExplanation)
             }
 
             MenuRow(symbol: "clock.arrow.circlepath", title: "History", shortcut: "⌘Y") {
@@ -325,10 +351,20 @@ private struct CategoryChip: View {
 
     @State private var isHovered = false
 
+    /// The widest a chip may be, against a 340pt popover with 16pt of gutter
+    /// either side. `FlowLayout` wraps a line that will not fit but cannot
+    /// shrink one chip that is wider than the popover itself — and these are
+    /// folder names now, which are sentences rather than words.
+    private static let maximumWidth: CGFloat = 250
+
     var body: some View {
         HStack(spacing: 5) {
             Text(label)
                 .font(.callout)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .frame(maxWidth: Self.maximumWidth, alignment: .leading)
+                .help(label)
             Text("\(count)")
                 .font(.caption.weight(.medium))
                 .monospacedDigit()

@@ -49,6 +49,45 @@ app is worse than not moving it.
 Switch between them in the menu bar popover or in Settings, where each mode is
 shown as the folders it would produce rather than described.
 
+### Names that say nothing
+
+A file called `32131231231.pdf` or `ASJKDHASDASD.png` is the case Hoot is
+built for, and moving it to the right folder only half-solves it — you still
+cannot find it. Switch on **Rename files whose names say nothing** in
+Settings and Hoot proposes a real name, taken only from text actually read
+out of the file.
+
+A name you chose is never touched: `CV.pdf` is short, vowel-poor and
+completely meaningful, and Hoot leaves it alone. Every rename is shown before
+it happens with the sentence saying where the name came from, can be refused
+on its own, and is put back by undo.
+
+### The notch HUD
+
+On a Mac with a camera housing, ⌘J puts the tidying at the notch. At rest the
+bar is exactly the size of the cutout, so on the hardware it is built for you
+never see it. Point at it and it opens.
+
+**Tidy** takes one folder at a time — the files going in, the reason they
+belong together, and what each would be called afterwards. **Move & name**,
+or **Leave**, and it moves on; **Rename** decides whether the new names
+travel with the move. Untick a file to leave it out. When the last folder is
+answered it says what moved and offers to undo all of it.
+
+**Tray** answers the other question — how much is waiting, how many folders
+that is, how long the oldest has been sitting there, and how many files Hoot
+has decided to leave alone.
+
+Looking is not answering. Swipe sideways across the panel, click a pip, or
+press **⌃⌥←** / **⌃⌥→** to move between folders without deciding anything: a
+folder you page past is still waiting when you come back to it. The keys are
+registered only while the panel is open, so they belong to whatever you are
+working in for the rest of the time — the panel never takes keyboard focus,
+which is what lets you point at it mid-sentence.
+
+Needs a display with a notch. Everywhere else the menu bar popover is the
+whole interface, and it is a good one.
+
 ### What decides where a file goes
 
 Sorting by meaning draws on four sources of evidence, in order of how much
@@ -143,7 +182,7 @@ above.
 
 ```bash
 swift test              # the engine imports nothing platform-specific
-./Verification/run.sh   # 270 behaviour and safety checks, in a sandbox
+./Verification/run.sh   # 481 behaviour and safety checks, in a sandbox
 ./Evaluation/run.sh     # accuracy against folders you organized yourself
 ```
 
@@ -163,7 +202,7 @@ way to know a decompressor is correct.
 | `Sources/HootKit` | the engine — decides where files belong, imports only Foundation |
 | `Sources/HootPlatformMac` | Apple adapters (PDFKit, Vision, FoundationModels) |
 | `Sources/Hoot` | the macOS app |
-| `Verification` | 270 behaviour and safety checks |
+| `Verification` | 481 behaviour and safety checks |
 | `Evaluation` | measures accuracy against folders you organized |
 | `Packaging` | app bundle, icon, signing and notarization |
 | `CONTEXT.md` | what each term in the code means, in one place |

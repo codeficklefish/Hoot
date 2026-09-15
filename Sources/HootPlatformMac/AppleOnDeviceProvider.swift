@@ -26,7 +26,7 @@ public struct AppleOnDeviceProvider: AIProvider {
     /// each time — and it makes any measurement of quality meaningless.
     /// Greedy decoding always takes the most likely token, so the same input
     /// gives the same answer.
-    private static let deterministic = GenerationOptions(sampling: .greedy)
+    static let deterministic = GenerationOptions(sampling: .greedy)
 
     public func availability() async -> ProviderAvailability {
         switch SystemLanguageModel.default.availability {

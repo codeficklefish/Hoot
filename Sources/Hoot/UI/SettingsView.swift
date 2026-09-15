@@ -160,6 +160,17 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+
+            Section("Renaming") {
+                Toggle("Rename files whose names say nothing",
+                       isOn: $appState.settings.renameMeaninglessFiles)
+                    .disabled(!canRename)
+
+                Text(renamingExplanation)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .formStyle(.grouped)
         .frame(width: 480, height: 520)
@@ -169,6 +180,30 @@ struct SettingsView: View {
         .task(id: appState.sortingMode) {
             await appState.refreshProviderStatus()
         }
+    }
+
+    /// Renaming needs a local model *and* permission to read files. Either
+    /// missing makes the toggle meaningless rather than merely limited.
+    private var canRename: Bool {
+        appState.sortingMode.usesModel
+            && appState.settings.provider != .rulesOnly
+            && appState.settings.allowLocalContentReading
+    }
+
+    /// Says which of the conditions is missing rather than greying the
+    /// toggle silently. Each one is a real reason, and a person who turned
+    /// something off above deserves to be told that is what did it.
+    private var renamingExplanation: String {
+        guard appState.sortingMode.usesModel else {
+            return "Sorting by type never renames anything. Files keep the names they arrived with."
+        }
+        if appState.settings.provider == .rulesOnly {
+            return "Filename rules can only read the name, which is the thing that failed. Renaming needs the on-device model."
+        }
+        if !appState.settings.allowLocalContentReading {
+            return "A name can only come from what is inside the file, so this needs reading excerpts, above."
+        }
+        return "Only names that say nothing are replaced — a camera number, a row of digits, a keyboard mash — and only from text actually read out of the file. A name you chose is never touched. Every rename is shown in review before it happens, can be refused on its own, and is put back by undo."
     }
 
     private var privacyExplanation: String {

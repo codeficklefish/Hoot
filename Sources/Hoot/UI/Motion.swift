@@ -16,6 +16,14 @@ enum Motion {
     /// For state the user changed: a row approved, a section opened.
     static let state = Animation.easeInOut(duration: 0.18)
 
+    /// For the HUD opening and closing at the notch.
+    ///
+    /// Looser and slower than `move`, because this one is the whole point:
+    /// the HUD is recognisable by how it grows out of the camera housing,
+    /// not by being a rounded rectangle. Under-damped on purpose — it
+    /// overshoots a little, which is what reads as physical.
+    static let hud = Animation.spring(response: 0.34, dampingFraction: 0.78)
+
     /// For things arriving and leaving — a file dragged into another folder.
     /// Springy, because a row that slides into place explains where it went
     /// in a way a cross-fade does not.

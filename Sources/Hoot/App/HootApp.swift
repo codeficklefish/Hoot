@@ -6,11 +6,14 @@ import HootPlatformMac
 struct HootApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var appState = AppState()
+    /// The notch HUD. Owned here rather than by the popover, because it
+    /// outlives any particular click on the menu bar item.
+    @StateObject private var hud = HUDController()
     @Environment(\.openWindow) private var openWindow
 
     var body: some Scene {
         MenuBarExtra {
-            MenuBarContentView(appState: appState)
+            MenuBarContentView(appState: appState, hud: hud)
                 .task {
                     // First launch: introduce the app before it's handed a
                     // folder, rather than showing an empty popover.
@@ -23,7 +26,13 @@ struct HootApp: App {
             // contents are not — they wait for a click. Starting from here is
             // what makes Hoot resume watching without being opened first.
             MenuBarLabel(pendingCount: appState.detectedFiles.count)
-                .task { appState.start() }
+                .task {
+                    appState.start()
+                    // Brought back here, not in the popover: the HUD should
+                    // reappear on login without the menu bar being opened
+                    // first, which is the same reason `start()` lives here.
+                    hud.restore(appState: appState)
+                }
         }
         .menuBarExtraStyle(.window)
 

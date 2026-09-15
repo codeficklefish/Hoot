@@ -75,4 +75,39 @@ public struct OrganizationPlan {
     public var allMoves: [PlannedMove] { groups.flatMap(\.moves) }
     public var approvedMoves: [PlannedMove] { allMoves.filter(\.isApproved) }
     public var isEmpty: Bool { groups.isEmpty }
+
+    /// One destination and how many files are headed for it.
+    public struct WaitingEntry: Equatable, Sendable {
+        public init(label: String, count: Int) {
+            self.label = label
+            self.count = count
+        }
+
+        public let label: String
+        public let count: Int
+    }
+
+    /// What the user calls the files nothing is going to happen to. Named
+    /// here because three surfaces show that count and they have to agree on
+    /// the word as well as the number.
+    public static let leftAloneLabel = "Left alone"
+
+    /// What is waiting, one entry per destination, ending with the files the
+    /// plan decided to leave where they are.
+    ///
+    /// In the engine rather than in the menu bar view because it is the same
+    /// question the review window and the notch HUD answer, and three
+    /// surfaces working it out separately is how they came to disagree: the
+    /// popover counted every file it had found and labelled it with the
+    /// classifier's category, so a file this plan had decided not to touch
+    /// still appeared under a destination, as though it were about to move.
+    public var waiting: [WaitingEntry] {
+        var entries = groups
+            .map { WaitingEntry(label: $0.name, count: $0.approvedCount) }
+            .filter { $0.count > 0 }
+        if !skipped.isEmpty {
+            entries.append(WaitingEntry(label: Self.leftAloneLabel, count: skipped.count))
+        }
+        return entries
+    }
 }

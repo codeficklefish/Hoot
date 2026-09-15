@@ -92,6 +92,31 @@ extension AppState {
         lastMessage = "Moved to “\(destination)”. Hoot will remember."
     }
 
+    /// Refuses one proposed name while keeping the move it came with.
+    ///
+    /// Deliberately not a correction that teaches: declining a name says the
+    /// name was wrong, not that the file belongs somewhere else, and feeding
+    /// it to the personal classifier would move the file next time for a
+    /// reason the user never gave.
+    ///
+    /// The refusal is remembered against the file's signature so that
+    /// rebuilding the plan does not propose it again a second later.
+    func keepOriginalName(ofMove moveID: UUID) {
+        guard var current = plan else { return }
+        for groupIndex in current.groups.indices {
+            guard let moveIndex = current.groups[groupIndex].moves
+                .firstIndex(where: { $0.id == moveID }) else { continue }
+
+            let file = current.groups[groupIndex].moves[moveIndex].file
+            current.groups[groupIndex].moves[moveIndex].destinationName = file.filename
+            plan = current
+
+            renameCache[file.signature] = ProposedName?.none
+            renameNotes[file.id] = nil
+            return
+        }
+    }
+
     /// Bulk toggle for the review window's All / None buttons.
     func setApprovalForAll(_ approved: Bool) {
         guard var current = plan else { return }

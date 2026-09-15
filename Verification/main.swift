@@ -241,6 +241,8 @@ stageCloud(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 stageCorrections(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 stageInflate(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 stageAnnouncing(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
+stageNaming(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
+stageHUD(sandbox: sandbox, rawCheck: { check($0, $1, $2) })
 
 try? FileManager.default.removeItem(at: sandbox)
 print("\n\(failures == 0 ? "ALL CHECKS PASSED" : "\(failures) CHECK(S) FAILED")")
