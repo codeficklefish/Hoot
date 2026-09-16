@@ -165,6 +165,26 @@ public struct CategoryRefiner {
             // must be beaten on evidence rather than merely contradicted.
             let existingIsTypeOnly = ruleView.suggestedFolder
                 == RuleBasedClassifier.typeCategory(for: file)
+
+            // A type-only answer may be replaced by a claim about the file's
+            // *subject* — that is the entire job of this refiner. It may not
+            // be replaced by a different claim about its *type*. The
+            // extension already settled that, and no reading of the contents
+            // can know better: a zip full of PNGs is still a zip, and moving
+            // `Landing page redesign.zip` to Images lost the one thing about
+            // it that was never in doubt.
+            //
+            // This also declines a PDF moved from Documents to Books, which
+            // would sometimes have been an improvement. That is the price of
+            // the rule, and it is worth paying: the Books keyword rule still
+            // catches the ones whose names say so, and a refiner documented
+            // as turning types into subjects should not be quietly deciding
+            // types.
+            if existingIsTypeOnly, RuleBasedClassifier.namesAFileType(folder) {
+                Self.trace("  DROPPED (\(folder) is another file type, not a subject)")
+                continue
+            }
+
             if !existingIsTypeOnly, confidence <= ruleView.confidence { continue }
 
             refined[file.id] = ClassificationResult(

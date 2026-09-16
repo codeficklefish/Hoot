@@ -341,32 +341,84 @@ func stageNaming(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Voi
 
     // The dangerous case: a number must never overrule an answer that named
     // its file outright, or a confident match could be replaced by a guess.
+    //
+    // Both answers below have to be names the file's text actually supports,
+    // or grounding would refuse them and these checks would pass for the
+    // wrong reason — telling us a name was rejected, when what is being
+    // tested is which file it was matched to.
     let conflicting = NamingSpy(answer: { sent in
         [
             NameSuggestion(filename: sent[0].filename,
-                           proposedName: "Named by its own filename", reason: ""),
+                           proposedName: "Delta boarding pass", reason: ""),
             NameSuggestion(filename: "mangled",
-                           proposedName: "Named by number instead", reason: "",
+                           proposedName: "Manila to Cebu", reason: "",
                            requestIndex: 1)
         ]
     })
     check("a number cannot take a file an exact name already claimed",
-          propose(conflicting)[opaque.id]?.name == "Named by its own filename.pdf",
+          propose(conflicting)[opaque.id]?.name == "Delta boarding pass.pdf",
           propose(conflicting)[opaque.id]?.name ?? "nil")
 
     let greedy = NamingSpy(answer: { _ in
         [
-            NameSuggestion(filename: "a", proposedName: "First answer",
+            NameSuggestion(filename: "a", proposedName: "Delta boarding pass",
                            reason: "", requestIndex: 1),
-            NameSuggestion(filename: "b", proposedName: "Second answer",
+            NameSuggestion(filename: "b", proposedName: "Manila to Cebu",
                            reason: "", requestIndex: 1)
         ]
     })
     let greedyResult = propose(greedy)
     check("the same file cannot be named twice", greedyResult.count == 1)
     check("and the first answer is the one that stands",
-          greedyResult[opaque.id]?.name == "First answer.pdf",
+          greedyResult[opaque.id]?.name == "Delta boarding pass.pdf",
           greedyResult[opaque.id]?.name ?? "nil")
+
+    // MARK: - A name has to be carried by the file's own text
+
+    // The naming instructions tell the model to invent nothing. Until
+    // `NameGrounding` existed, that sentence was the entire enforcement —
+    // every other rule about a proposed name guards the path, not the claim.
+    print("\n[a name has to be carried by the file's own text]")
+
+    let boardingPass = "DELTA AIR LINES BOARDING PASS MANILA TO CEBU"
+    func grounded(_ proposed: String, in excerpt: String = boardingPass,
+                  replacing original: String = "32131231231.pdf") -> String? {
+        SuggestionValidator.sanitizeFilename(
+            proposed, keepingExtensionOf: original, groundedIn: excerpt)
+    }
+
+    check("a name built from the text is kept",
+          grounded("Delta boarding pass Manila") == "Delta boarding pass Manila.pdf",
+          grounded("Delta boarding pass Manila") ?? "nil")
+    check("the text may shout where the name does not",
+          grounded("Cebu air lines") == "Cebu air lines.pdf",
+          grounded("Cebu air lines") ?? "nil")
+    check("a word the text never contains is refused",
+          grounded("Delta hotel booking") == nil,
+          grounded("Delta hotel booking") ?? "nil")
+    // The dangerous kind: everything but one word is real, so the invention
+    // is the only part nobody would question.
+    check("and a plausible invention is refused with it",
+          grounded("Delta boarding pass Jakarta") == nil,
+          grounded("Delta boarding pass Jakarta") ?? "nil")
+
+    let issued = "BOARDING PASS ISSUED 2024"
+    check("a year the text never mentions is refused",
+          grounded("Boarding pass 2019", in: issued, replacing: "1.pdf") == nil,
+          grounded("Boarding pass 2019", in: issued, replacing: "1.pdf") ?? "nil")
+    check("the year that is there survives",
+          grounded("Boarding pass 2024", in: issued, replacing: "1.pdf")
+            == "Boarding pass 2024.pdf",
+          grounded("Boarding pass 2024", in: issued, replacing: "1.pdf") ?? "nil")
+
+    // Grounding is a check on invention, not on spelling.
+    let paid = "TAXES PAID — OFFICIAL RECEIPTS FOR THE YEAR"
+    check("a plural in the text supports the singular in the name",
+          grounded("Tax receipt", in: paid, replacing: "1.pdf") == "Tax receipt.pdf",
+          grounded("Tax receipt", in: paid, replacing: "1.pdf") ?? "nil")
+
+    check("with no text to check against, the path rules still stand",
+          SuggestionValidator.sanitizeFilename("../../Escape", keepingExtensionOf: "1.pdf") == nil)
 }
 
 /// Stands in for a provider so the renamer's contract can be checked without

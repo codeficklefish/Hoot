@@ -20,14 +20,23 @@ extension SuggestionValidator {
     /// Reduces a model-proposed filename to something safe to move a file to,
     /// or nil when nothing usable survives.
     ///
-    /// - Parameter original: the file's current name. Its extension is kept
-    ///   exactly as it is — renaming `boarding.pdf` to `Delta boarding pass`
-    ///   with no extension, or with the wrong one, would break the way every
-    ///   other program on the Mac opens it.
+    /// - Parameters:
+    ///   - original: the file's current name. Its extension is kept exactly
+    ///     as it is — renaming `boarding.pdf` to `Delta boarding pass` with
+    ///     no extension, or with the wrong one, would break the way every
+    ///     other program on the Mac opens it.
+    ///   - excerpt: the text the model was shown for this file. Given, the
+    ///     proposal must be carried by it — see `NameGrounding`. Omitted, the
+    ///     path rules below still apply and only the invention check is
+    ///     skipped, which is how the safety rules are exercised on their own.
     /// - Returns: a single path component carrying the original extension, or
-    ///   nil if the proposal was empty, meaningless, unsafe, or the name the
-    ///   file already has.
-    public static func sanitizeFilename(_ raw: String, keepingExtensionOf original: String) -> String? {
+    ///   nil if the proposal was empty, meaningless, unsafe, ungrounded, or
+    ///   the name the file already has.
+    public static func sanitizeFilename(
+        _ raw: String,
+        keepingExtensionOf original: String,
+        groundedIn excerpt: String? = nil
+    ) -> String? {
         // A proposal that reaches for a path is not a name that needs
         // cleaning; it is an answer to a question nobody asked. Cleaning
         // "../../Escape" leaves the perfectly good name "Escape", which is
@@ -68,6 +77,12 @@ extension SuggestionValidator {
         // another is churn, not help.
         guard !MeaninglessName.applies(to: candidate) else { return nil }
         guard candidate.lowercased() != original.lowercased() else { return nil }
+
+        // The last and least negotiable check. Everything above keeps a bad
+        // name from being a dangerous *path*; this is what keeps it from
+        // being a confident lie about the file.
+        if let excerpt, !NameGrounding.isSupported(candidate, by: excerpt) { return nil }
+
         return candidate
     }
 

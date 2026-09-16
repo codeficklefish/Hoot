@@ -53,6 +53,15 @@ answers, so its self-scored number is discarded entirely. Below
 it carries alone. Signals combine with a noisy-OR rule, so two sources that
 could each fail independently are much stronger than one source repeated.
 
+**Source** — where a signal was read: the filename, the text inside, the file
+type, the provider, the project, the user's own filing. Confidence takes *one
+weight per source*, not one per signal. Noisy-OR is only honest about things
+that can fail separately, and four keywords read out of one filename cannot —
+a misleading name is misleading in all of its words at once. Repetition within
+a source raises it slightly and is capped well short of certainty. Counting
+each keyword as its own chance took `invoice-template-blank.pdf` to 0.95 on
+the strength of a name that says the opposite.
+
 **Strength** — the exception, and the only signal that carries its own weight.
 It is the margin by which the personal model's winning folder beat the runner-up,
 measured from the user's own filing. Not a self-assessment: a folder that barely
@@ -79,6 +88,18 @@ A name may only come from text **genuinely read out of the file**. Not from
 the old filename, which is the thing that failed, and not from a guess about
 a picture — `ExtractedEvidence.isTextual` is what separates words on a
 photographed receipt from "appears to show: outdoor, sky, water".
+
+**Grounded** — a proposed name every word and every long number of which can
+be found in the excerpt the model was shown. `NameGrounding` decides this, and
+it is the only thing that enforces "invent nothing": that rule lives in the
+prompt, and a prompt is a request. Everything else checked about a proposed
+name guards the *path* — that it cannot traverse, hide a file or swap an
+extension. Grounding guards the *claim*, which is what the user will later go
+looking for the file by.
+
+It is checked against the text that was actually sent, never a fresh read: a
+name honestly derived from what the model saw must not fail because the file
+was read differently the second time.
 
 A rename is not a new kind of operation. It is a move whose destination
 folder is the folder the file is already in, which is why history records it

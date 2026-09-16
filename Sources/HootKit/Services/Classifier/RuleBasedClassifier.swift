@@ -47,6 +47,19 @@ public struct RuleBasedClassifier {
              subfolder: "Documents")
     ]
 
+    /// Every rule's keywords paired with the stem a filename's own words are
+    /// compared against.
+    ///
+    /// Built once beside the rules rather than per file: the rules never
+    /// change, and stemming them again for every file would be the same
+    /// answer recomputed thousands of times. Declaration order is kept, so
+    /// the sentence explaining a classification still lists a rule's words in
+    /// the order the rule does.
+    private static let stemmedRules: [(rule: Rule, keywords: [(stem: String, word: String)])] =
+        rules.map { rule in
+            (rule, rule.keywords.map { (stem: WordStem.stem($0), word: $0) })
+        }
+
     /// Classifies with the file's own text when it's available; pass `nil`
     /// for `excerpt` to classify on the filename alone.
     ///
@@ -54,16 +67,21 @@ public struct RuleBasedClassifier {
     /// saying "invoice" and the document itself saying "invoice" are two
     /// separate chances to be right, and confidence reflects that.
     public func classify(_ file: FileItem, excerpt: String?) -> ClassificationResult {
-        let tokens = Set(FilenameTokenizer.tokens(in: file.filename))
+        // Stemmed on both sides, so `Invoices-2024.pdf` reaches the rule that
+        // lists "invoice". Comparing the words as written meant the plural of
+        // nearly every keyword here missed outright — receipts, taxes,
+        // contracts, statements, results — which are the commonest things in
+        // a downloads folder, not edge cases.
+        let tokens = Set(FilenameTokenizer.tokens(in: file.filename).map(WordStem.stem))
         let contentTokens: Set<String> = excerpt.map {
-            Set(FilenameTokenizer.tokens(in: $0))
+            Set(FilenameTokenizer.tokens(in: $0).map(WordStem.stem))
         } ?? []
 
         // Strongest signal: an explicit keyword match in the filename.
         var bestMatch: (rule: Rule, nameHits: [String], contentHits: [String])?
-        for rule in Self.rules {
-            let nameHits = rule.keywords.filter { tokens.contains($0) }
-            let contentHits = rule.keywords.filter { contentTokens.contains($0) }
+        for (rule, keywords) in Self.stemmedRules {
+            let nameHits = keywords.filter { tokens.contains($0.stem) }.map(\.word)
+            let contentHits = keywords.filter { contentTokens.contains($0.stem) }.map(\.word)
             let score = nameHits.count * 2 + contentHits.count
             let bestScore = (bestMatch?.nameHits.count ?? 0) * 2 + (bestMatch?.contentHits.count ?? 0)
             if score > 0, score > bestScore {
@@ -148,6 +166,28 @@ public struct RuleBasedClassifier {
     public static func typeCategory(for file: FileItem) -> String {
         categoryForKind(file.kind)
     }
+
+    /// Whether a folder name answers *what a file is* rather than what it is
+    /// about.
+    ///
+    /// The distinction decides who is allowed to overrule whom. A file's type
+    /// is settled by its extension and is not open to opinion, so a model
+    /// offering one of these names in place of another is contradicting the
+    /// filesystem rather than adding to it — `Landing page redesign.zip` was
+    /// moved out of Archives and into Images on the strength of the PNGs
+    /// listed inside it, which is a true statement about the contents and no
+    /// statement at all about the file.
+    ///
+    /// Both vocabularies are listed because two of them exist: sorting by
+    /// type produces `TypeSorter.allFolders`, while the rules here fall back
+    /// to a shorter set of their own.
+    public static func namesAFileType(_ folder: String) -> Bool {
+        typeFolderNames.contains(folder.lowercased())
+    }
+
+    private static let typeFolderNames: Set<String> = Set(
+        (TypeSorter.allFolders + ["Notes", "Media", "Unsorted"]).map { $0.lowercased() }
+    )
 
     private static func categoryForKind(_ kind: FileItem.Kind) -> String {
         switch kind {

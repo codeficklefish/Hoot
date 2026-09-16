@@ -49,9 +49,17 @@ func stage4(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
         let rules = RuleBasedClassifier()
         for f in files { existing[f.id] = rules.classify(f, excerpt: nil) }
 
-        // Strong keyword evidence must not be overridden by a model opinion.
-        check("keyword match is high confidence",
-              existing[invoice.id]!.confidence >= 0.75,
+        // Two keywords out of one filename are one source agreeing with
+        // itself, not two sources agreeing, so this sits above the
+        // leave-alone line and below the certainty that would stop the file
+        // ever being read. It used to score 0.86 on that repetition alone,
+        // which put every multi-keyword filename beyond the refiner's reach
+        // and spent a number nothing had earned. What the next check proves
+        // is that the answer is still defended — on evidence, where it
+        // belongs, rather than by a threshold.
+        check("one filename's keywords do not add up to certainty",
+              existing[invoice.id]!.confidence > ClassificationResult.lowConfidenceThreshold
+                && existing[invoice.id]!.confidence < 0.75,
               "\(existing[invoice.id]!.confidence)")
 
         let refiner = CategoryRefiner(provider: OverreachingProvider(), extractor: MacPlatform.makeTextExtractor(), allowContentReading: true)
@@ -67,6 +75,47 @@ func stage4(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
               (refined[photo.id]?.confidence ?? 1) <= 0.85,
               "\(refined[photo.id]?.confidence ?? -1)")
 
+        // A model may turn a type into a subject. It may not turn a type
+        // into a different type: the extension settled that, and no reading
+        // of the contents outranks it. `Landing page redesign.zip` was moved
+        // to Images on the strength of the PNGs listed inside it.
+        let zipURL = sandbox.appending(path: "Landing page redesign.zip")
+        try? Data("x".utf8).write(to: zipURL)
+        if let archive = FileAnalyzer.analyze(zipURL) {
+            var archiveExisting: [UUID: ClassificationResult] = [:]
+            archiveExisting[archive.id] = rules.classify(archive, excerpt: nil)
+            check("a zip is filed by its type to begin with",
+                  archiveExisting[archive.id]?.suggestedFolder == "Archives",
+                  archiveExisting[archive.id]?.suggestedFolder ?? "nil")
+
+            let typeSwapper = CategoryRefiner(
+                provider: TypeSwappingProvider(), extractor: MacPlatform.makeTextExtractor(),
+                allowContentReading: true)
+            let swapped = await typeSwapper.refine(
+                [archive], existing: archiveExisting, preferredFolders: ["Images", "Archives"])
+            check("a zip full of images is still a zip", swapped[archive.id] == nil,
+                  "moved to \(swapped[archive.id]?.suggestedFolder ?? "-")")
+
+            // The other half: a subject claim is still allowed to take it.
+            let subjectProvider = CategoryRefiner(
+                provider: SubjectProvider(), extractor: MacPlatform.makeTextExtractor(),
+                allowContentReading: true)
+            let toSubject = await subjectProvider.refine(
+                [archive], existing: archiveExisting, preferredFolders: ["Cebu Trip"])
+            check("but a subject may still claim it",
+                  toSubject[archive.id]?.suggestedFolder == "Cebu Trip",
+                  toSubject[archive.id]?.suggestedFolder ?? "nil")
+        } else {
+            check("archive fixture", false)
+        }
+
+        check("Images names a file type", RuleBasedClassifier.namesAFileType("Images"))
+        check("and so does Archives, whatever its casing",
+              RuleBasedClassifier.namesAFileType("archives"))
+        check("Finance does not", !RuleBasedClassifier.namesAFileType("Finance"))
+        check("nor does a folder someone named themselves",
+              !RuleBasedClassifier.namesAFileType("Cebu Trip"))
+
         // A provider that fails must leave rule categories intact.
         let failing = CategoryRefiner(provider: FailingProvider(), extractor: MacPlatform.makeTextExtractor(), allowContentReading: true)
         let none = await failing.refine(files, existing: existing, preferredFolders: [])
@@ -75,6 +124,39 @@ func stage4(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
         sem.signal()
     }
     sem.wait()
+}
+
+/// Answers with another *type* name, the way a model reading a zip's contents
+/// reports what is inside it rather than what it is.
+struct TypeSwappingProvider: AIProvider {
+    let displayName = "Type swapping"
+    let isLocal = true
+    func availability() async -> ProviderAvailability { .available }
+    func suggestGrouping(for files: [FileDescriptor]) async throws -> GroupingSuggestion {
+        GroupingSuggestion(projects: [], loose: files.map(\.filename))
+    }
+    func suggestCategories(for files: [FileDescriptor], preferredFolders: [String]) async throws -> [CategorySuggestion] {
+        files.map {
+            CategorySuggestion(filename: $0.filename, category: "Images",
+                               reason: "It is full of PNGs.", confidence: 0.99)
+        }
+    }
+}
+
+/// Answers with a subject, which is what this refiner exists to accept.
+struct SubjectProvider: AIProvider {
+    let displayName = "Subject"
+    let isLocal = true
+    func availability() async -> ProviderAvailability { .available }
+    func suggestGrouping(for files: [FileDescriptor]) async throws -> GroupingSuggestion {
+        GroupingSuggestion(projects: [], loose: files.map(\.filename))
+    }
+    func suggestCategories(for files: [FileDescriptor], preferredFolders: [String]) async throws -> [CategorySuggestion] {
+        files.map {
+            CategorySuggestion(filename: $0.filename, category: "Cebu Trip",
+                               reason: "The photos are from the trip.", confidence: 0.99)
+        }
+    }
 }
 
 /// Returns a path-traversing folder name and claims a file that wasn't sent,
@@ -683,6 +765,75 @@ func stageConfidence(sandbox: URL, rawCheck: @escaping (String, Bool, String) ->
     check("the reason cites the file's text",
           corroborated.reason.lowercased().contains("text"),
           corroborated.reason)
+
+    print("\n[one source saying the same thing twice]")
+    // Noisy-OR is only honest about evidence that can fail separately, and
+    // four keywords out of one filename cannot: if the name is misleading,
+    // every word of it is misleading at once. Counted as four independent
+    // chances, `invoice-template-blank.pdf` reached 0.95.
+    let onceOverName = ConfidenceModel.combine([.filenameKeyword])
+    let fourTimesOverName = ConfidenceModel.combine(
+        [.filenameKeyword, .filenameKeyword, .filenameKeyword, .filenameKeyword])
+    let twoSources = ConfidenceModel.combine([.filenameKeyword, .contentKeyword])
+
+    check("repeating a source still counts for something",
+          fourTimesOverName > onceOverName,
+          String(format: "%.2f vs %.2f", fourTimesOverName, onceOverName))
+    check("but never for as much as a second source agreeing",
+          fourTimesOverName < twoSources,
+          String(format: "%.2f vs %.2f", fourTimesOverName, twoSources))
+    check("and repetition alone cannot manufacture certainty",
+          fourTimesOverName <= 0.8, String(format: "%.2f", fourTimesOverName))
+    check("the explanation names that source once",
+          ConfidenceModel.explain([.filenameKeyword, .filenameKeyword, .filenameKeyword])
+            == "Based on the filename.",
+          ConfidenceModel.explain([.filenameKeyword, .filenameKeyword, .filenameKeyword]))
+    // The ceiling applies to what repetition adds, never to a signal's own
+    // weight — the personal model's margin arrives above it, and clamping
+    // that would throw away the strongest evidence Hoot has.
+    check("a single strong signal keeps its own weight",
+          ConfidenceModel.combine([.matchesUserHistory(strength: 0.85)]) == 0.85,
+          String(format: "%.2f", ConfidenceModel.combine([.matchesUserHistory(strength: 0.85)])))
+    check("the order signals arrive in does not change the answer",
+          ConfidenceModel.combine([.filenameKeyword, .contentKeyword, .recognizedType])
+            == ConfidenceModel.combine([.recognizedType, .filenameKeyword, .contentKeyword]))
+
+    print("\n[a plural is the same word]")
+    // `Invoices-2024.pdf` matched no rule at all while `invoice-2024.pdf`
+    // reached Finance: keywords were compared as written, so the plural of
+    // nearly every one of them missed — and plurals are what a downloads
+    // folder is full of.
+    func folder(named name: String) -> String {
+        let path = root.appending(path: name)
+        try? Data("x".utf8).write(to: path)
+        guard let item = FileAnalyzer.analyze(path) else { return "?" }
+        return rules.classify(item, excerpt: nil).suggestedFolder
+    }
+
+    check("the singular reaches its rule", folder(named: "invoice_2024.pdf") == "Finance",
+          folder(named: "invoice_2024.pdf"))
+    check("and so does the plural", folder(named: "invoices_2024.pdf") == "Finance",
+          folder(named: "invoices_2024.pdf"))
+    check("taxes are tax", folder(named: "taxes_2024.pdf") == "Finance",
+          folder(named: "taxes_2024.pdf"))
+    check("receipts are receipt", folder(named: "receipts.pdf") == "Finance",
+          folder(named: "receipts.pdf"))
+    check("contracts are contract", folder(named: "contracts.pdf") == "Work",
+          folder(named: "contracts.pdf"))
+
+    // The other half of the rule, and the more important half: a word that
+    // merely ends in s is left alone. Over-stemming fails silently —
+    // `address` reduced to `addres` would match nothing, for ever.
+    check("a doubled s is not a plural", WordStem.stem("address") == "address",
+          WordStem.stem("address"))
+    check("nor is a Greek singular", WordStem.stem("analysis") == "analysis",
+          WordStem.stem("analysis"))
+    check("nor a Latin one", WordStem.stem("status") == "status", WordStem.stem("status"))
+    check("nor anything too short to judge", WordStem.stem("gas") == "gas", WordStem.stem("gas"))
+    check("but an ordinary plural is", WordStem.stem("policies") == "policy",
+          WordStem.stem("policies"))
+    check("including one spelled with es", WordStem.stem("boxes") == "box",
+          WordStem.stem("boxes"))
 
     print("\n[scanned documents are read]")
     // Filename says nothing; the page is a picture of words.

@@ -68,13 +68,19 @@ public struct FileRenamer {
         guard !candidates.isEmpty else { return [:] }
         guard case .available = await provider.availability() else { return [:] }
 
-        let descriptors = candidates.map { file in
-            FileDescriptor(
+        // Kept rather than rebuilt from `evidence` later: what the model was
+        // shown is what its answer has to be justified by, and re-deriving it
+        // is how the two quietly come apart.
+        var excerpts: [UUID: String] = [:]
+        let descriptors = candidates.map { file -> FileDescriptor in
+            let excerpt = evidence[file.id]?.excerpt
+            if let excerpt { excerpts[file.id] = excerpt }
+            return FileDescriptor(
                 id: file.id,
                 filename: file.filename,
                 sizeDescription: file.displaySize,
                 modifiedAt: file.modifiedAt,
-                excerpt: evidence[file.id]?.excerpt
+                excerpt: excerpt
             )
         }
 
@@ -89,7 +95,7 @@ public struct FileRenamer {
             return [:]
         }
 
-        return match(suggestions, to: candidates)
+        return match(suggestions, to: candidates, excerpts: excerpts)
     }
 
     /// Matches answers back to the files they were asked about.
@@ -101,7 +107,8 @@ public struct FileRenamer {
     /// certainty for a guess, which is the one trade never worth making.
     private func match(
         _ suggestions: [NameSuggestion],
-        to candidates: [FileItem]
+        to candidates: [FileItem],
+        excerpts: [UUID: String]
     ) -> [UUID: ProposedName] {
 
         var byName: [String: FileItem] = [:]
@@ -115,7 +122,7 @@ public struct FileRenamer {
                 unmatched.append(suggestion)
                 continue
             }
-            claim(file, with: suggestion, into: &proposals)
+            claim(file, with: suggestion, excerpt: excerpts[file.id], into: &proposals)
         }
 
         // The numbers exist because the filenames this feature is for are
@@ -129,7 +136,7 @@ public struct FileRenamer {
             guard index >= 1, index <= candidates.count else { continue }
             let file = candidates[index - 1]
             guard proposals[file.id] == nil else { continue }
-            claim(file, with: suggestion, into: &proposals)
+            claim(file, with: suggestion, excerpt: excerpts[file.id], into: &proposals)
         }
 
         return proposals
@@ -142,12 +149,14 @@ public struct FileRenamer {
     private func claim(
         _ file: FileItem,
         with suggestion: NameSuggestion,
+        excerpt: String?,
         into proposals: inout [UUID: ProposedName]
     ) {
         guard proposals[file.id] == nil else { return }
         guard let name = SuggestionValidator.sanitizeFilename(
             suggestion.proposedName,
-            keepingExtensionOf: file.filename
+            keepingExtensionOf: file.filename,
+            groundedIn: excerpt
         ) else { return }
 
         proposals[file.id] = ProposedName(

@@ -57,7 +57,7 @@ let package = Package(
             name: "Evaluation",
             dependencies: ["HootKit", "HootPlatformMac"],
             path: "Evaluation",
-            exclude: ["run.sh"]
+            exclude: ["run.sh", "scheduled-run.sh"]
         ),
 
         // Guards the dependency rule the ADR sets out, so a stray import

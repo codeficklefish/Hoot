@@ -3,6 +3,23 @@ import Foundation
 /// What Hoot tells a provider about one file. Deliberately narrow: a provider
 /// only ever sees what the privacy rules allow, never the file itself.
 public struct FileDescriptor: Hashable {
+    /// Public so a harness outside this module can build a request and
+    /// measure what a provider does with it. The evaluation target names
+    /// files the user already named, and cannot do that without this.
+    public init(
+        id: UUID,
+        filename: String,
+        sizeDescription: String,
+        modifiedAt: Date?,
+        excerpt: String?
+    ) {
+        self.id = id
+        self.filename = filename
+        self.sizeDescription = sizeDescription
+        self.modifiedAt = modifiedAt
+        self.excerpt = excerpt
+    }
+
     public let id: UUID
     public let filename: String
     public let sizeDescription: String

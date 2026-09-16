@@ -147,6 +147,23 @@ check that it is the active developer directory:
 sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 ```
 
+That is not the only way to end up with the wrong compiler, and the other way
+is harder to read. `swift` on `PATH` is often *not* Xcode's — swiftly,
+swiftenv, asdf and the swift.org installer all put their own ahead of it — and
+a swift.org toolchain driving Xcode's SDK fails quite differently:
+
+```
+error: unknown argument: '-target-arch-variant'
+error: cannot find 'Data' in scope
+```
+
+thousands of times, in files whose first line imports Foundation. Nothing in
+that names the toolchain. Every script here resolves Xcode's Swift itself
+rather than trusting `PATH` — see `Packaging/find-swift.sh` — so
+`./Packaging/build-app.sh` and both `run.sh` scripts are unaffected by it. Only
+running `swift` by hand is, and `xcrun swift` is the version that always means
+Xcode's.
+
 Then:
 
 ```bash
@@ -182,9 +199,24 @@ above.
 
 ```bash
 swift test              # the engine imports nothing platform-specific
-./Verification/run.sh   # 481 behaviour and safety checks, in a sandbox
+./Verification/run.sh   # 506 behaviour and safety checks, in a sandbox
 ./Evaluation/run.sh     # accuracy against folders you organized yourself
 ```
+
+The evaluation measures three things, and names one on the command line to
+run it alone:
+
+| | |
+|---|---|
+| `folders` | does a file end up where you would have put it? |
+| `meaningless` | which of the names you kept would Hoot offer to overwrite? |
+| `names` | can Hoot recover a name you chose, from the file's text alone? |
+
+The last two need no labelling and no judgement call. Every filename in a
+folder you organized is a name you have already approved, so a name Hoot
+would replace is a candidate mistake; and for `names`, your own filename is
+hidden and then used as the answer key, because you wrote it while looking at
+the file.
 
 The verification suite covers the safety rules directly: that a symlinked
 folder cannot move files outside the watched directory, that a malformed
@@ -202,9 +234,9 @@ way to know a decompressor is correct.
 | `Sources/HootKit` | the engine — decides where files belong, imports only Foundation |
 | `Sources/HootPlatformMac` | Apple adapters (PDFKit, Vision, FoundationModels) |
 | `Sources/Hoot` | the macOS app |
-| `Verification` | 481 behaviour and safety checks |
+| `Verification` | 506 behaviour and safety checks |
 | `Evaluation` | measures accuracy against folders you organized |
-| `Packaging` | app bundle, icon, signing and notarization |
+| `Packaging` | app bundle, icon, signing, notarization and toolchain selection |
 | `CONTEXT.md` | what each term in the code means, in one place |
 | `Website/public` | the deployed landing page — what Netlify publishes |
 | `Website` | design artboards the page was drawn from |

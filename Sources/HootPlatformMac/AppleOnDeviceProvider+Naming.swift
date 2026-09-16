@@ -26,11 +26,21 @@ extension AppleOnDeviceProvider {
         }
 
         var suggestions: [NameSuggestion] = []
+        // Numbered across the whole request, not within each chunk.
+        // `NameSuggestion.requestIndex` means "which file in the request",
+        // and the renamer reads it as an index into everything it sent — so
+        // restarting the count at 1 for every chunk handed the second
+        // chunk's answers to the first chunk's files. It only showed with
+        // more than eight files to name, and only on the fallback path where
+        // the model had miscopied a filename, which is to say: rarely, and
+        // silently, on exactly the names nobody could check by eye.
+        var firstNumber = 1
         for chunk in files.chunked(into: Self.maximumFilesPerNamingRequest) {
+            defer { firstNumber += chunk.count }
             let session = LanguageModelSession(instructions: Self.namingInstructions)
             do {
                 let answer = try await session.respond(
-                    to: Self.namingPrompt(for: chunk),
+                    to: Self.namingPrompt(for: chunk, startingAt: firstNumber),
                     generating: ModelNames.self,
                     options: Self.deterministic
                 )
@@ -81,10 +91,10 @@ extension AppleOnDeviceProvider {
     /// Asked to echo `------.txt` verbatim the model came back one dash
     /// short, and the answer was dropped as being for a file that was never
     /// sent. A number survives the round trip.
-    private static func namingPrompt(for files: [FileDescriptor]) -> String {
+    private static func namingPrompt(for files: [FileDescriptor], startingAt first: Int) -> String {
         var lines = ["Name each of these \(files.count) files:"]
         for (offset, file) in files.enumerated() {
-            lines.append("\(offset + 1). \(file.filename)")
+            lines.append("\(first + offset). \(file.filename)")
             if let excerpt = file.excerpt, !excerpt.isEmpty {
                 lines.append("    text from inside: \(excerpt)")
             }

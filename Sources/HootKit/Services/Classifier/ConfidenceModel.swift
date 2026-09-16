@@ -64,6 +64,22 @@ public enum ConfidenceModel {
             case .matchesUserHistory: return "how you have filed similar files before"
             }
         }
+
+        /// Which reading of the file this signal came from.
+        ///
+        /// Two signals sharing a key are the same source speaking twice, not
+        /// two sources agreeing — and the whole value of a noisy-OR is that
+        /// it combines things which can fail *independently*.
+        var sourceKey: String {
+            switch self {
+            case .filenameKeyword: return "filename"
+            case .contentKeyword: return "content"
+            case .recognizedType: return "type"
+            case .corroboratedByProvider: return "provider"
+            case .sharedProjectVocabulary: return "project"
+            case .matchesUserHistory: return "history"
+            }
+        }
     }
 
     /// Nothing here is ever certain, so confidence is capped short of it.
@@ -73,22 +89,72 @@ public enum ConfidenceModel {
     /// either source alone would suggest.
     private static let conflictPenalty = 0.7
 
-    /// Combines signals. Each is treated as an independent chance of being
-    /// right: `1 - ∏(1 - weight)`.
+    /// What a second and each further hit from the same source adds.
+    private static let repeatStep = 0.06
+
+    /// As far as repetition alone can carry one source. Well short of the
+    /// overall ceiling: however many words of a filename agree, a filename on
+    /// its own is never close to certain.
+    private static let repeatCeiling = 0.8
+
+    /// Combines signals. *Sources* are treated as independent chances of
+    /// being right — `1 - ∏(1 - weight)` — and repeated hits from one source
+    /// are not.
     public static func combine(_ signals: [Signal], conflicting: Bool = false) -> Double {
         guard !signals.isEmpty else { return 0.2 }
 
-        let failure = signals.reduce(1.0) { $0 * (1 - $1.weight) }
+        let failure = weightsBySource(signals).reduce(1.0) { $0 * (1 - $1) }
         let combined = 1 - failure
         let adjusted = conflicting ? combined * conflictPenalty : combined
         return min(adjusted, ceiling)
+    }
+
+    /// One weight per source, with repeated hits from the same source folded
+    /// into it rather than counted beside it.
+    ///
+    /// Noisy-OR is only honest about things that can fail separately, and
+    /// four keywords read out of one filename cannot: a filename that is
+    /// misleading is misleading in all of its words at once. Counting them
+    /// as four chances took `invoice-template-blank.pdf` to 0.95 on the
+    /// strength of a name that says the opposite — and, because
+    /// `CategoryRefiner` only looks at files below its keyword threshold,
+    /// spent that false certainty on never reading the file at all.
+    ///
+    /// Sorted so the product is formed in the same order every time. The
+    /// arithmetic is associative, floating-point arithmetic is not, and an
+    /// answer that changes in the last decimal between runs is one that
+    /// cannot be tested.
+    private static func weightsBySource(_ signals: [Signal]) -> [Double] {
+        var strongest: [String: Double] = [:]
+        var occurrences: [String: Int] = [:]
+        for signal in signals {
+            strongest[signal.sourceKey] = max(strongest[signal.sourceKey] ?? 0, signal.weight)
+            occurrences[signal.sourceKey, default: 0] += 1
+        }
+
+        return strongest.map { source, weight in
+            let repeats = Double((occurrences[source] ?? 1) - 1)
+            // The ceiling applies to what repetition *adds*, never to the
+            // signal's own weight: the personal model's margin can arrive
+            // above it, and clamping that would quietly throw away the
+            // strongest evidence Hoot has.
+            return min(weight + repeatStep * repeats, max(weight, repeatCeiling))
+        }
+        .sorted()
     }
 
     /// A sentence naming what the confidence rests on, so the user can judge
     /// the reasoning rather than trusting a bare number.
     public static func explain(_ signals: [Signal], conflicting: Bool = false) -> String {
         guard !signals.isEmpty else { return "No clear evidence." }
-        let names = signals.map(\.description)
+        // One phrase per source, for the same reason confidence takes one
+        // weight per source. Three keywords out of one filename are one
+        // reason to believe something, and "the filename, the filename, and
+        // the filename" would tell the user the opposite.
+        var seen: Set<String> = []
+        let names = signals
+            .filter { seen.insert($0.sourceKey).inserted }
+            .map(\.description)
         let joined: String
         switch names.count {
         case 1: joined = names[0]
