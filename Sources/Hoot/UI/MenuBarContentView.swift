@@ -159,6 +159,13 @@ struct MenuBarContentView: View {
                 // it counts what was found, which is all anything knows yet.
                 Text("Review \(appState.reviewableCount) \(appState.reviewableCount == 1 ? "File" : "Files")…")
                     .fontWeight(.medium)
+                    // The width of the section, like the mode selector it sits
+                    // under. A bordered-prominent button hugs its title, which
+                    // left the one decision this popover exists to offer
+                    // sitting in the corner at a third the width of everything
+                    // above it — reading as a leftover control rather than the
+                    // thing to press.
+                    .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
