@@ -7,4 +7,10 @@
 # Touches nothing outside a temporary directory.
 set -e
 cd "$(dirname "$0")/.."
-exec swift run -c release Verification "$@"
+
+# Xcode's Swift, never whatever happens to be first on PATH — see
+# Packaging/find-swift.sh for what goes wrong when it is not.
+source Packaging/find-swift.sh
+SWIFT="$(find_swift)"
+
+exec "$SWIFT" run -c release Verification "$@"

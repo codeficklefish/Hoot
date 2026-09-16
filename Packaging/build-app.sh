@@ -8,9 +8,15 @@ cd "$(dirname "$0")/.."
 CONFIG="${1:-release}"
 APP="build/Hoot.app"
 
+# Xcode's Swift, never whatever happens to be first on PATH. This build in
+# particular cannot survive the wrong one: the @Generable macro is expanded by
+# a plugin only Xcode ships.
+source Packaging/find-swift.sh
+SWIFT="$(find_swift)"
+
 echo "==> Building ($CONFIG)"
-swift build -c "$CONFIG"
-BIN="$(swift build -c "$CONFIG" --show-bin-path)"
+"$SWIFT" build -c "$CONFIG"
+BIN="$("$SWIFT" build -c "$CONFIG" --show-bin-path)"
 
 echo "==> Assembling $APP"
 rm -rf "$APP"
