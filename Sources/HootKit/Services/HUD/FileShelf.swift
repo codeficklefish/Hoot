@@ -55,6 +55,11 @@ public struct FileShelf: Equatable, Sendable {
 
     public var isEmpty: Bool { folders.isEmpty }
 
+    /// Whether another folder will fit. The `+` is shown either way and
+    /// disabled when it will not, rather than vanishing — a control that
+    /// disappears leaves you wondering where it went.
+    public var hasRoom: Bool { folders.count < Self.maxFolders }
+
     public var current: ShelfFolder? {
         guard folders.indices.contains(showing) else { return nil }
         return folders[showing]
@@ -70,7 +75,7 @@ public struct FileShelf: Equatable, Sendable {
 
     public var emptyMessage: String {
         guard let current else {
-            return "Add a folder in Settings and it will be here."
+            return "No folders yet — use + to add one."
         }
         return current.emptyMessage
     }
@@ -128,6 +133,21 @@ public struct FileShelf: Equatable, Sendable {
     /// something useful to do — open the folder itself.
     public var revealLabel: String {
         pickedEntry == nil ? "Open folder" : "Show in Finder"
+    }
+
+    /// What the panel says after handing something to the Finder.
+    ///
+    /// Phrased here rather than at the call site for the same reason every
+    /// other label on this type is: a sentence with a count in it is exactly
+    /// the kind of thing that reads "1 files" in the one case nobody tried.
+    public var revealMessage: String {
+        if let picked = pickedEntry { return "Revealed \(picked.name) in the Finder" }
+        return "Opened \(title) in the Finder"
+    }
+
+    /// And after sending the watched folder to the review window.
+    public func tidyMessage(untidy: Int) -> String {
+        "Review opened — \(untidy) \(untidy == 1 ? "file" : "files") in \(title) to sort and name"
     }
 
     /// The one place the organizer surfaces here, and only for a folder that

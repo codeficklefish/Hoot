@@ -49,7 +49,32 @@ extension AppState {
     /// documented reasons: an accessory app has to activate before its panel
     /// takes key focus, and `runModal()` inside the popover's event-tracking
     /// loop swallows clicks.
-    func presentShelfFolderPicker() {
+    /// The places people actually leave things.
+    ///
+    /// Offered as one-click destinations because "Desktop" is a word someone
+    /// has in mind, not a path they want to navigate to. The sandbox still
+    /// requires them to choose it — there is no automatic access to any of
+    /// these — but a panel already standing in the right folder turns that
+    /// into a confirmation rather than an errand.
+    static var standardFolders: [(name: String, url: URL)] {
+        let manager = FileManager.default
+        let wanted: [(String, FileManager.SearchPathDirectory)] = [
+            ("Desktop", .desktopDirectory),
+            ("Documents", .documentDirectory),
+            ("Downloads", .downloadsDirectory),
+            ("Pictures", .picturesDirectory)
+        ]
+        return wanted.compactMap { name, directory in
+            manager.urls(for: directory, in: .userDomainMask).first.map { (name, $0) }
+        }
+    }
+
+    /// True when that folder is not already a tab.
+    func isOnShelf(_ url: URL) -> Bool {
+        shelf.folders.contains { FolderIdentity.same($0.url, url) }
+    }
+
+    func presentShelfFolderPicker(startingAt start: URL? = nil) {
         NSApp.activate(ignoringOtherApps: true)
 
         Task { @MainActor [weak self] in
@@ -61,8 +86,11 @@ extension AppState {
             panel.allowsMultipleSelection = true
             panel.prompt = "Add to Shelf"
             panel.message = "Choose folders for the notch to show. Hoot only reads these."
-            panel.directoryURL = FileManager.default
-                .urls(for: .userDirectory, in: .localDomainMask).first
+            // Standing in the folder being offered. With nothing selected,
+            // an open panel in directory mode returns the directory it is
+            // showing — so "Add Desktop" is one button and one confirm.
+            panel.directoryURL = start
+                ?? FileManager.default.urls(for: .userDirectory, in: .localDomainMask).first
 
             panel.begin { response in
                 guard response == .OK else { return }
@@ -91,6 +119,11 @@ extension AppState {
     func removeShelfFolder(_ url: URL) {
         shelfAccess.forget(url)
         shelf.remove(url)
+        // Whatever the cursor landed on may never have been read — a folder
+        // restored at launch carries no rows until something asks for them,
+        // so removing a tab would otherwise leave the next one looking empty.
+        shelfHandoff = nil
+        Task { await refreshShelf(force: true) }
     }
 
     // MARK: - Reading them
@@ -168,7 +201,13 @@ extension AppState {
     /// was, which is the reason the walk came out of the notch in the first
     /// place.
     func openReviewForTidying() {
+        guard let folder = shelf.current else { return }
+        shelfHandoff = shelf.tidyMessage(untidy: untidyCount(in: folder.url))
         openReviewWindow?()
+    }
+
+    func dismissShelfHandoff() {
+        shelfHandoff = nil
     }
 
     /// Hands the current folder, or the picked file, to the Finder.
@@ -177,6 +216,9 @@ extension AppState {
             NSWorkspace.shared.activateFileViewerSelecting([picked.url])
         } else if let folder = shelf.current {
             NSWorkspace.shared.activateFileViewerSelecting([folder.url])
+        } else {
+            return
         }
+        shelfHandoff = shelf.revealMessage
     }
 }

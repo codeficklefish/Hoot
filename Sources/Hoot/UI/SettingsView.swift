@@ -182,6 +182,20 @@ struct SettingsView: View {
                     .font(.callout)
                 }
 
+                // The same offers the notch makes, for anyone who came
+                // looking here instead.
+                let offers = AppState.standardFolders.filter { !appState.isOnShelf($0.url) }
+                if !offers.isEmpty, appState.shelf.hasRoom {
+                    HStack(spacing: 6) {
+                        ForEach(offers, id: \.url) { offer in
+                            Button("Add \(offer.name)") {
+                                appState.presentShelfFolderPicker(startingAt: offer.url)
+                            }
+                            .controlSize(.small)
+                        }
+                    }
+                }
+
                 HStack(spacing: 8) {
                     Button("Add Folder…") { appState.presentShelfFolderPicker() }
                         .controlSize(.small)

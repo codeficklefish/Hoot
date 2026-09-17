@@ -90,6 +90,10 @@ enum HUDTokens {
     /// Height of the collapsed bar, and of the header in every other state.
     /// Matches a camera housing, which is the point: at rest the HUD is the
     /// same shape as the notch and therefore invisible on it.
+    /// The menu bar row, measured: `frame.maxY - visibleFrame.maxY` is 34 on
+    /// a notched display, where the cutout itself is 33. The bar covers the
+    /// row rather than the cutout, so it ends where the menu bar ends — tying
+    /// it to the notch instead left a one-point seam of menu bar showing.
     static let headerHeight: CGFloat = 34
 
     /// Each file row in the expanded panel, used to size the panel before it
@@ -119,6 +123,20 @@ enum HUDTokens {
     static let shelfRowHeight: CGFloat = 26
     /// The footer's pill controls.
     static let pillHeight: CGFloat = 20
+
+    /// How far the resting bar reaches past the camera housing on each side.
+    ///
+    /// The bar used to be exactly the width of the cutout, which made it
+    /// invisible — and made everything drawn on it invisible too, since the
+    /// housing was directly over the mark and the folder's name. Reaching
+    /// past the cutout is what lets the bar say which folder it is showing
+    /// without being opened.
+    static let restingShoulder: CGFloat = 88
+
+    /// How far the mark and the folder's name stand off the camera housing.
+    /// Close enough to read as one object continuing out of the hardware,
+    /// far enough not to touch the bezel.
+    static let housingGap: CGFloat = 10
 
     // MARK: - Motion
 

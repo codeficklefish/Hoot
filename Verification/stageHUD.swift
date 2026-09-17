@@ -77,6 +77,35 @@ func stageHUD(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) 
 
     // MARK: - Walking through the plan, one folder at a time
 
+    print("\n[the resting bar says which folder it is showing]")
+
+    // It used to be exactly the width of the cutout, which made it invisible
+    // — and made the mark and the folder's name invisible with it, because
+    // the camera housing was directly over both. Reaching past the cutout is
+    // the whole point, and the arithmetic is worth pinning because it decides
+    // how much usable menu bar the bar sits on top of.
+    let shoulder = 88.0
+    let resting = notch.width + shoulder * 2
+    check("the resting bar clears the cutout on both sides",
+          resting > notch.width, "\(resting) vs \(notch.width)")
+    check("by exactly a shoulder each side",
+          (resting - notch.width) / 2 == shoulder)
+    check("and is still wide enough for the placement rule",
+          resting >= HUDPlacement.minimumWidth(for: notch),
+          "\(resting) vs \(HUDPlacement.minimumWidth(for: notch))")
+
+    // Centred on the camera, so the shoulders are even and the bar still
+    // continues out of the housing rather than hanging off one side of it.
+    let restingFrame = HUDPlacement.frame(
+        contentWidth: resting, contentHeight: 34,
+        notch: notch, screenTopY: 1107)
+    check("the bar stays centred on the camera",
+          restingFrame.x + restingFrame.width / 2 == notch.centerX,
+          "\(restingFrame.x + restingFrame.width / 2) vs \(notch.centerX)")
+    check("and still meets the top of the display",
+          HUDPlacement.gapAboveTop(originY: restingFrame.y,
+                                   contentHeight: 34, screenTopY: 1107) == 0)
+
     print("\n[a list stops growing before the window does]")
 
     // The panel is sized from its content's fittingSize, so a list with no
@@ -348,6 +377,23 @@ func stageHUD(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) 
 
     // The organizer's one appearance here. A folder with no plan has no
     // button at all, rather than a button reading zero.
+    check("handing a folder over says so", shelf.revealMessage == "Opened shelf-read in the Finder",
+          shelf.revealMessage)
+    check("and names the file when one is picked", {
+        var picked = shelf
+        picked.select(picked.rows.first { !$0.isFolder }!.id)
+        return picked.revealMessage == "Revealed invoice_march.pdf in the Finder"
+    }(), {
+        var picked = shelf
+        picked.select(picked.rows.first { !$0.isFolder }!.id)
+        return picked.revealMessage
+    }())
+    // The case that reads "1 files" if nobody tries it.
+    check("one file is a file", shelf.tidyMessage(untidy: 1).contains("1 file in"),
+          shelf.tidyMessage(untidy: 1))
+    check("and several are files", shelf.tidyMessage(untidy: 4).contains("4 files in"),
+          shelf.tidyMessage(untidy: 4))
+
     check("no tidying to offer means no button", shelf.tidyLabel(untidy: 0) == nil)
     check("and otherwise it counts", shelf.tidyLabel(untidy: 5) == "Tidy 5",
           shelf.tidyLabel(untidy: 5) ?? "nil")
@@ -358,12 +404,18 @@ func stageHUD(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) 
         ShelfFolder(url: sandbox.appending(path: name), state: .empty, entries: [])
     }
     var tabs = FileShelf()
-    check("an empty shelf says where folders come from",
-          tabs.isEmpty && tabs.emptyMessage.contains("Settings"))
+    // It used to send you to Settings. The standard folders are offered at
+    // the notch itself now, so the message points at what is on screen.
+    check("an empty shelf points at the control beside it",
+          tabs.isEmpty && tabs.emptyMessage.contains("+"),
+          tabs.emptyMessage)
+    check("and it knows there is room for more", tabs.hasRoom)
     for index in 0..<FileShelf.maxFolders {
         check("folder \(index + 1) is added", tabs.add(folderNamed("F\(index)")))
     }
     check("the ninth is refused", !tabs.add(folderNamed("F99")))
+    check("and a full shelf says so rather than hiding the control",
+          !tabs.hasRoom)
     check("and so is one already there", !tabs.add(folderNamed("F0")))
 
     tabs.show(folderAt: 7)

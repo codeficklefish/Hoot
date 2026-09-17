@@ -81,6 +81,10 @@ final class AppState: ObservableObject {
     @Published var shelf = FileShelf()
     /// Guards against re-reading on every hover flicker.
     var lastShelfRead: Date?
+    /// What the shelf last handed to something else, shown until dismissed.
+    /// A handover is the one thing the panel does that has no visible result
+    /// inside the panel, so it says so rather than appearing to do nothing.
+    @Published var shelfHandoff: String?
     /// Opening a window is the app's business, not the state's — `openWindow`
     /// is a SwiftUI environment value and exists only inside a scene. The app
     /// hands this in so the notch can send you to the review window without

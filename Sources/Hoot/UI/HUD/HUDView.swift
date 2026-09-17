@@ -43,6 +43,11 @@ struct HUDView: View {
     var onPreview: (URL) -> Void = { _ in }
     var onDragStart: () -> Void = {}
     var onRevealEntry: (URL) -> Void = { _ in }
+    var handoff: String?
+    var onDismissHandoff: () -> Void = {}
+    var offers: [(name: String, url: URL)] = []
+    var onAddFolder: (URL?) -> Void = { _ in }
+    var onRemoveFolder: (URL) -> Void = { _ in }
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -75,7 +80,16 @@ struct HUDView: View {
     /// switched on.
     private var isExpanded: Bool { isOpen || isHoldingOpen }
 
-    private var width: CGFloat { isExpanded ? HUDTokens.shelfWidth : 190 }
+    private var width: CGFloat { isExpanded ? HUDTokens.shelfWidth : restingWidth }
+
+    /// The cutout, plus room either side of it to say something.
+    ///
+    /// Falls back to the old notch-sized bar where there is no notch to
+    /// measure, which is only ever a preview or a display that lost one.
+    private var restingWidth: CGFloat {
+        guard notch.hasNotch else { return 190 }
+        return notch.width + HUDTokens.restingShoulder * 2
+    }
 
     /// Square at the top, because a rounded corner there would open a sliver
     /// of desktop between the HUD and the bezel and give the join away.
@@ -97,23 +111,38 @@ struct HUDView: View {
     /// the popover's chips and the review window's header, and those two
     /// disagreeing once was the bug that made all three read one plan.
     private var housing: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 0) {
+            // Pinned to the near edge of its shoulder, not floated in the
+            // middle of it. A `Spacer` between the two takes up all the slack
+            // and pushes both of these out to the far edges of the bar, which
+            // leaves the mark and the folder's name stranded either side of a
+            // wide empty gap. They belong against the camera: the bar is one
+            // object continuing out of the hardware, and things that sit at
+            // the extremes of it read as two separate labels instead.
             Image(nsImage: HootMark.menuBarIcon)
                 .renderingMode(.template)
                 .foregroundStyle(HUDTokens.onDark)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.trailing, HUDTokens.housingGap)
 
-            Spacer(minLength: 4)
+            // The cutout, at a fixed width so the two halves stay even. On
+            // the hardware this is built for the camera housing is physically
+            // here, and anything drawn in it is simply not on screen.
+            Color.clear
+                .frame(width: notch.hasNotch ? notch.width : 0)
 
             Text(shelf.pillText)
-                .font(HUDTokens.caption2)
+                .font(HUDTokens.caption)
+                .fontWeight(.semibold)
                 .foregroundStyle(HUDTokens.onDark)
                 .lineLimit(1)
-                .fixedSize()
+                .truncationMode(.middle)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, HUDTokens.housingGap)
         }
-        .padding(.horizontal, 10)
         .frame(height: HUDTokens.headerHeight)
-        // Hidden while the panel is open: the tabs take this line, and on a
-        // notched Mac the mark would be behind the camera anyway.
+        // Hidden while the panel is open: the tabs take this line, and the
+        // folder's name is already the selected one among them.
         .opacity(isExpanded ? 0 : 1)
         .accessibilityLabel("Hoot — \(shelf.pillText)")
     }
@@ -127,6 +156,11 @@ struct HUDView: View {
                 shelf: shelf,
                 untidy: untidy,
                 now: now,
+                handoff: handoff,
+                onDismissHandoff: onDismissHandoff,
+                offers: offers,
+                onAddFolder: onAddFolder,
+                onRemoveFolder: onRemoveFolder,
                 onShowFolder: onShowFolder,
                 onSelect: onSelect,
                 onCycleSort: onCycleSort,

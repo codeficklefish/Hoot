@@ -118,6 +118,11 @@ final class HUDController: ObservableObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.refresh() }
             .store(in: &cancellables)
+
+        appState.$shelfHandoff
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.refresh() }
+            .store(in: &cancellables)
     }
 
     // MARK: - Paging by keyboard
@@ -248,7 +253,12 @@ final class HUDController: ObservableObject {
             onDragStart: { [weak self] in self?.beginHold() },
             onRevealEntry: { url in
                 NSWorkspace.shared.activateFileViewerSelecting([url])
-            }
+            },
+            handoff: appState.shelfHandoff,
+            onDismissHandoff: { appState.dismissShelfHandoff() },
+            offers: AppState.standardFolders.filter { !appState.isOnShelf($0.url) },
+            onAddFolder: { appState.presentShelfFolderPicker(startingAt: $0) },
+            onRemoveFolder: { appState.removeShelfFolder($0) }
         )
 
         // Replacing the root view rather than the hosting view keeps the
@@ -259,6 +269,17 @@ final class HUDController: ObservableObject {
         // used it. It also stops a frame observer being added per refresh.
         if let hosting {
             hosting.rootView = view
+            // Re-measure and re-place, rather than waiting for the frame
+            // observer below. The panel's width is a property of the *view*,
+            // but only the window can act on it — and on this path the window
+            // was never told, so a view that wanted to be wider simply got
+            // squeezed into the window it already had. That is what kept the
+            // resting bar the width of the cutout, with the mark and the
+            // folder's name behind the camera housing where nobody could see
+            // them. `layoutSubtreeIfNeeded` first, or `fittingSize` answers
+            // for the layout that has just been replaced.
+            hosting.layoutSubtreeIfNeeded()
+            if let panel { resize(panel, to: hosting.fittingSize) }
             panel?.orderFrontRegardless()
             return
         }
@@ -394,6 +415,15 @@ final class HUDController: ObservableObject {
         )
     }
 
+    /// What the HUD measured and where it put itself, off unless
+    /// HOOT_TRACE_HUD is set. The panel is drawn over the one part of the
+    /// screen that is hardest to look at, so being able to ask it for its
+    /// numbers is worth the four lines.
+    private static func trace(_ message: @autoclosure () -> String) {
+        guard ProcessInfo.processInfo.environment["HOOT_TRACE_HUD"] != nil else { return }
+        FileHandle.standardError.write(Data("[hud] \(message())\n".utf8))
+    }
+
     private func resize(_ panel: NSPanel, to size: NSSize) {
         guard let screen = NSScreen.main else { return }
         let notch = Self.notch(for: screen)
@@ -411,6 +441,10 @@ final class HUDController: ObservableObject {
         )
         // A borderless panel's shadow lags a size change without this.
         panel.invalidateShadow()
+
+        Self.trace("notch w=\(notch.width) h=\(notch.height) centre=\(notch.centerX) | "
+            + "content=\(size.width)x\(size.height) | "
+            + "panel x=\(placed.x) w=\(placed.width)")
     }
 
     deinit {
