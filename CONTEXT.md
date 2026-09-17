@@ -10,9 +10,14 @@ yet, not that it is unimportant.
 
 ## The watched folder
 
-**Watched folder** — the single directory Hoot has been pointed at. There is
-never more than one. Everything Hoot does happens inside it, and safety rule 4
-is that nothing is ever written outside it, checked after symlinks are resolved.
+**Watched folder** — the single directory Hoot *organizes*. There is never
+more than one, and safety rule 4 depends on that: nothing is ever written
+outside it, checked after symlinks are resolved. Everything Hoot *does* to a
+file happens here.
+
+Not to be confused with the folders on the shelf, which Hoot only reads. The
+distinction is load-bearing rather than tidy — see
+[decision 0003](docs/decisions/0003-many-folders-read-one-folder-written.md).
 
 **Grant** — the user's permission to read and write the watched folder, and the
 durable record of it. On macOS the grant is a security-scoped bookmark, because
@@ -22,7 +27,19 @@ can be remembered, asked for again and given back, and nothing more.
 
 Restoring a grant is not free and not silent — it opens an operating-system
 resource and starts a watcher — so it happens in `AppState.start()`, never as a
-side effect of constructing something.
+side effect of constructing something. That is now true several times over:
+the shelf restores one grant per folder there.
+
+`FolderAccessing` is the watched folder's grant and stays singular;
+`FolderSetAccessing` is the shelf's and is plural. Two seams rather than one
+keyed seam, because widening the first would make every caller ask "which
+folder?" about a question that has exactly one answer.
+
+**The same folder** — two URLs naming one folder very often do not compare
+equal. A security-scoped bookmark resolves to the canonical path with a
+trailing slash where the URL it was made from had neither. `FolderIdentity`
+is the one answer to that, and comparing without it made adding a shelf
+folder twice give it two tabs and made forgetting one do nothing at all.
 
 ## Speaking up
 
@@ -113,37 +130,46 @@ for it is *invisible*; pointing at it opens the panel. Hover rather than a
 click, because there is no affordance to aim at when the thing at rest cannot
 be seen — aiming at the housing has to be enough.
 
-**A tidy walk** — the HUD's unit of work: one folder at a time, shown with
-the files going into it and the reason they belong together. Answered with
-**Move & name**, or **Leave**, and then the next one. `TidyFlow` owns the
-walk — which group is up, which files are still ticked, and the tallies the
-closing summary is built from.
+**The shelf** — what the HUD shows: the contents of folders the user picked,
+one folder at a time, as a list. `FileShelf` owns which folders there are,
+which is showing, the order they are read in and which row is picked;
+`ShelfReader` turns one folder into rows.
 
-**Paging** — moving between folders without answering any of them, by swipe,
-by clicking a pip, or with ⌃⌥←/→. The distinction is the point: a folder you
-paged past is still owed an answer, so the walk comes back round for it and
-is over only when every folder has been answered. `TidyFlow` keeps a set of
-the answered ones rather than a high-water mark for exactly this reason.
+The shelf **reads and never writes**. That sentence is the whole reason it
+may hold several folders while the organizer holds one, because every safety
+rule in this project is about writing. If anything here ever moves, renames
+or deletes a file, that reasoning is gone.
 
-**The tray** — the HUD's other tab, answering "how much is waiting" rather
-than "should this folder happen". Tiles rather than rows, because a quantity
-is read at a glance where filenames have to be read one at a time.
+It replaced a *tidy walk* — one folder at a time with a Move-or-Leave
+decision — which was the review window's job done again in a smaller space,
+and a *tray* counting what was waiting, which was the popover's. The walk was
+also conditional on there being something to file, so a tidy folder left
+nothing at the notch to point at.
 
-Both decisions are on screen together — where a file goes and what it is
-called — because they are answered together. A file whose name says nothing
-is usually also one you cannot place by looking at it, so splitting them
-would mean asking about the same file twice on two different screens.
-**Rename** is the one setting that lives beside the decision rather than in
-Settings, because it changes what the button in front of you will do.
+**Paging** — moving between shelf folders, by swipe, by clicking a tab, or
+with ⌃⌥←/→. It no longer leaves anything owed: a folder is a thing to look
+at, not a question to answer, so there is nothing to come back round for.
+
+**Tidy N** — the organizer's one appearance at the notch, and a door rather
+than a verb: it opens the review window. It can only ever show on the watched
+folder, because that is the only folder there is a plan for — the
+read-many-write-one rule showing through the interface instead of being
+asserted in a comment.
 
 **Left alone** — the files a plan decided not to touch. Named once, in
-`OrganizationPlan`, because three surfaces show that count and they have to
-agree on the word as well as the number.
+`OrganizationPlan`, because the surfaces that show that count have to agree
+on the word as well as the number.
 
-All three surfaces read the same plan, and that is a rule rather than a
-coincidence. They used to disagree: the popover counted every file it had
-found and labelled each with the classifier's category, so a file the plan
-had decided to leave alone still appeared under a destination, as though it
-were about to move. The counts that remain different — ten in the folder,
-seven proposed to move — are now the plan's own arithmetic, and each surface
-says which it means.
+Every surface that describes the plan reads the same plan, and that is a rule
+rather than a coincidence. They used to disagree: the popover counted every
+file it had found and labelled each with the classifier's category, so a file
+the plan had decided to leave alone still appeared under a destination, as
+though it were about to move. The counts that remain different — ten in the
+folder, seven proposed to move — are the plan's own arithmetic, and each
+surface says which it means.
+
+The shelf is the exemption, and it is exempt for a reason rather than by
+oversight: it is not describing the plan at all. It says what is in a folder,
+which is a fact about the disk, so it cannot disagree with a plan it never
+consults. The one number it takes from the plan is `Tidy N`, and that comes
+from the plan directly.

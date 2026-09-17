@@ -27,10 +27,24 @@ crash reporting.
 
 ## What Hoot reads
 
-**One folder.** The one you choose. macOS grants access to that folder alone,
-and Hoot stores a security-scoped bookmark so it can reopen the same folder
-after a restart without asking again. It has no access to anything else on
-your Mac.
+**One folder it organizes.** The one you choose. Hoot stores a security-scoped
+bookmark so it can reopen the same folder after a restart without asking
+again. Everything Hoot *does* to a file — moving it, renaming it, putting it
+back — happens inside that folder and nowhere else.
+
+**Any number of folders it shows you.** The shelf at the notch lists folders
+you add yourself, one open panel at a time. Hoot only ever reads these: it
+lists what is in them, previews a file when you hold one, and hands a file to
+another app when you drag one out. It never moves, renames or deletes
+anything in a shelf folder. That asymmetry is the whole reason it can have
+several of them.
+
+macOS grants access to the folders you picked and to nothing else. This
+needed no new entitlement, and the three above are unchanged — because
+`files.user-selected.read-write` and `files.bookmarks.app-scope` already mean
+"whatever you choose, however many times you choose it". The sandbox story
+was always this; the app simply asked for one folder before and asks for as
+many as you offer now.
 
 **Always:** filenames, file sizes, and creation and modification dates.
 
@@ -54,7 +68,7 @@ In `~/Library/Application Support/`:
   window, so Hoot learns how you file things.
 - **A learned classifier** — counts derived from your existing folders.
 
-In the app's preferences (`UserDefaults`): your settings and the bookmark for
+In the app's preferences (`UserDefaults`): your settings, the bookmark for
 the watched folder.
 
 All of it is on your Mac, and all of it is removed when you delete the app's
@@ -109,6 +123,11 @@ put a file back on top of something that has since taken its place.
 The only thing Hoot removes is a folder it created itself, when undo leaves it
 empty. It cannot remove a folder you already had.
 
+None of this applies to the folders on the shelf. Nothing in this section can
+happen to one of those, because nothing in Hoot writes to them at all — the
+shelf lists, previews and hands over, and that is the entire set of verbs it
+has. See [decision 0003](decisions/0003-many-folders-read-one-folder-written.md).
+
 ## Children
 
 Hoot collects nothing from anyone, of any age.
@@ -118,4 +137,4 @@ Hoot collects nothing from anyone, of any age.
 This page is versioned in the repository alongside the code it describes, so
 its history is public and any change is visible in the commit log.
 
-_Last reviewed: 14 September 2026._
+_Last reviewed: 17 September 2026._

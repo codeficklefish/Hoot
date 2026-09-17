@@ -23,8 +23,8 @@ watch folder → analyse → group → review → move (reversible)
 Nothing moves until you approve it. Every move can be undone, and Hoot never
 deletes anything.
 
-In the review window, **hold a row to preview the file** — Quick Look opens it
-the way the Finder does. The filename is often what failed to say what a file
+In the review window and at the notch, **hold a row to preview the file** —
+Quick Look opens it the way the Finder does. The filename is often what failed to say what a file
 is, so being able to look inside is usually what settles whether a suggestion
 is right.
 
@@ -62,28 +62,32 @@ completely meaningful, and Hoot leaves it alone. Every rename is shown before
 it happens with the sentence saying where the name came from, can be refused
 on its own, and is put back by undo.
 
-### The notch HUD
+### The notch shelf
 
-On a Mac with a camera housing, ⌘J puts the tidying at the notch. At rest the
+On a Mac with a camera housing, ⌘J puts your folders at the notch. At rest the
 bar is exactly the size of the cutout, so on the hardware it is built for you
-never see it. Point at it and it opens.
+never see it. Point at it and it opens — whether or not anything needs filing.
 
-**Tidy** takes one folder at a time — the files going in, the reason they
-belong together, and what each would be called afterwards. **Move & name**,
-or **Leave**, and it moves on; **Rename** decides whether the new names
-travel with the move. Untick a file to leave it out. When the last folder is
-answered it says what moved and offers to undo all of it.
+It lists the folders you add in **Settings → Shelf**: Desktop, Documents,
+wherever you actually leave things. Each row is a file with its size and how
+long it has been there, newest first, folders leading the way the Finder does.
+**Hold a row to preview it**, drag one out to carry it somewhere, or
+right-click to show it in the Finder.
 
-**Tray** answers the other question — how much is waiting, how many folders
-that is, how long the oldest has been sitting there, and how many files Hoot
-has decided to leave alone.
+Hoot only ever *reads* these folders. It never moves, renames or deletes
+anything in them — that is what lets there be several of them, while the one
+folder it organizes stays one. See
+[docs/decisions/0003](docs/decisions/0003-many-folders-read-one-folder-written.md).
 
-Looking is not answering. Swipe sideways across the panel, click a pip, or
-press **⌃⌥←** / **⌃⌥→** to move between folders without deciding anything: a
-folder you page past is still waiting when you come back to it. The keys are
-registered only while the panel is open, so they belong to whatever you are
-working in for the rest of the time — the panel never takes keyboard focus,
-which is what lets you point at it mid-sentence.
+Sort by date, name or size with the control in the corner. Swipe sideways
+across the panel, click a folder's tab, or press **⌃⌥←** / **⌃⌥→** to move
+between them. The keys are registered only while the panel is open, so they
+belong to whatever you are working in for the rest of the time — the panel
+never takes keyboard focus, which is what lets you point at it mid-sentence.
+
+When the folder on screen is the one Hoot watches, a **Tidy** button appears
+with the number of files it would file. It opens the review window: the notch
+shows you what is there, and deciding where things go stays where it was.
 
 Needs a display with a notch. Everywhere else the menu bar popover is the
 whole interface, and it is a good one.
@@ -199,7 +203,7 @@ above.
 
 ```bash
 swift test              # the engine imports nothing platform-specific
-./Verification/run.sh   # 506 behaviour and safety checks, in a sandbox
+./Verification/run.sh   # 517 behaviour and safety checks, in a sandbox
 ./Evaluation/run.sh     # accuracy against folders you organized yourself
 ```
 
@@ -234,7 +238,7 @@ way to know a decompressor is correct.
 | `Sources/HootKit` | the engine — decides where files belong, imports only Foundation |
 | `Sources/HootPlatformMac` | Apple adapters (PDFKit, Vision, FoundationModels) |
 | `Sources/Hoot` | the macOS app |
-| `Verification` | 506 behaviour and safety checks |
+| `Verification` | 517 behaviour and safety checks |
 | `Evaluation` | measures accuracy against folders you organized |
 | `Packaging` | app bundle, icon, signing, notarization and toolchain selection |
 | `CONTEXT.md` | what each term in the code means, in one place |
@@ -256,6 +260,8 @@ rather than the conclusion:
 
 - [0001](docs/decisions/0001-engine-and-platform-adapters.md) — why the engine
   is a separate module that imports nothing platform-specific.
+- [0003](docs/decisions/0003-many-folders-read-one-folder-written.md) — why
+  the notch may show any number of folders while Hoot still organizes one.
 - [0002](docs/decisions/0002-no-protocol-for-rule-based-classification.md) —
   why a protocol with one implementation was deleted rather than kept for a
   second that never came.
