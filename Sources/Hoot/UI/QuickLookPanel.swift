@@ -26,6 +26,13 @@ final class QuickLookPanel: NSObject {
         // swap what the panel shows, not close it.
         panel.makeKeyAndOrderFront(nil)
     }
+
+    /// Puts it away. Escape does this from the notch, where the preview panel
+    /// may not be the key window and so would not hear Escape itself.
+    func close() {
+        QLPreviewPanel.shared()?.orderOut(nil)
+        url = nil
+    }
 }
 
 extension QuickLookPanel: QLPreviewPanelDataSource {

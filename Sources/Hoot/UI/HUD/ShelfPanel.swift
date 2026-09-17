@@ -27,6 +27,7 @@ struct ShelfPanel: View {
     var onPreview: (URL) -> Void = { _ in }
     var onDragStart: () -> Void = {}
     var onRevealEntry: (URL) -> Void = { _ in }
+    var onOpenEntry: (ShelfEntry) -> Void = { _ in }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -94,19 +95,7 @@ struct ShelfPanel: View {
 
     private var header: some View {
         HStack(spacing: 4) {
-            ForEach(Array(shelf.folders.enumerated()), id: \.element.id) { index, folder in
-                NotchTab(label: folder.name, isSelected: index == shelf.showing) {
-                    onShowFolder(index)
-                }
-                // Taking a folder off the shelf belongs where the folder is,
-                // not only in Settings: the tab is the thing you are looking
-                // at when you decide you no longer want it.
-                .contextMenu {
-                    Button("Remove \(folder.name) from Shelf") {
-                        onRemoveFolder(folder.url)
-                    }
-                }
-            }
+            tabs
 
             // Behind a menu, not beside the real tabs.
             //
@@ -145,6 +134,45 @@ struct ShelfPanel: View {
         .frame(minHeight: HUDTokens.tabHeight)
     }
 
+    /// The folders, at full width, in a row that moves rather than squeezes.
+    ///
+    /// Scrolled to follow the selection rather than by the pointer: the HUD's
+    /// scroll monitor takes horizontal gestures over the panel for paging
+    /// between folders, so a row that expected to be swiped would never
+    /// receive one. Paging and this are the same motion from the user's side
+    /// — change folder, and the row brings that tab into view.
+    private var tabs: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal) {
+                HStack(spacing: 4) {
+                    ForEach(Array(shelf.folders.enumerated()), id: \.element.id) { index, folder in
+                        NotchTab(label: folder.name, isSelected: index == shelf.showing) {
+                            onShowFolder(index)
+                        }
+                        // Taking a folder off the shelf belongs where the
+                        // folder is, not only in Settings: the tab is the
+                        // thing you are looking at when you decide you no
+                        // longer want it.
+                        .contextMenu {
+                            Button("Remove \(folder.name) from Shelf") {
+                                onRemoveFolder(folder.url)
+                            }
+                        }
+                        .id(folder.id)
+                    }
+                }
+            }
+            .scrollIndicators(.never)
+            .frame(height: HUDTokens.tabHeight)
+            .onChange(of: shelf.showing) { _ in
+                guard let current = shelf.current else { return }
+                withAnimation(HUDTokens.resize) {
+                    proxy.scrollTo(current.id, anchor: .center)
+                }
+            }
+        }
+    }
+
     // MARK: - What is in it
 
     /// A definite height, from `HUDPlacement.listHeight` by way of the shelf.
@@ -162,7 +190,8 @@ struct ShelfPanel: View {
                         onSelect: { onSelect(entry.id) },
                         onPreview: { onPreview(entry.url) },
                         onDragStart: onDragStart,
-                        onReveal: { onRevealEntry(entry.url) }
+                        onReveal: { onRevealEntry(entry.url) },
+                        onOpen: { onOpenEntry(entry) }
                     )
                 }
             }

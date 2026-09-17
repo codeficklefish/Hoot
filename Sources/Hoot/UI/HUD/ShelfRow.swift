@@ -21,6 +21,8 @@ struct ShelfRow: View {
     /// drag out of it does is take the pointer off it.
     var onDragStart: () -> Void = {}
     var onReveal: () -> Void = {}
+    /// Double-click, as in the Finder.
+    var onOpen: () -> Void = {}
 
     private static let glyphWidth: CGFloat = 13
     private static let sizeWidth: CGFloat = 52
@@ -29,91 +31,99 @@ struct ShelfRow: View {
     @State private var isHovered = false
 
     var body: some View {
-        Button(action: onSelect) {
-            HStack(spacing: 7) {
-                Image(systemName: entry.symbolName)
-                    .font(.system(size: 11))
-                    // A folder is the brighter of the two: it is a place, and
-                    // places are what the eye looks for first in a list.
-                    .foregroundStyle(entry.isFolder ? HUDTokens.secondaryText : HUDTokens.tertiaryText)
-                    .frame(width: Self.glyphWidth)
-
-                Text(entry.name)
-                    .font(HUDTokens.caption)
-                    .foregroundStyle(isSelected ? HUDTokens.onDark : HUDTokens.secondaryText)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                if entry.isCloudPlaceholder {
-                    // Safety rule 5, said on the row rather than only enforced
-                    // underneath it: this one is not on the disk, so nothing
-                    // here will open it.
-                    Image(systemName: "icloud")
-                        .font(.system(size: 10))
-                        .foregroundStyle(HUDTokens.tertiaryText)
-                }
-
-                Text(entry.sizeLabel)
-                    .font(HUDTokens.caption3)
-                    .foregroundStyle(HUDTokens.secondaryText)
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .frame(width: Self.sizeWidth, alignment: .trailing)
-
-                Text(age)
-                    .font(HUDTokens.caption3)
-                    .foregroundStyle(HUDTokens.secondaryText)
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .frame(width: Self.ageWidth, alignment: .trailing)
-            }
-            .padding(.horizontal, 6)
-            .frame(height: HUDTokens.shelfRowHeight)
-            .background(
-                background,
-                in: RoundedRectangle(cornerRadius: HUDTokens.radiusRow, style: .continuous)
-            )
+        line
             .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .onHover { hovering in
-            withAnimation(HUDTokens.fade) { isHovered = hovering }
-        }
-        // Carrying a file out of the shelf. A real file URL, unlike the
-        // review window's drag, which vends a move id because it is an
-        // internal correction rather than a handover to another app.
-        .onDrag {
-            onDragStart()
-            return NSItemProvider(contentsOf: entry.url) ?? NSItemProvider()
-        }
-        // Simultaneous, so that holding still previews and holding then
-        // moving drags. The two gestures begin identically, which is why a
-        // plain `onLongPressGesture` here would swallow the drag — the same
-        // conflict, and the same fix, as the review window's rows.
-        .simultaneousGesture(
-            LongPressGesture(minimumDuration: 0.45)
-                .onEnded { _ in
-                    guard entry.isPreviewable else { return }
-                    onPreview()
-                }
-        )
-        .contextMenu {
-            Button("Show in Finder", action: onReveal)
-        }
-        .help(helpText)
+            // Count 2 declared before count 1: SwiftUI resolves the longer
+            // gesture first, so a double-click opens rather than toggling the
+            // selection twice on its way there. A `Button` cannot do this at
+            // all — its action fires on the first click of the pair.
+            .onTapGesture(count: 2, perform: onOpen)
+            .onTapGesture(count: 1, perform: onSelect)
+            .onHover { hovering in
+                withAnimation(HUDTokens.fade) { isHovered = hovering }
+            }
+            // Carrying a file out of the shelf. A real file URL, unlike the
+            // review window's drag, which vends a move id because it is an
+            // internal correction rather than a handover to another app.
+            .onDrag {
+                onDragStart()
+                return NSItemProvider(contentsOf: entry.url) ?? NSItemProvider()
+            }
+            // Simultaneous, so that holding still previews and holding then
+            // moving drags. The two gestures begin identically, which is why
+            // a plain `onLongPressGesture` here would swallow the drag — the
+            // same conflict, and the same fix, as the review window's rows.
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: 0.45)
+                    .onEnded { _ in
+                        guard entry.isPreviewable else { return }
+                        onPreview()
+                    }
+            )
+            .contextMenu {
+                Button("Open", action: onOpen)
+                Button("Show in Finder", action: onReveal)
+            }
+            .help(helpText)
     }
 
-    private var helpText: String {
-        entry.isCloudPlaceholder
-            ? "\(entry.name) — in iCloud and not downloaded, so Hoot will not open it"
-            : "\(entry.name) — hold to preview, drag to move it elsewhere"
+    private var line: some View {
+        HStack(spacing: 7) {
+            Image(systemName: entry.symbolName)
+                .font(.system(size: 11))
+                // A folder is the brighter of the two: it is a place, and
+                // places are what the eye looks for first in a list.
+                .foregroundStyle(entry.isFolder ? HUDTokens.secondaryText : HUDTokens.tertiaryText)
+                .frame(width: Self.glyphWidth)
+
+            Text(entry.name)
+                .font(HUDTokens.caption)
+                .foregroundStyle(isSelected ? HUDTokens.onDark : HUDTokens.secondaryText)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            if entry.isCloudPlaceholder {
+                // Safety rule 5, said on the row rather than only enforced
+                // underneath it: this one is not on the disk, so nothing here
+                // will open it.
+                Image(systemName: "icloud")
+                    .font(.system(size: 10))
+                    .foregroundStyle(HUDTokens.tertiaryText)
+            }
+
+            Text(entry.sizeLabel)
+                .font(HUDTokens.caption3)
+                .foregroundStyle(HUDTokens.secondaryText)
+                .monospacedDigit()
+                .lineLimit(1)
+                .frame(width: Self.sizeWidth, alignment: .trailing)
+
+            Text(age)
+                .font(HUDTokens.caption3)
+                .foregroundStyle(HUDTokens.secondaryText)
+                .monospacedDigit()
+                .lineLimit(1)
+                .frame(width: Self.ageWidth, alignment: .trailing)
+        }
+        .padding(.horizontal, 6)
+        .frame(height: HUDTokens.shelfRowHeight)
+        .background(
+            background,
+            in: RoundedRectangle(cornerRadius: HUDTokens.radiusRow, style: .continuous)
+        )
     }
 
     private var background: AnyShapeStyle {
         if isSelected { return AnyShapeStyle(HUDTokens.tileHover) }
         if isHovered { return AnyShapeStyle(HUDTokens.tile) }
         return AnyShapeStyle(Color.clear)
+    }
+
+    private var helpText: String {
+        entry.isCloudPlaceholder
+            ? "\(entry.name) — in iCloud and not downloaded, so Hoot will not open it"
+            : "\(entry.name) — space to preview, double-click to open, drag to move it"
     }
 }
 

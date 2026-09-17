@@ -149,6 +149,16 @@ nothing at the notch to point at.
 **Paging** — moving between shelf folders, by swipe, by clicking a tab, or
 with ⌃⌥←/→. It no longer leaves anything owed: a folder is a thing to look
 at, not a question to answer, so there is nothing to come back round for.
+The tab row scrolls to follow the selection rather than being scrolled by
+hand, because the horizontal gesture over the panel is already paging.
+
+**Focus** — the panel takes keyboard focus when a row is *clicked*, and never
+when it is merely pointed at. The distinction is the whole of it: hovering
+must stay free, or the HUD cannot be opened mid-sentence, while a spacebar
+can only reach a window that is key. The alternatives were a global monitor,
+which can see the key but not consume it and would type a space into whatever
+was frontmost as well as previewing, and a system-wide hot key, which would
+take the spacebar away from every app on the Mac.
 
 **Tidy N** — the organizer's one appearance at the notch, and a door rather
 than a verb: it opens the review window. It can only ever show on the watched

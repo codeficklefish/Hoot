@@ -43,6 +43,7 @@ struct HUDView: View {
     var onPreview: (URL) -> Void = { _ in }
     var onDragStart: () -> Void = {}
     var onRevealEntry: (URL) -> Void = { _ in }
+    var onOpenEntry: (ShelfEntry) -> Void = { _ in }
     var handoff: String?
     var onDismissHandoff: () -> Void = {}
     var offers: [(name: String, url: URL)] = []
@@ -168,7 +169,8 @@ struct HUDView: View {
                 onTidy: onTidy,
                 onPreview: onPreview,
                 onDragStart: onDragStart,
-                onRevealEntry: onRevealEntry
+                onRevealEntry: onRevealEntry,
+                onOpenEntry: onOpenEntry
             )
             .padding(.horizontal, HUDTokens.panelSidePadding)
             .padding(.bottom, HUDTokens.panelBottomPadding)

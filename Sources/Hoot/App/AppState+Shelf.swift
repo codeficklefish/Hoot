@@ -210,6 +210,21 @@ extension AppState {
         shelfHandoff = nil
     }
 
+    /// Opens a file the way double-clicking it in the Finder would.
+    ///
+    /// Still not a write: handing a file to the application that owns it is
+    /// what the Finder does, and Hoot does not touch the file either way.
+    /// A folder opens in the Finder rather than being descended into — the
+    /// shelf lists, it does not browse.
+    func openShelfEntry(_ entry: ShelfEntry) {
+        if entry.isFolder {
+            NSWorkspace.shared.activateFileViewerSelecting([entry.url])
+        } else {
+            NSWorkspace.shared.open(entry.url)
+        }
+        shelfHandoff = "Opened \(entry.name)"
+    }
+
     /// Hands the current folder, or the picked file, to the Finder.
     func revealInFinder() {
         if let picked = shelf.pickedEntry {

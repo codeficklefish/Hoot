@@ -3,7 +3,8 @@ import Carbon.HIToolbox
 
 /// System-wide shortcuts for paging the HUD.
 ///
-/// The panel never takes keyboard focus — that is exactly why it can be
+/// The panel does not take keyboard focus while it is only being pointed at
+/// — it takes it on a click, and not before — which is exactly why it can be
 /// pointed at mid-sentence without disturbing anything — so a key press never
 /// reaches it the ordinary way. Keystrokes go to the frontmost application's
 /// key window, and Hoot is never frontmost. A local event monitor does not

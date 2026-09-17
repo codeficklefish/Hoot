@@ -79,11 +79,20 @@ anything in them — that is what lets there be several of them, while the one
 folder it organizes stays one. See
 [docs/decisions/0003](docs/decisions/0003-many-folders-read-one-folder-written.md).
 
-Sort by date, name or size with the control in the corner. Swipe sideways
-across the panel, click a folder's tab, or press **⌃⌥←** / **⌃⌥→** to move
-between them. The keys are registered only while the panel is open, so they
-belong to whatever you are working in for the rest of the time — the panel
-never takes keyboard focus, which is what lets you point at it mid-sentence.
+Click a row to pick it, then **space** to preview it and **double-click** to
+open it — the same keys the Finder uses. Escape puts the preview away.
+
+Sort by date, name or size with the control in the corner. Up to three folders
+sit on the shelf, because three names fit across it at a size you can still
+read. Swipe sideways across the panel, click a folder's tab, or press
+**⌃⌥←** / **⌃⌥→** to move between them; the keys are registered only while
+the panel is open, so they belong to whatever you are working in for the rest
+of the time.
+
+Pointing at the notch never takes keyboard focus, which is what lets you open
+it mid-sentence. *Clicking* a row does, because a spacebar can only reach a
+window that has it — and a preview shortcut that typed a space into your
+document instead would be worse than no shortcut at all.
 
 When the folder on screen is the one Hoot watches, a **Tidy** button appears
 with the number of files it would file. It opens the review window: the notch

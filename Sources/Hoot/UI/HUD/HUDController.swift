@@ -59,6 +59,8 @@ final class HUDController: ObservableObject {
     /// Watches for the mouse coming up, which is the only signal that a drag
     /// has finished — SwiftUI's `.onDrag` reports a start and never an end.
     private var dragMonitors: [Any] = []
+    /// Space and Escape, watched only while the panel is key.
+    private var keyMonitor: Any?
     /// A backstop. If a mouse-up is somehow missed, a panel held open for
     /// ever is a worse failure than one that closes a moment early.
     private var holdTimeout: Task<Void, Never>?
@@ -127,7 +129,7 @@ final class HUDController: ObservableObject {
 
     // MARK: - Paging by keyboard
     //
-    // The panel never takes keyboard focus — that is what lets it be pointed
+    // The panel takes keyboard focus only on a click — that is what lets it be pointed
     // at mid-sentence — so an ordinary key press never reaches it: keystrokes
     // go to the frontmost application's key window, and Hoot is never
     // frontmost. A registered hot key is the one route that needs none of
@@ -245,7 +247,15 @@ final class HUDController: ObservableObject {
             untidy: appState.shelf.current.map { appState.untidyCount(in: $0.url) } ?? 0,
             now: Date(),
             onShowFolder: { appState.showShelfFolder(at: $0) },
-            onSelect: { appState.selectShelfEntry($0) },
+            onSelect: { [weak self] id in
+                appState.selectShelfEntry(id)
+                // Clicking is what earns focus, not pointing. Hovering still
+                // leaves whatever you are typing in alone; a click is a
+                // deliberate act, and every other window on the Mac takes
+                // focus on one. Without it the spacebar below goes to the app
+                // that *is* frontmost.
+                self?.takeFocus()
+            },
             onCycleSort: { appState.cycleShelfSort() },
             onReveal: { appState.revealInFinder() },
             onTidy: { appState.openReviewForTidying() },
@@ -254,6 +264,7 @@ final class HUDController: ObservableObject {
             onRevealEntry: { url in
                 NSWorkspace.shared.activateFileViewerSelecting([url])
             },
+            onOpenEntry: { appState.openShelfEntry($0) },
             handoff: appState.shelfHandoff,
             onDismissHandoff: { appState.dismissShelfHandoff() },
             offers: AppState.standardFolders.filter { !appState.isOnShelf($0.url) },
@@ -323,6 +334,7 @@ final class HUDController: ObservableObject {
     }
 
     private func hide() {
+        stopWatchingForKeys()
         panel?.orderOut(nil)
         // Straight to the stored value and the hot keys, not through
         // `setPanelOpen`: that ends in `refresh()`, which is usually what
@@ -330,6 +342,61 @@ final class HUDController: ObservableObject {
         // appear should arrive resting in the housing.
         isPanelOpen = false
         hotKeys.unregister()
+    }
+
+    // MARK: - The keys a panel can only have while it is key
+
+    /// Makes the panel key so it can receive a spacebar.
+    ///
+    /// Two separate things are needed and both cost something. The app has to
+    /// become active, because key events go to the frontmost application; and
+    /// the panel has to accept key status, which borderless panels refuse by
+    /// default — see `HUDPanel.canBecomeKey`.
+    ///
+    /// Only ever called from a click. Pointing at the HUD must still never
+    /// pull focus out of what someone is doing, which is the difference
+    /// between an ambient indicator and an interruption.
+    private func takeFocus() {
+        guard let panel else { return }
+        NSApp.activate(ignoringOtherApps: true)
+        panel.makeKeyAndOrderFront(nil)
+        watchForKeys()
+    }
+
+    /// Space previews the picked row and Escape puts it down.
+    ///
+    /// A *local* monitor, which only sees events already delivered to this
+    /// app, and it returns nil for the keys it takes so they go no further. A
+    /// global monitor would see the same keys and be unable to consume them —
+    /// space would preview the file *and* type a space into whatever was
+    /// frontmost.
+    private func watchForKeys() {
+        guard keyMonitor == nil else { return }
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            MainActor.assumeIsolated { () -> NSEvent? in
+                guard let self, let panel = self.panel, panel.isKeyWindow,
+                      let appState = self.appState else { return event }
+
+                switch event.keyCode {
+                case 49:   // space
+                    guard let picked = appState.shelf.pickedEntry,
+                          picked.isPreviewable else { return nil }
+                    self.preview(picked.url)
+                    return nil
+                case 53:   // escape
+                    appState.selectShelfEntry(nil)
+                    QuickLookPanel.shared.close()
+                    return nil
+                default:
+                    return event
+                }
+            }
+        }
+    }
+
+    private func stopWatchingForKeys() {
+        if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
+        keyMonitor = nil
     }
 
     // MARK: - Looking inside a file, and carrying one out
@@ -455,6 +522,7 @@ final class HUDController: ObservableObject {
             NSEvent.removeMonitor(scrollMonitor)
         }
         dragMonitors.forEach(NSEvent.removeMonitor)
+        if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
         holdTimeout?.cancel()
     }
 }

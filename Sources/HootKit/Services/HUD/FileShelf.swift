@@ -9,9 +9,14 @@ import Foundation
 /// crash-looped all evening while the checks passed.
 public struct FileShelf: Equatable, Sendable {
 
-    /// As many folders as the tab row can name without turning into a menu.
-    /// A product call, not a derivation.
-    public static let maxFolders = 8
+    /// As many folders as the tab row can *name*.
+    ///
+    /// Three, because the constraint is legibility rather than storage. The
+    /// row has about 280 points once the add control and the file count have
+    /// taken theirs, and three ordinary folder names fit in that at full
+    /// size. At eight they were being squeezed to "Des…", "Docu…", "Dow…" —
+    /// a tab you cannot read is not a tab, it is a guess.
+    public static let maxFolders = 3
     /// Rows before the list starts scrolling rather than the window growing.
     public static let maxRows = 9
     public static let rowHeight: Double = 26

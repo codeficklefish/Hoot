@@ -100,6 +100,10 @@ struct NotchTab: View {
                 }
                 Text(label)
                     .font(.system(size: 12, weight: .semibold))
+                    // Never compressed. A tab that shrinks to fit stops
+                    // saying which folder it is, which is the only thing it
+                    // is for — the row scrolls instead.
+                    .fixedSize()
             }
             .foregroundStyle(isSelected ? HUDTokens.onDark : HUDTokens.secondaryText)
             .padding(.horizontal, 10)

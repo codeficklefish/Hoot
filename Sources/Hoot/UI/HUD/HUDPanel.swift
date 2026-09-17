@@ -12,6 +12,17 @@ final class HUDPanel: NSPanel {
         frameRect
     }
 
+    /// Borderless panels refuse key status, and this one has to be able to
+    /// accept it — not while it is merely being pointed at, but once somebody
+    /// has clicked a row in it.
+    ///
+    /// The spacebar is why. A key this window cannot receive is a key that
+    /// goes to whatever *is* frontmost, so previewing with space without
+    /// being key would put a space in the middle of someone's sentence and
+    /// preview the file as well. A global hot key is worse still: it would
+    /// take the spacebar away from every app on the Mac.
+    override var canBecomeKey: Bool { true }
+
     /// Non-activating on purpose: pointing at the HUD must never pull focus
     /// out of whatever the person is actually doing, which is the difference
     /// between an ambient indicator and an interruption.

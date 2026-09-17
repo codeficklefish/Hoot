@@ -410,27 +410,31 @@ func stageHUD(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) 
           tabs.isEmpty && tabs.emptyMessage.contains("+"),
           tabs.emptyMessage)
     check("and it knows there is room for more", tabs.hasRoom)
+    check("a shelf holds three folders, so three names stay readable",
+          FileShelf.maxFolders == 3, "\(FileShelf.maxFolders)")
     for index in 0..<FileShelf.maxFolders {
         check("folder \(index + 1) is added", tabs.add(folderNamed("F\(index)")))
     }
-    check("the ninth is refused", !tabs.add(folderNamed("F99")))
+    check("one past the cap is refused", !tabs.add(folderNamed("F99")))
     check("and a full shelf says so rather than hiding the control",
           !tabs.hasRoom)
     check("and so is one already there", !tabs.add(folderNamed("F0")))
 
-    tabs.show(folderAt: 7)
-    check("paging lands where it was asked", tabs.showing == 7, "\(tabs.showing)")
+    let last = FileShelf.maxFolders - 1
+    tabs.show(folderAt: last)
+    check("paging lands where it was asked", tabs.showing == last, "\(tabs.showing)")
     tabs.showNext()
-    check("and cannot walk off the end", tabs.showing == 7, "\(tabs.showing)")
+    check("and cannot walk off the end", tabs.showing == last, "\(tabs.showing)")
     tabs.show(folderAt: 0)
     tabs.showPrevious()
     check("nor off the front", tabs.showing == 0, "\(tabs.showing)")
 
-    tabs.show(folderAt: 7)
-    tabs.remove(sandbox.appending(path: "F7"))
+    tabs.show(folderAt: last)
+    tabs.remove(sandbox.appending(path: "F\(last)"))
     check("removing the folder being shown clamps rather than jumping home",
-          tabs.showing == 6, "\(tabs.showing)")
-    check("and the rest are still there", tabs.folders.count == 7, "\(tabs.folders.count)")
+          tabs.showing == last - 1, "\(tabs.showing)")
+    check("and the rest are still there", tabs.folders.count == last,
+          "\(tabs.folders.count)")
 
     print("\n[the same folder, however it is spelled]")
 
