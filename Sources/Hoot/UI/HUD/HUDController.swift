@@ -50,6 +50,19 @@ final class HUDController: ObservableObject {
 
     private var appState: AppState?
 
+    /// Set while something is happening that the pointer leaving must not
+    /// interrupt. A drag out of the panel is the case that needs it: the
+    /// first thing such a drag does is leave, which would otherwise collapse
+    /// the window from 420 to 190 and pull the drag source out from under
+    /// the session.
+    private var isHoldingOpen = false
+    /// Watches for the mouse coming up, which is the only signal that a drag
+    /// has finished — SwiftUI's `.onDrag` reports a start and never an end.
+    private var dragMonitors: [Any] = []
+    /// A backstop. If a mouse-up is somehow missed, a panel held open for
+    /// ever is a worse failure than one that closes a moment early.
+    private var holdTimeout: Task<Void, Never>?
+
     /// True when this Mac has a camera housing to grow out of.
     static var isSupported: Bool {
         Self.notch(for: NSScreen.main).hasNotch
@@ -64,9 +77,9 @@ final class HUDController: ObservableObject {
         UserDefaults.standard.set(true, forKey: Self.enabledKey)
         observe(appState)
         watchForSwipes()
-        // A plan may already exist — switching the HUD on should pick it up
-        // rather than wait for the folder to change.
-        appState.refreshTidyFlow()
+        // Read whatever is on the shelf now, rather than waiting for a
+        // folder to change.
+        Task { await appState.refreshShelf(force: true) }
         refresh()
     }
 
@@ -98,24 +111,13 @@ final class HUDController: ObservableObject {
 
     private func observe(_ appState: AppState) {
         cancellables.removeAll()
-        // The plan is what the walk is built from; the rest is what the walk
-        // itself publishes as it is answered.
-        appState.$plan
+        // One subscription, to the thing the panel draws. The HUD used to
+        // watch the plan and the walk built from it; it no longer has an
+        // opinion about either, which is the whole point of the change.
+        appState.$shelf
             .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                appState.refreshTidyFlow()
-                self?.refresh()
-            }
+            .sink { [weak self] _ in self?.refresh() }
             .store(in: &cancellables)
-
-        Publishers.CombineLatest3(
-            appState.$tidyFlow,
-            appState.$isTidyWorking,
-            appState.$tidyProgress
-        )
-        .receive(on: RunLoop.main)
-        .sink { [weak self] _, _, _ in self?.refresh() }
-        .store(in: &cancellables)
     }
 
     // MARK: - Paging by keyboard
@@ -138,6 +140,13 @@ final class HUDController: ObservableObject {
         isPanelOpen = open
         syncHotKeys()
         refresh()
+
+        // Opening is the moment the folder is worth reading again. Off the
+        // main run-loop turn for the same family of reasons the frame resize
+        // is: this is called from inside a SwiftUI update.
+        if open, let appState {
+            Task { await appState.refreshShelf() }
+        }
     }
 
     private func syncHotKeys() {
@@ -145,8 +154,8 @@ final class HUDController: ObservableObject {
         hotKeys.register { [weak self] page in
             guard let appState = self?.appState else { return }
             switch page {
-            case .previous: appState.showPreviousTidyGroup()
-            case .next: appState.showNextTidyGroup()
+            case .previous: appState.showPreviousShelfFolder()
+            case .next: appState.showNextShelfFolder()
             }
         }
     }
@@ -171,6 +180,13 @@ final class HUDController: ObservableObject {
     private func page(on event: NSEvent) -> NSEvent? {
         guard isEnabled, let panel, event.window === panel, let appState else { return event }
 
+        // The panel holds a scrolling list now. This used to swallow every
+        // scroll event over it — "the panel is not a scrollable surface" —
+        // which would leave the list unable to scroll.
+        guard SwipeTracker.isHorizontal(deltaX: event.scrollingDeltaX,
+                                        deltaY: event.scrollingDeltaY)
+        else { return event }
+
         var phase: SwipeTracker.Phase = .changed
         if event.phase.contains(.began) {
             phase = .began
@@ -193,38 +209,46 @@ final class HUDController: ObservableObject {
         ) else { return nil }
 
         switch direction {
-        case .next: appState.showNextTidyGroup()
-        case .previous: appState.showPreviousTidyGroup()
+        case .next: appState.showNextShelfFolder()
+        case .previous: appState.showPreviousShelfFolder()
         }
         return nil
     }
 
     // MARK: - What to show
 
+    /// The panel is shown whenever the HUD is switched on.
+    ///
+    /// It used to be conditional on a non-idle walk existing, so a folder
+    /// with nothing waiting left nothing at the notch to point at — reported
+    /// as "pointing at the camera still doesn't open the notch", and it was
+    /// this line. A shelf has something to say about an empty folder too.
     func refresh() {
-        guard isEnabled, let appState, let flow = appState.tidyFlow,
-              flow.stage != .idle
-        else { return hide() }
-        show(flow, appState: appState)
+        guard isEnabled, let appState else { return hide() }
+        show(appState: appState)
     }
 
-    private func show(_ flow: TidyFlow, appState: AppState) {
+    private func show(appState: AppState) {
         let view = HUDView(
-            flow: flow,
+            shelf: appState.shelf,
             isOpen: Binding(
                 get: { [weak self] in self?.isPanelOpen ?? false },
                 set: { [weak self] in self?.setPanelOpen($0) }
             ),
             notch: Self.notch(for: NSScreen.main),
-            isWorking: appState.isTidyWorking,
-            progress: appState.tidyProgress,
-            onToggleFile: { appState.toggleTidyFile($0) },
-            onApply: { Task { await appState.applyTidyGroup() } },
-            onSkip: { appState.skipTidyGroup() },
-            onToggleRenaming: { appState.toggleTidyRenaming() },
-            onUndo: { appState.undoTidy() },
-            onDone: { appState.finishTidy() },
-            onShowGroup: { appState.showTidyGroup(at: $0) }
+            isHoldingOpen: isHoldingOpen,
+            untidy: appState.shelf.current.map { appState.untidyCount(in: $0.url) } ?? 0,
+            now: Date(),
+            onShowFolder: { appState.showShelfFolder(at: $0) },
+            onSelect: { appState.selectShelfEntry($0) },
+            onCycleSort: { appState.cycleShelfSort() },
+            onReveal: { appState.revealInFinder() },
+            onTidy: { appState.openReviewForTidying() },
+            onPreview: { [weak self] url in self?.preview(url) },
+            onDragStart: { [weak self] in self?.beginHold() },
+            onRevealEntry: { url in
+                NSWorkspace.shared.activateFileViewerSelecting([url])
+            }
         )
 
         // Replacing the root view rather than the hosting view keeps the
@@ -287,6 +311,69 @@ final class HUDController: ObservableObject {
         hotKeys.unregister()
     }
 
+    // MARK: - Looking inside a file, and carrying one out
+
+    /// Quick Look, the same panel the Finder opens on space.
+    ///
+    /// The activation is not optional. Hoot is an accessory app and this
+    /// panel is non-activating, so at the moment of the hold Hoot is not the
+    /// active application — and a Quick Look panel ordered front from an
+    /// inactive app never becomes key. Space and the arrow keys would do
+    /// nothing, and it could sit behind whatever is in front.
+    ///
+    /// The consequence is deliberate and worth stating: **previewing takes
+    /// focus.** It happens in response to a held click, never to a hover, so
+    /// pointing at the notch mid-sentence still costs nothing.
+    private func preview(_ url: URL) {
+        NSApp.activate(ignoringOtherApps: true)
+        QuickLookPanel.shared.show(url)
+    }
+
+    /// Holds the panel open across a drag.
+    ///
+    /// The first thing a drag out of the panel does is take the pointer off
+    /// it, and `HUDView.onHover` would close it — resizing the window from
+    /// 420 to 190 and pulling the drag source out from under the session
+    /// before it had travelled a pixel.
+    private func beginHold() {
+        guard !isHoldingOpen else { return }
+        isHoldingOpen = true
+        refresh()
+
+        // Both monitors, because a drag can end anywhere: a global one sees
+        // the mouse come up over the Finder, a local one sees it come up
+        // back over the panel it started from.
+        let finish: (NSEvent) -> Void = { [weak self] _ in
+            MainActor.assumeIsolated { self?.endHold() }
+        }
+        if let global = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseUp, handler: finish) {
+            dragMonitors.append(global)
+        }
+        if let local = NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp, handler: { event in
+            finish(event)
+            return event
+        }) {
+            dragMonitors.append(local)
+        }
+
+        holdTimeout?.cancel()
+        holdTimeout = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(30))
+            guard !Task.isCancelled else { return }
+            self?.endHold()
+        }
+    }
+
+    private func endHold() {
+        guard isHoldingOpen else { return }
+        isHoldingOpen = false
+        holdTimeout?.cancel()
+        holdTimeout = nil
+        dragMonitors.forEach(NSEvent.removeMonitor)
+        dragMonitors.removeAll()
+        refresh()
+    }
+
     // MARK: - Where it goes
 
     /// Reads the shape of the display's top edge.
@@ -333,5 +420,7 @@ final class HUDController: ObservableObject {
         if let scrollMonitor {
             NSEvent.removeMonitor(scrollMonitor)
         }
+        dragMonitors.forEach(NSEvent.removeMonitor)
+        holdTimeout?.cancel()
     }
 }

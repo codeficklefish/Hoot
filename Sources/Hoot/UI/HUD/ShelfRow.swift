@@ -1,0 +1,167 @@
+import SwiftUI
+import HootKit
+
+/// One file, on one line.
+///
+/// Four columns at fixed widths rather than laid out by priority: the two
+/// numbers on the right are the width of the widest thing they will ever
+/// hold, so the filename between them does not jump about as the folder is
+/// re-sorted. Column widths come from the design, which measured them
+/// against "3.9 GB" and "Yest.".
+struct ShelfRow: View {
+    let entry: ShelfEntry
+    let isSelected: Bool
+    let age: String
+    let onSelect: () -> Void
+    /// Hold still to look inside. Never offered for a file that is in the
+    /// cloud and not downloaded: previewing one would fetch it, and safety
+    /// rule 5 says Hoot does not start a download nobody asked for.
+    var onPreview: () -> Void = {}
+    /// A drag has begun. The panel has to be told, because the first thing a
+    /// drag out of it does is take the pointer off it.
+    var onDragStart: () -> Void = {}
+    var onReveal: () -> Void = {}
+
+    private static let glyphWidth: CGFloat = 13
+    private static let sizeWidth: CGFloat = 52
+    private static let ageWidth: CGFloat = 34
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(spacing: 7) {
+                Image(systemName: entry.symbolName)
+                    .font(.system(size: 11))
+                    // A folder is the brighter of the two: it is a place, and
+                    // places are what the eye looks for first in a list.
+                    .foregroundStyle(entry.isFolder ? HUDTokens.secondaryText : HUDTokens.tertiaryText)
+                    .frame(width: Self.glyphWidth)
+
+                Text(entry.name)
+                    .font(HUDTokens.caption)
+                    .foregroundStyle(isSelected ? HUDTokens.onDark : HUDTokens.secondaryText)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                if entry.isCloudPlaceholder {
+                    // Safety rule 5, said on the row rather than only enforced
+                    // underneath it: this one is not on the disk, so nothing
+                    // here will open it.
+                    Image(systemName: "icloud")
+                        .font(.system(size: 10))
+                        .foregroundStyle(HUDTokens.tertiaryText)
+                }
+
+                Text(entry.sizeLabel)
+                    .font(HUDTokens.caption3)
+                    .foregroundStyle(HUDTokens.secondaryText)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .frame(width: Self.sizeWidth, alignment: .trailing)
+
+                Text(age)
+                    .font(HUDTokens.caption3)
+                    .foregroundStyle(HUDTokens.secondaryText)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .frame(width: Self.ageWidth, alignment: .trailing)
+            }
+            .padding(.horizontal, 6)
+            .frame(height: HUDTokens.shelfRowHeight)
+            .background(
+                background,
+                in: RoundedRectangle(cornerRadius: HUDTokens.radiusRow, style: .continuous)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(HUDTokens.fade) { isHovered = hovering }
+        }
+        // Carrying a file out of the shelf. A real file URL, unlike the
+        // review window's drag, which vends a move id because it is an
+        // internal correction rather than a handover to another app.
+        .onDrag {
+            onDragStart()
+            return NSItemProvider(contentsOf: entry.url) ?? NSItemProvider()
+        }
+        // Simultaneous, so that holding still previews and holding then
+        // moving drags. The two gestures begin identically, which is why a
+        // plain `onLongPressGesture` here would swallow the drag — the same
+        // conflict, and the same fix, as the review window's rows.
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.45)
+                .onEnded { _ in
+                    guard entry.isPreviewable else { return }
+                    onPreview()
+                }
+        )
+        .contextMenu {
+            Button("Show in Finder", action: onReveal)
+        }
+        .help(helpText)
+    }
+
+    private var helpText: String {
+        entry.isCloudPlaceholder
+            ? "\(entry.name) — in iCloud and not downloaded, so Hoot will not open it"
+            : "\(entry.name) — hold to preview, drag to move it elsewhere"
+    }
+
+    private var background: AnyShapeStyle {
+        if isSelected { return AnyShapeStyle(HUDTokens.tileHover) }
+        if isHovered { return AnyShapeStyle(HUDTokens.tile) }
+        return AnyShapeStyle(Color.clear)
+    }
+}
+
+/// The footer's small controls.
+///
+/// Three weights, which is what the design draws: `solid` for the one action
+/// that leaves the shelf and does something, `tile` for the ordinary one, and
+/// `ghost` for the control that only changes what you are looking at.
+struct NotchPill: View {
+    enum Tone { case solid, tile, ghost }
+
+    var symbol: String?
+    let label: String
+    var tone: Tone = .ghost
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 5) {
+                if let symbol {
+                    Image(systemName: symbol).font(.system(size: 10, weight: .medium))
+                }
+                Text(label)
+                    .font(HUDTokens.caption2)
+                    .fontWeight(.semibold)
+            }
+            .foregroundStyle(foreground)
+            .padding(.horizontal, 9)
+            .frame(height: HUDTokens.pillHeight)
+            .background(fill, in: Capsule())
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var foreground: Color {
+        switch tone {
+        case .solid: return HUDTokens.ground
+        case .tile: return HUDTokens.onDark
+        case .ghost: return HUDTokens.secondaryText
+        }
+    }
+
+    private var fill: AnyShapeStyle {
+        switch tone {
+        case .solid: return AnyShapeStyle(HUDTokens.onDark)
+        case .tile: return AnyShapeStyle(HUDTokens.tile)
+        case .ghost: return AnyShapeStyle(Color.clear)
+        }
+    }
+}

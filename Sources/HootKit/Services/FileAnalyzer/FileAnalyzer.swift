@@ -11,7 +11,33 @@ public struct FileAnalyzer {
     ]
 
     /// True if this path should never be surfaced to the rest of Hoot.
+    ///
+    /// Reads the two facts it needs off disk, then defers to the pure rules
+    /// below. Kept as the entry point everything already calls.
     public static func isIgnored(_ url: URL) -> Bool {
+        var isDirectory: ObjCBool = false
+        let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
+        let size = (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
+        return isIgnored(url, isDirectory: exists && isDirectory.boolValue, fileSize: size)
+    }
+
+    /// The same question, with the disk already read.
+    ///
+    /// A directory is ignored here because everything downstream of this
+    /// organizes *files*. It is a separate clause from `isJunk` rather than
+    /// folded into it, because whether a folder should be shown depends on
+    /// who is asking: the organizer never touches one, and the shelf lists
+    /// them the way the Finder does.
+    public static func isIgnored(_ url: URL, isDirectory: Bool, fileSize: Int) -> Bool {
+        isDirectory || isJunk(url, fileSize: fileSize)
+    }
+
+    /// Whether this is an artifact rather than a file someone has: a dotfile,
+    /// an Office lock file, a half-finished download, a system leftover.
+    ///
+    /// Pure — it touches nothing and can be checked without a sandbox, which
+    /// is the point of separating it. Directories are not judged.
+    public static func isJunk(_ url: URL, fileSize: Int) -> Bool {
         let name = url.lastPathComponent
 
         if name.hasPrefix(".") { return true }
@@ -27,10 +53,7 @@ public struct FileAnalyzer {
         // when they're also empty.
         let hasBlankName = (name as NSString).deletingPathExtension
             .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        if hasBlankName {
-            let size = (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
-            if size == 0 { return true }
-        }
+        if hasBlankName, fileSize == 0 { return true }
 
         // System / well-known noise files.
         let ignoredNames: Set<String> = [".DS_Store", ".localized", "Thumbs.db", "desktop.ini"]
@@ -40,11 +63,6 @@ public struct FileAnalyzer {
         // safe: when the download finishes the file is *renamed* to its final
         // name, which the watcher sees as a new arrival.
         if isInProgressDownload(url) { return true }
-
-        var isDirectory: ObjCBool = false
-        if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory), isDirectory.boolValue {
-            return true
-        }
 
         return false
     }

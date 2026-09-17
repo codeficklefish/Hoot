@@ -69,6 +69,9 @@ enum HUDTokens {
     static let caption = Font.system(size: 13)
     /// `--text-app-caption`, every label under a control.
     static let caption2 = Font.system(size: 11)
+    /// --text-app-caption2. The size and age columns, which sit beside a
+    /// filename and must not compete with it.
+    static let caption3 = Font.system(size: 10)
     /// The struck-out name. Monospaced so the thing being replaced reads as
     /// machine output next to the name that replaces it.
     static let mono = Font.system(size: 11, design: .monospaced)
@@ -78,7 +81,6 @@ enum HUDTokens {
     static let radiusControl: CGFloat = 7    // --radius-md
     static let radiusRow: CGFloat = 5        // --radius-sm
     /// `--notch-radius-inner`, for file tiles.
-    static let radiusTile: CGFloat = 12
     /// `--notch-radius`. The panel's bottom corners.
     static let radiusPanel: CGFloat = 26
     /// `--radius-xl`. The collapsed bar's, which is a smaller shape and needs
@@ -92,11 +94,9 @@ enum HUDTokens {
 
     /// Each file row in the expanded panel, used to size the panel before it
     /// is laid out — the window has to be told how big to be.
-    static let fileRowHeight: CGFloat = 24
 
     /// The round actions, and the file tiles in the tray.
     static let actionDiameter: CGFloat = 38
-    static let tileSide: CGFloat = 52
     /// The tab pills.
     static let tabHeight: CGFloat = 24
 
@@ -112,8 +112,13 @@ enum HUDTokens {
     /// Panel widths. Two, because the two tabs are different shapes of
     /// answer: Tidy carries a folder's worth of rows, the Tray carries a row
     /// of tiles, and one width flattering both would flatter neither.
-    static let tidyWidth: CGFloat = 680
-    static let trayWidth: CGFloat = 580
+    /// The panel, open. A vertical list wants a reading measure rather than
+    /// the width two columns of filenames needed.
+    static let shelfWidth: CGFloat = 420
+    /// One file. Icon, name and two numbers on a single line.
+    static let shelfRowHeight: CGFloat = 26
+    /// The footer's pill controls.
+    static let pillHeight: CGFloat = 20
 
     // MARK: - Motion
 

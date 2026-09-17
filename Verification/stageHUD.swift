@@ -1,5 +1,8 @@
 import Foundation
 import HootKit
+// For the folder adapters. The suite links both modules; only the app
+// target's views and controller are out of reach from here.
+import HootPlatformMac
 
 /// The notch HUD: where its panel goes, and what it decides to show.
 ///
@@ -74,380 +77,348 @@ func stageHUD(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) 
 
     // MARK: - Walking through the plan, one folder at a time
 
-    print("\n[the HUD files one folder at a time]")
+    print("\n[a list stops growing before the window does]")
 
-    func file(_ name: String, newName: String? = nil) -> TidyFile {
-        TidyFile(moveID: UUID(), currentName: name, proposedName: newName, kindSymbol: "doc")
+    // The panel is sized from its content's fittingSize, so a list with no
+    // definite height asks for a window as tall as the folder is long.
+    check("an empty list takes no height",
+          HUDPlacement.listHeight(rows: 0, rowHeight: 26, maxRows: 9) == 0)
+    check("a short list is exactly its rows",
+          HUDPlacement.listHeight(rows: 3, rowHeight: 26, maxRows: 9) == 78,
+          "\(HUDPlacement.listHeight(rows: 3, rowHeight: 26, maxRows: 9))")
+    check("a long one stops at the cap",
+          HUDPlacement.listHeight(rows: 200, rowHeight: 26, maxRows: 9) == 234,
+          "\(HUDPlacement.listHeight(rows: 200, rowHeight: 26, maxRows: 9))")
+    check("and a negative count cannot make it negative",
+          HUDPlacement.listHeight(rows: -5, rowHeight: 26, maxRows: 9) == 0)
+
+    print("\n[scrolling a list is not paging between folders]")
+
+    // The HUD's scroll monitor swallows what it takes. Once the panel holds a
+    // list, swallowing a vertical scroll would leave it unable to scroll.
+    check("a sideways flick is paging",
+          SwipeTracker.isHorizontal(deltaX: 30, deltaY: 2))
+    check("a scroll down the list is not",
+          !SwipeTracker.isHorizontal(deltaX: 2, deltaY: 30))
+    check("nor is one that only leans sideways",
+          !SwipeTracker.isHorizontal(deltaX: 12, deltaY: 10),
+          "12 across, 10 down — under the 1.4x bias")
+    check("the rule is the one track() uses", {
+        var tracker = SwipeTracker()
+        return tracker.track(deltaX: 2, deltaY: 30, phase: .began) == nil
+    }())
+
+    print("\n[what counts as somebody's file]")
+
+    // The name rules, asked without touching a disk. Directories are judged
+    // separately, because whether a folder should be shown depends on who is
+    // asking: the organizer never touches one, the shelf lists them.
+    func junk(_ name: String, size: Int = 1024) -> Bool {
+        FileAnalyzer.isJunk(URL(fileURLWithPath: "/tmp/\(name)"), fileSize: size)
     }
 
-    let opaque = file("12312312312312.docx", newName: "Patrick Hans Daguno — resume.docx")
-    let dashes = file("------.pdf", newName: "Patrick Hans Daguno — resume.pdf")
-    let plain = file("notes-final.pdf")
+    check("a dotfile is not somebody's file", junk(".DS_Store"))
+    check("nor is an Office lock file", junk("~$Report.docx"))
+    check("nor a half-finished download", junk("Xcode.dmg.crdownload"))
+    check("nor a blank name with nothing in it", junk(" .png", size: 0))
+    check("but a blank name with real content is kept",
+          !junk(" .png", size: 4096))
+    check("and an ordinary file is left alone", !junk("invoice_march.pdf"))
 
-    let resume = TidyGroup(
-        name: "Resume and Contact Information",
-        reason: "Each one holds a name, a phone number and a work history.",
-        files: [opaque, dashes]
-    )
-    let documents = TidyGroup(
-        name: "Documents",
-        reason: "No clear evidence of a shared subject. Sorted by file type instead.",
-        files: [plain]
-    )
+    check("a directory is ignored when files are what is wanted",
+          FileAnalyzer.isIgnored(URL(fileURLWithPath: "/tmp/Receipts"),
+                                 isDirectory: true, fileSize: 0))
+    check("but it is not junk, so a shelf may still list it",
+          !junk("Receipts", size: 0))
 
-    var flow = TidyFlow(groups: [resume, documents], isRenaming: true)
+    print("\n[how long ago, in a column and in a sentence]")
 
-    check("an empty plan gives the HUD nothing to show",
-          TidyFlow(groups: [], isRenaming: true).stage == .idle)
-
-    check("the pill counts every file, not every folder",
-          flow.pillText == "3 files could be sorted and named", flow.pillText)
-    check("and says it in the singular when there is one",
-          TidyFlow(groups: [documents], isRenaming: true).pillText
-            == "1 file could be sorted and named")
-
-    guard case .reviewing(let first) = flow.stage else {
-        check("the first group is up for review", false); return
+    // Both forms against one fixed instant: read against the real clock they
+    // change their answers as the evening wears on.
+    var stamp = DateComponents()
+    stamp.year = 2026; stamp.month = 9; stamp.day = 15
+    stamp.hour = 22; stamp.minute = 0
+    guard let anchorNow = Calendar.current.date(from: stamp) else {
+        check("fixed clock", false); return
     }
-    check("the first group is up for review", first.group.name == resume.name)
-    check("the step is counted from one", first.stepLabel == "1 of 2", first.stepLabel)
-    check("every file starts picked", first.pickedLabel == "2/2", first.pickedLabel)
-    check("the button says what it will do, counted",
-          first.primaryLabel == "Move & Rename 2", first.primaryLabel)
+    func ago(_ minutes: Double) -> Date { anchorNow.addingTimeInterval(-minutes * 60) }
 
-    // ---- what each row says ----
-    check("a renamed row leads with the new name",
-          first.rows[0].shownName == "Patrick Hans Daguno — resume.docx")
-    check("a folder that does have new names shows the column for them",
-          first.showsProposedNames)
-    check("and strikes out the one it replaces",
-          first.rows[0].replacedName == "12312312312312.docx")
-    check("with the word that explains the strike", first.rows[0].subLead == "was")
+    check("minutes read as minutes",
+          RelativeAge.label(of: ago(22), now: anchorNow) == "22m",
+          RelativeAge.label(of: ago(22), now: anchorNow))
+    check("and as a phrase they gain an 'ago'",
+          RelativeAge.since(ago(22), now: anchorNow) == "22m ago",
+          RelativeAge.since(ago(22), now: anchorNow))
+    check("hours the same",
+          RelativeAge.since(ago(240), now: anchorNow) == "4h ago",
+          RelativeAge.since(ago(240), now: anchorNow))
+    // "Yest. ago" is not English, which is why the two forms are separate
+    // functions rather than one with a suffix stuck on the end.
+    check("yesterday is a word, not a count",
+          RelativeAge.since(ago(60 * 26), now: anchorNow) == "yesterday",
+          RelativeAge.since(ago(60 * 26), now: anchorNow))
+    check("while the column still abbreviates it",
+          RelativeAge.label(of: ago(60 * 26), now: anchorNow) == "Yest.",
+          RelativeAge.label(of: ago(60 * 26), now: anchorNow))
+    check("older than that counts days",
+          RelativeAge.since(ago(60 * 24 * 3), now: anchorNow) == "3d ago",
+          RelativeAge.since(ago(60 * 24 * 3), now: anchorNow))
+    // 46 and a half hours: 23:30 two nights ago, which arithmetic that counts
+    // hours and divides by 24 calls yesterday. Sunday night is not yesterday
+    // on a Tuesday, and this is the case the calendar rule exists for. Note
+    // that 46 hours exactly *is* yesterday — the boundary is the day, not
+    // the elapsed time, which is exactly what makes it worth a check.
+    check("the night before last is not yesterday",
+          RelativeAge.label(of: ago(46.5 * 60), now: anchorNow) == "2d",
+          RelativeAge.label(of: ago(46.5 * 60), now: anchorNow))
+    check("while 46 hours still is",
+          RelativeAge.label(of: ago(46 * 60), now: anchorNow) == "Yest.",
+          RelativeAge.label(of: ago(46 * 60), now: anchorNow))
+    check("a date in the future does not go negative",
+          RelativeAge.since(anchorNow.addingTimeInterval(600), now: anchorNow) == "just now")
+    check("the clock time is zero-padded",
+          RelativeAge.clockTime(of: ago(60 * 13 + 55)) == "08:05",
+          RelativeAge.clockTime(of: ago(60 * 13 + 55)))
 
-    // ---- the rename chip ----
-    flow.isRenaming = false
-    guard case .reviewing(let unrenamed) = flow.stage else {
-        check("turning renaming off keeps the group", false); return
+    print("\n[several folders, each remembered on its own]")
+
+    // Security-scoped bookmarks are a sandbox feature and this binary is not
+    // sandboxed, so what can be checked here is the list bookkeeping rather
+    // than the encoding. Probed rather than assumed: if bookmarking does work
+    // outside the sandbox on this OS, the round trip is checked too.
+    let suite = "hoot.verification.shelf"
+    guard let shelfDefaults = UserDefaults(suiteName: suite) else {
+        check("shelf defaults", false); return
     }
-    check("with renaming off the row keeps its own name",
-          unrenamed.rows[0].shownName == "12312312312312.docx")
-    check("and nothing is struck out", unrenamed.rows[0].replacedName == nil)
-    check("the row says the name is being kept",
-          unrenamed.rows[0].subLead == "keeps its name", unrenamed.rows[0].subLead)
-    check("and the button drops the word rename",
-          unrenamed.primaryLabel == "Move 2", unrenamed.primaryLabel)
-    check("renaming nothing is counted as nothing", unrenamed.renamableCount == 0)
-    flow.isRenaming = true
+    shelfDefaults.removePersistentDomain(forName: suite)
 
-    // ---- a file with no name to suggest ----
-    var single = TidyFlow(groups: [documents], isRenaming: true)
-    guard case .reviewing(let lone) = single.stage else {
-        check("a group of one is reviewable", false); return
-    }
-    check("a file Hoot could not name says so",
-          lone.rows[0].subLead == "no clear name to suggest", lone.rows[0].subLead)
-    check("and is not counted as a rename", lone.renamableCount == 0)
-
-    // ---- unticking ----
-    flow.toggle(opaque.moveID)
-    guard case .reviewing(let dropped) = flow.stage else {
-        check("unticking keeps the group", false); return
-    }
-    check("an unticked file is shown as dropped", dropped.rows[0].isKept == false)
-    check("the count follows it", dropped.pickedLabel == "1/2", dropped.pickedLabel)
-    check("and so does the button", dropped.primaryLabel == "Move & Rename 1")
-    check("only the kept files would be filed", flow.keptFiles.count == 1)
-
-    flow.toggle(opaque.moveID)
-    check("and ticking it again puts it back", flow.keptFiles.count == 2)
-
-    // Unticking everything must not offer to move nothing.
-    flow.toggle(opaque.moveID)
-    flow.toggle(dashes.moveID)
-    guard case .reviewing(let empty) = flow.stage else {
-        check("an empty group is still reviewable", false); return
-    }
-    check("with nothing picked the button says so",
-          empty.primaryLabel == "Nothing selected", empty.primaryLabel)
-    check("and refuses to be pressed", empty.canApply == false)
-    flow.toggle(opaque.moveID)
-    flow.toggle(dashes.moveID)
-
-    // ---- advancing ----
-    flow.recordApplied(movedFiles: 2, renamedFiles: 2)
-    guard case .reviewing(let second) = flow.stage else {
-        check("answering one group moves to the next", false); return
-    }
-    check("answering one group moves to the next", second.group.name == documents.name)
-    check("and the step label follows", second.stepLabel == "2 of 2", second.stepLabel)
-
-    flow.skip()
-    guard case .finished(let summary) = flow.stage else {
-        check("answering the last group finishes the walk", false); return
-    }
-    check("answering the last group finishes the walk", true)
-    check("the summary counts what actually moved",
-          summary.title == "2 files moved into 1 folder", summary.title)
-    check("and what was renamed",
-          summary.detail == "2 files were renamed too. Any move can be undone later.",
-          summary.detail)
-    check("a skipped group is not counted as a folder", summary.movedGroups == 1)
-
-    // ---- the summary's other shapes ----
-    check("one file reads in the singular",
-          TidySummary(movedFiles: 1, movedGroups: 1, renamedFiles: 1).title
-            == "1 file moved into 1 folder")
-    check("one rename reads in the singular",
-          TidySummary(movedFiles: 1, movedGroups: 1, renamedFiles: 1).detail
-            == "1 file was renamed too. Any move can be undone later.")
-    check("skipping everything says so",
-          TidySummary(movedFiles: 0, movedGroups: 0, renamedFiles: 0).title
-            == "Every file stayed where it was")
-    check("renaming nothing says so too",
-          TidySummary(movedFiles: 2, movedGroups: 1, renamedFiles: 0).detail
-            == "Nothing was renamed. Any move can be undone later.")
-    // Whatever happened, the way back is always on screen.
-    for renamed in 0...2 {
-        check("the summary always says it can be undone (\(renamed) renamed)",
-              TidySummary(movedFiles: 2, movedGroups: 1, renamedFiles: renamed)
-                .detail.contains("can be undone"))
+    let shelfRoot = sandbox.appending(path: "shelf-folders")
+    let alpha = shelfRoot.appending(path: "Alpha")
+    let beta = shelfRoot.appending(path: "Beta")
+    for dir in [alpha, beta] {
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
     }
 
-    // ---- undo puts the walk back to the start ----
-    flow.restart()
-    guard case .reviewing(let restarted) = flow.stage else {
-        check("undo returns to the first group", false); return
-    }
-    check("undo returns to the first group", restarted.index == 0)
-    check("with every file picked again", restarted.pickedLabel == "2/2")
-    single.skip()
-    check("a one-group walk finishes after one answer",
-          { if case .finished = single.stage { return true }; return false }())
+    let shelfAccess = ShelfFolderAccess(defaults: shelfDefaults)
+    check("nothing remembered yet", shelfAccess.restoreAll().folders.isEmpty)
+    check("and nothing was dropped to get there", shelfAccess.restoreAll().dropped == 0)
 
-    // MARK: - Renaming in place is a move, and moves come back
+    let addedAlpha = shelfAccess.remember(alpha)
+    check("a folder new to the list is added", addedAlpha)
+    check("the same folder again is refused", !shelfAccess.remember(alpha))
+    // The spelling it is asked about is not the spelling a bookmark comes
+    // back as: /tmp is a symlink to /private/tmp, and a resolved folder URL
+    // carries a trailing slash. Both have to name the same folder.
+    check("however it is spelled",
+          !shelfAccess.remember(URL(fileURLWithPath: alpha.path + "/")))
 
-    print("\n[a rename is a move that stays put]")
+    // Everything past this point needs the bookmark to have survived being
+    // written and read back, which is the part the sandbox owns.
+    let bookmarksWork = !shelfAccess.restoreAll().folders.isEmpty
+    if bookmarksWork {
+        shelfAccess.remember(beta)
+        let restored = shelfAccess.restoreAll()
+        check("both folders come back", restored.folders.count == 2,
+              "\(restored.folders.map(\.lastPathComponent))")
+        check("in the order they were added",
+              restored.folders.first?.lastPathComponent == "Alpha",
+              restored.folders.first?.lastPathComponent ?? "nil")
+        check("none of them was dropped", restored.dropped == 0)
 
-    let root = sandbox.appending(path: "hud-rename")
-    try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-    let original = root.appending(path: "32131231231.pdf")
-    try? Data("boarding pass".utf8).write(to: original)
-
-    guard let item = FileItem(url: original) else {
-        check("the rename fixture exists", false)
-        return
-    }
-
-    let classification = ClassificationResult(
-        fileID: item.id,
-        category: "Travel",
-        project: nil,
-        suggestedFolder: "Travel",
-        suggestedName: "Delta boarding pass Manila.pdf",
-        confidence: 0.9,
-        reason: "Read from inside the file."
-    )
-
-    // The HUD renames where the file stands, so the destination folder is
-    // the watched folder itself — an empty subpath. This is the one case the
-    // organizer had never been asked for, and "" is exactly the kind of
-    // value that turns into a path bug nobody notices until a file vanishes.
-    let renameInPlace = PlannedMove(
-        file: item,
-        classification: classification,
-        destinationFolder: "",
-        roleSubfolder: nil,
-        destinationName: "Delta boarding pass Manila.pdf",
-        isApproved: true
-    )
-
-    let organizer = Organizer()
-    let (batch, failures) = organizer.organize(
-        OrganizationPlan(
-            root: root,
-            groups: [PlannedGroup(name: "", proposedName: "",
-                                  rationale: "Renamed in place.", moves: [renameInPlace])],
-            skipped: []
-        )
-    )
-
-    check("renaming in place does not fail", failures.isEmpty,
-          failures.map { $0.1.localizedDescription }.joined())
-    check("it produces exactly one operation", batch.operations.count == 1)
-
-    let renamed = root.appending(path: "Delta boarding pass Manila.pdf")
-    check("the file is on disk under its new name",
-          FileManager.default.fileExists(atPath: renamed.path))
-    check("and is gone from under the old one",
-          !FileManager.default.fileExists(atPath: original.path))
-    check("it stayed in the folder it was already in",
-          renamed.deletingLastPathComponent().path == root.path,
-          renamed.deletingLastPathComponent().path)
-    check("no folder was invented for it",
-          (try? FileManager.default.contentsOfDirectory(atPath: root.path))?.count == 1)
-    check("with the same contents",
-          (try? Data(contentsOf: renamed)) == Data("boarding pass".utf8))
-
-    let (restored, undoFailures) = organizer.undo(batch)
-    check("undo puts the original name back",
-          undoFailures.isEmpty && restored.count == 1)
-    check("the file is called what it was called again",
-          FileManager.default.fileExists(atPath: original.path))
-    check("and leaves nothing behind under the new one",
-          !FileManager.default.fileExists(atPath: renamed.path))
-
-    // MARK: - What the notch layout prints
-    //
-    // The panel has two surfaces now — a folder at a time, and a tray saying
-    // how much is waiting — and each has its own phrasing. Same reason as
-    // every other label here: a count that reads "0 of 3 files" or an age
-    // that reads "-4m" is only ever noticed by someone using it.
-
-    print("\n[the notch's own labels]")
-
-    // A fixed instant rather than `Date()`. These labels are relative to a
-    // clock, and read against the real one they change their answers as the
-    // evening wears on: a file "3h" old at eleven is "Yest." at one in the
-    // morning, and the suite would start failing for no reason anybody
-    // changed.
-    var midEvening = DateComponents()
-    midEvening.year = 2026; midEvening.month = 9; midEvening.day = 15
-    midEvening.hour = 22; midEvening.minute = 0
-    guard let now = Calendar.current.date(from: midEvening) else {
-        check("the clock these labels are read against could be built", false); return
-    }
-
-    func waiting(_ name: String, minutesAgo: Double) -> TidyFile {
-        TidyFile(moveID: UUID(), currentName: name, proposedName: nil,
-                 kindSymbol: "doc", addedAt: now.addingTimeInterval(-minutesAgo * 60))
-    }
-
-    let trayFlow = TidyFlow(
-        groups: [
-            TidyGroup(name: "Receipts", reason: "Shared subject.", files: [
-                waiting("a.pdf", minutesAgo: 4), waiting("b.pdf", minutesAgo: 9)
-            ]),
-            TidyGroup(name: "Documents", reason: "By type.", files: [
-                waiting("c.pdf", minutesAgo: 200)
-            ])
-        ],
-        isRenaming: true
-    )
-
-    check("the bar counts what is still waiting",
-          trayFlow.pillCount == "3 new", trayFlow.pillCount)
-    check("the tray says the same thing in words",
-          trayFlow.waitingTitle == "3 files waiting", trayFlow.waitingTitle)
-    check("and how many folders that is, oldest first",
-          trayFlow.waitingDetail(now: now) == "2 folders suggested \u{00B7} oldest 3h",
-          trayFlow.waitingDetail(now: now))
-    check("an age under an hour is counted in minutes",
-          TidyFile.age(of: now.addingTimeInterval(-240), now: now) == "4m",
-          TidyFile.age(of: now.addingTimeInterval(-240), now: now))
-    check("yesterday is named rather than counted",
-          TidyFile.age(of: now.addingTimeInterval(-90_000), now: now) == "Yest.",
-          TidyFile.age(of: now.addingTimeInterval(-90_000), now: now))
-    check("a file with no date reports no age",
-          TidyFile(moveID: UUID(), currentName: "x", proposedName: nil,
-                   kindSymbol: "doc").ageLabel() == nil)
-
-    guard case .reviewing(let notchStep) = trayFlow.stage else {
-        check("the first group is reviewable", false); return
-    }
-    check("the folder's line counts its files in words",
-          notchStep.pickedSentence == "2 of 2 files", notchStep.pickedSentence)
-    check("the caption under the round action stays short",
-          notchStep.actionLabel == "Move & name", notchStep.actionLabel)
-    // Nothing in that folder has a new name to move to, so the column that
-    // would carry one has nothing to say and does not appear.
-    check("a folder with no new names hides the column for them",
-          notchStep.showsProposedNames == false)
-
-    var plainFlow = trayFlow
-    plainFlow.isRenaming = false
-    if case .reviewing(let plainStep) = plainFlow.stage {
-        check("and drops the naming when naming is off",
-              plainStep.actionLabel == "Move", plainStep.actionLabel)
-    }
-
-    var walked = trayFlow
-    walked.recordApplied(movedFiles: 2, renamedFiles: 0)
-    check("what has been filed is no longer waiting",
-          walked.pillCount == "1 new", walked.pillCount)
-    walked.skip()
-    check("and once every folder is answered the bar goes quiet",
-          walked.pillCount == "Idle", walked.pillCount)
-    check("a single file is counted in the singular",
-          TidyFlow(groups: [TidyGroup(name: "One", reason: "", files: [waiting("z.pdf", minutesAgo: 1)])],
-                   isRenaming: true).waitingTitle == "1 file waiting")
-
-    // MARK: - Moving between folders without answering
-    //
-    // Looking at what else is in the pile is not a decision. Everything here
-    // guards the difference: a folder you paged past is still waiting, and
-    // the walk is over when every folder has been answered — not when the
-    // cursor happens to be at the end.
-
-    print("\n[paging through the folders]")
-
-    func threeFolders() -> TidyFlow {
-        TidyFlow(groups: (1...3).map { index in
-            TidyGroup(name: "Folder \(index)", reason: "",
-                      files: [waiting("f\(index).pdf", minutesAgo: Double(index))])
-        }, isRenaming: true)
-    }
-
-    var paging = threeFolders()
-    check("it starts on the first folder", paging.step == 0)
-    check("with nowhere behind it", !paging.canShowPrevious)
-    check("and somewhere ahead", paging.canShowNext)
-
-    paging.showNext()
-    check("paging forward moves the cursor", paging.step == 1)
-    check("and nothing is counted as answered",
-          paging.pendingGroupCount == 3, "\(paging.pendingGroupCount)")
-    check("so the pile has not shrunk", paging.pendingFiles.count == 3)
-
-    paging.showPrevious()
-    check("paging back returns to it", paging.step == 0)
-    paging.showPrevious()
-    check("and cannot go back past the first", paging.step == 0)
-
-    paging.show(groupAt: 2)
-    check("a folder can be jumped to outright", paging.step == 2)
-    paging.showNext()
-    check("the last folder has nothing ahead of it", paging.step == 2)
-    paging.show(groupAt: 99)
-    check("a folder that does not exist is ignored", paging.step == 2)
-
-    // Answering from the middle: the ones behind are still owed an answer.
-    var middle = threeFolders()
-    middle.show(groupAt: 1)
-    middle.skip()
-    check("answering the middle folder moves to the one after it", middle.step == 2)
-    check("and only that one is counted as answered",
-          middle.pendingGroupCount == 2, "\(middle.pendingGroupCount)")
-    middle.skip()
-    check("answering the last one comes back for the first",
-          middle.step == 0, "\(middle.step)")
-    check("which is still unfinished", middle.stage != .idle)
-    if case .finished = middle.stage {
-        check("a folder still unanswered means the walk is not over", false)
+        shelfAccess.forget(alpha)
+        let afterForget = shelfAccess.restoreAll()
+        check("forgetting one leaves the rest",
+              afterForget.folders.map(\.lastPathComponent) == ["Beta"],
+              "\(afterForget.folders.map(\.lastPathComponent))")
     } else {
-        check("a folder still unanswered means the walk is not over", true)
+        print("  ....  bookmark round trip not checkable: "
+            + "security-scoped bookmarks need the sandbox, and this binary has none")
     }
-    middle.skip()
-    guard case .finished = middle.stage else {
-        check("answering every folder ends the walk", false); return
+    shelfDefaults.removePersistentDomain(forName: suite)
+
+    print("\n[a folder, read as the notch shows it]")
+
+    let shelfDir = sandbox.appending(path: "shelf-read")
+    let nested = shelfDir.appending(path: "Receipts")
+    try? FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
+    for child in ["a.pdf", "b.pdf", "c.pdf"] {
+        try? Data("x".utf8).write(to: nested.appending(path: child))
     }
-    check("answering every folder ends the walk", true)
 
-    var jumped = threeFolders()
-    jumped.skip()
-    jumped.show(groupAt: 0)
-    check("a folder already answered cannot be gone back to", jumped.step == 1)
+    // Written oldest first, then stamped, so "newest first" is a claim about
+    // the dates rather than about the order they happen to be listed in.
+    let made: [(String, Double, Int)] = [
+        ("invoice_march.pdf", 4, 2_400_000),
+        ("photo.png", 90, 800_000),
+        ("notes.txt", 60 * 26, 400)
+    ]
+    for (name, minutes, size) in made {
+        let url = shelfDir.appending(path: name)
+        try? Data(repeating: 0x41, count: size).write(to: url)
+        let when = anchorNow.addingTimeInterval(-minutes * 60)
+        try? FileManager.default.setAttributes(
+            [.creationDate: when, .modificationDate: when], ofItemAtPath: url.path)
+    }
+    // Junk, which must not be listed.
+    for junkName in [".DS_Store", "~$invoice_march.docx", "Xcode.dmg.crdownload"] {
+        try? Data("x".utf8).write(to: shelfDir.appending(path: junkName))
+    }
 
-    // MARK: - What counts as a swipe
+    let read = ShelfReader.read(shelfDir)
+    check("the folder was readable", read.state == .listed, "\(read.state)")
+    check("junk is not somebody's file", read.entries.count == 4,
+          "\(read.entries.map(\.name).sorted())")
+    check("a sub-folder is listed, where the organizer would ignore it",
+          read.entries.contains { $0.isFolder && $0.name == "Receipts" })
+    check("and it is measured in things, not bytes",
+          read.entries.first { $0.isFolder }?.sizeLabel == "3 items",
+          read.entries.first { $0.isFolder }?.sizeLabel ?? "nil")
+    check("the header counts both kinds", read.accessory == "3 files · 1 folder",
+          read.accessory)
+
+    // The check that keeps the panel from redrawing under the pointer: an
+    // unchanged folder read twice has to compare equal, or every refresh
+    // publishes a new value and the list flickers.
+    check("reading it again gives the same value", ShelfReader.read(shelfDir) == read)
+
+    check("an empty folder says so, and is not an error", {
+        let bare = sandbox.appending(path: "shelf-empty")
+        try? FileManager.default.createDirectory(at: bare, withIntermediateDirectories: true)
+        let folder = ShelfReader.read(bare)
+        return folder.state == .empty && folder.emptyMessage.contains("Nothing in")
+    }())
+    check("a folder that is not there is told apart from an empty one", {
+        let gone = ShelfReader.read(sandbox.appending(path: "shelf-not-here"))
+        return gone.state == .unavailable && gone.emptyMessage.contains("not available")
+    }())
+
+    print("\n[the order a folder is read in]")
+
+    var shelf = FileShelf(folders: [read])
+    check("newest first by default",
+          shelf.rows.map(\.name) == ["Receipts", "invoice_march.pdf", "photo.png", "notes.txt"],
+          "\(shelf.rows.map(\.name))")
+
+    shelf.sort = .name
+    check("by name, folders still lead",
+          shelf.rows.first?.name == "Receipts", shelf.rows.first?.name ?? "nil")
+    check("and the files are alphabetical",
+          shelf.rows.dropFirst().map(\.name) == ["invoice_march.pdf", "notes.txt", "photo.png"],
+          "\(shelf.rows.dropFirst().map(\.name))")
+
+    shelf.sort = .size
+    check("by size, largest first",
+          shelf.rows.dropFirst().map(\.name) == ["invoice_march.pdf", "photo.png", "notes.txt"],
+          "\(shelf.rows.dropFirst().map(\.name))")
+
+    check("the sort control cycles", FileShelf.SortOrder.added.next == .name
+            && FileShelf.SortOrder.name.next == .size
+            && FileShelf.SortOrder.size.next == .added)
+    check("and names itself", FileShelf.SortOrder.added.label == "Date added")
+
+    print("\n[what the notch prints about a shelf]")
+
+    shelf.sort = .added
+    check("the collapsed bar names the folder, and counts nothing",
+          shelf.pillText == "shelf-read", shelf.pillText)
+    check("the list stops growing at nine rows",
+          shelf.listHeight == 4 * 26, "\(shelf.listHeight)")
+    check("and a long folder is capped there", {
+        let many = (0..<40).map {
+            ShelfEntry(url: shelfDir.appending(path: "f\($0)"), symbolName: "doc",
+                       isFolder: false, byteCount: 1, childCount: 0,
+                       sortDate: anchorNow, isCloudPlaceholder: false)
+        }
+        let long = FileShelf(folders: [ShelfFolder(url: shelfDir, state: .listed, entries: many)])
+        return long.rows.count == 40 && long.listHeight == 234
+    }())
+
+    check("nothing is picked to begin with", shelf.selectionDetail(now: anchorNow) == nil)
+    let firstFile = shelf.rows.first { !$0.isFolder }!
+    shelf.select(firstFile.id)
+    check("a picked file says its size and when it came",
+          shelf.selectionDetail(now: anchorNow) == "2.4 MB · added 4m ago",
+          shelf.selectionDetail(now: anchorNow) ?? "nil")
+    check("and the reveal button changes what it offers",
+          shelf.revealLabel == "Show in Finder", shelf.revealLabel)
+    shelf.select(firstFile.id)
+    check("picking it again unpicks it", shelf.pickedEntry == nil)
+    check("and the button goes back to the folder",
+          shelf.revealLabel == "Open folder", shelf.revealLabel)
+
+    // The organizer's one appearance here. A folder with no plan has no
+    // button at all, rather than a button reading zero.
+    check("no tidying to offer means no button", shelf.tidyLabel(untidy: 0) == nil)
+    check("and otherwise it counts", shelf.tidyLabel(untidy: 5) == "Tidy 5",
+          shelf.tidyLabel(untidy: 5) ?? "nil")
+
+    print("\n[keeping the tabs straight]")
+
+    func folderNamed(_ name: String) -> ShelfFolder {
+        ShelfFolder(url: sandbox.appending(path: name), state: .empty, entries: [])
+    }
+    var tabs = FileShelf()
+    check("an empty shelf says where folders come from",
+          tabs.isEmpty && tabs.emptyMessage.contains("Settings"))
+    for index in 0..<FileShelf.maxFolders {
+        check("folder \(index + 1) is added", tabs.add(folderNamed("F\(index)")))
+    }
+    check("the ninth is refused", !tabs.add(folderNamed("F99")))
+    check("and so is one already there", !tabs.add(folderNamed("F0")))
+
+    tabs.show(folderAt: 7)
+    check("paging lands where it was asked", tabs.showing == 7, "\(tabs.showing)")
+    tabs.showNext()
+    check("and cannot walk off the end", tabs.showing == 7, "\(tabs.showing)")
+    tabs.show(folderAt: 0)
+    tabs.showPrevious()
+    check("nor off the front", tabs.showing == 0, "\(tabs.showing)")
+
+    tabs.show(folderAt: 7)
+    tabs.remove(sandbox.appending(path: "F7"))
+    check("removing the folder being shown clamps rather than jumping home",
+          tabs.showing == 6, "\(tabs.showing)")
+    check("and the rest are still there", tabs.folders.count == 7, "\(tabs.folders.count)")
+
+    print("\n[the same folder, however it is spelled]")
+
+    // Three things ask this now — the bookmark store, the shelf's tab list,
+    // and the check for whether a shelf folder is also the one being
+    // organized — so the rule is written once and checked here.
+    let identityDir = sandbox.appending(path: "identity")
+    try? FileManager.default.createDirectory(at: identityDir, withIntermediateDirectories: true)
+    check("a trailing slash names the same folder",
+          FolderIdentity.same(identityDir, URL(fileURLWithPath: identityDir.path + "/")))
+    check("and so does a path through a symlink", {
+        let link = sandbox.appending(path: "identity-link")
+        try? FileManager.default.removeItem(at: link)
+        try? FileManager.default.createSymbolicLink(at: link, withDestinationURL: identityDir)
+        return FolderIdentity.same(identityDir, link)
+    }())
+    check("but a different folder is a different folder",
+          !FolderIdentity.same(identityDir, sandbox.appending(path: "identity-other")))
+
+    print("\n[a file in the cloud is still not opened]")
+
+    // Safety rule 5's first appearance on a surface that is not the organizer:
+    // previewing a placeholder would start a download nobody asked for.
+    let placeholder = ShelfEntry(
+        url: shelfDir.appending(path: "far-away.pdf"), symbolName: "doc",
+        isFolder: false, byteCount: 0, childCount: 0,
+        sortDate: anchorNow, isCloudPlaceholder: true)
+    check("the row knows before anything offers to open it",
+          placeholder.isCloudPlaceholder)
+    check("and nothing will preview it", !placeholder.isPreviewable)
+    check("a folder is not previewed either — the Finder opens those", {
+        let dir = ShelfEntry(url: shelfDir, symbolName: "folder", isFolder: true,
+                             byteCount: 0, childCount: 3, sortDate: anchorNow,
+                             isCloudPlaceholder: false)
+        return !dir.isPreviewable
+    }())
+    check("but an ordinary file on this disk may be looked inside",
+          shelf.rows.first { !$0.isFolder }?.isPreviewable == true)
+    check("and an ordinary file does not",
+          !(shelf.rows.first { !$0.isFolder }?.isCloudPlaceholder ?? true))
 
     print("\n[what counts as a swipe]")
 
@@ -585,69 +556,4 @@ func stageHUD(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) 
           fromRules.contains("95% match"), fromRules)
 
     // MARK: - Captions that tell the tiles apart
-
-    print("\n[how long it has been sitting there]")
-
-    var fixed = DateComponents()
-    fixed.year = 2026; fixed.month = 9; fixed.day = 15
-    fixed.hour = 22; fixed.minute = 0
-    // A fixed instant, so the yesterday check cannot change its mind when the
-    // suite happens to run just after midnight.
-    guard let fixedNow = Calendar.current.date(from: fixed) else {
-        check("the fixed clock could be built", false); return
-    }
-    func at(_ day: Int, _ hour: Int, _ minute: Int) -> Date {
-        var parts = fixed
-        parts.day = day; parts.hour = hour; parts.minute = minute
-        return Calendar.current.date(from: parts)!
-    }
-
-    check("minutes while it is still minutes",
-          TidyFile.age(of: at(15, 21, 56), now: fixedNow) == "4m",
-          TidyFile.age(of: at(15, 21, 56), now: fixedNow))
-    check("hours later the same day",
-          TidyFile.age(of: at(15, 19, 0), now: fixedNow) == "3h",
-          TidyFile.age(of: at(15, 19, 0), now: fixedNow))
-    check("yesterday is yesterday",
-          TidyFile.age(of: at(14, 19, 43), now: fixedNow) == "Yest.",
-          TidyFile.age(of: at(14, 19, 43), now: fixedNow))
-    // 46 hours, which the old arithmetic called yesterday because it counted
-    // hours and divided by 24. Sunday night is not yesterday on a Tuesday.
-    check("and the night before last is not",
-          TidyFile.age(of: at(13, 23, 30), now: fixedNow) == "2d",
-          TidyFile.age(of: at(13, 23, 30), now: fixedNow))
-
-    func arrived(_ name: String, _ date: Date) -> TidyFile {
-        TidyFile(moveID: UUID(), currentName: name, proposedName: nil,
-                 kindSymbol: "doc", addedAt: date)
-    }
-
-    // A folder filled in one evening: every age is "Yest.", so five tiles say
-    // the same thing and none of them says which file it is.
-    let sameEvening = TidyFlow(groups: [TidyGroup(name: "Evening", reason: "", files: [
-        arrived("a.pdf", at(14, 19, 43)),
-        arrived("b.pdf", at(14, 21, 8)),
-        arrived("c.pdf", at(14, 21, 54))
-    ])], isRenaming: true)
-    let evening = sameEvening.trayCaptions(now: fixedNow)
-    check("identical ages fall back to clock times",
-          Set(evening.values) == ["19:43", "21:08", "21:54"],
-          "\(evening.values.sorted())")
-
-    let spread = TidyFlow(groups: [TidyGroup(name: "Spread", reason: "", files: [
-        arrived("d.pdf", at(15, 21, 56)),
-        arrived("e.pdf", at(14, 19, 43))
-    ])], isRenaming: true)
-    check("ages that already differ are left as ages",
-          Set(spread.trayCaptions(now: fixedNow).values) == ["4m", "Yest."],
-          "\(spread.trayCaptions(now: fixedNow).values.sorted())")
-
-    check("and the tray accounts for what is being left alone",
-          TidyFlow(groups: [TidyGroup(name: "Evening", reason: "",
-                                      files: [arrived("a.pdf", at(14, 19, 43))])],
-                   isRenaming: true, leftAlone: 3)
-            .waitingDetail(now: fixedNow).hasSuffix("3 left alone"),
-          TidyFlow(groups: [TidyGroup(name: "Evening", reason: "",
-                                      files: [arrived("a.pdf", at(14, 19, 43))])],
-                   isRenaming: true, leftAlone: 3).waitingDetail(now: fixedNow))
 }

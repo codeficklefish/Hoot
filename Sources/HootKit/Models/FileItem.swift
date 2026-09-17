@@ -50,6 +50,38 @@ public struct FileItem: Identifiable, Hashable {
             }
         }
 
+        /// What an extension says a file is.
+        ///
+        /// On `Kind` rather than on `FileItem` so that anything holding a
+        /// filename can ask — the shelf lists a folder's contents without
+        /// building a `FileItem` for each row, because that would mint a
+        /// fresh UUID per read and make an unchanged folder compare unequal
+        /// to itself.
+        public init(forExtension fileExtension: String) {
+            switch fileExtension.lowercased() {
+            case "docx", "doc", "pages", "rtf", "odt":
+                self = .document
+            case "xlsx", "xls", "csv", "numbers", "tsv":
+                self = .spreadsheet
+            case "png", "jpg", "jpeg", "heic", "heif", "gif", "tiff", "webp", "bmp", "svg":
+                self = .image
+            case "pdf":
+                self = .pdf
+            case "txt", "md", "markdown":
+                self = .text
+            case "epub", "mobi", "azw", "azw3", "djvu":
+                self = .book
+            case "zip", "rar", "7z", "tar", "gz", "tgz", "bz2":
+                self = .archive
+            case "dmg", "pkg", "app", "iso":
+                self = .installer
+            case "mp4", "mov", "m4v", "avi", "mkv", "mp3", "m4a", "wav", "aiff":
+                self = .media
+            default:
+                self = .other
+            }
+        }
+
         /// True when the extension alone tells us what this file is. Such
         /// files can be filed by type with confidence, even when nothing in
         /// the name hints at which project they belong to.
@@ -58,30 +90,7 @@ public struct FileItem: Identifiable, Hashable {
         }
     }
 
-    public var kind: Kind {
-        switch fileExtension.lowercased() {
-        case "docx", "doc", "pages", "rtf", "odt":
-            return .document
-        case "xlsx", "xls", "csv", "numbers", "tsv":
-            return .spreadsheet
-        case "png", "jpg", "jpeg", "heic", "heif", "gif", "tiff", "webp", "bmp", "svg":
-            return .image
-        case "pdf":
-            return .pdf
-        case "txt", "md", "markdown":
-            return .text
-        case "epub", "mobi", "azw", "azw3", "djvu":
-            return .book
-        case "zip", "rar", "7z", "tar", "gz", "tgz", "bz2":
-            return .archive
-        case "dmg", "pkg", "app", "iso":
-            return .installer
-        case "mp4", "mov", "m4v", "avi", "mkv", "mp3", "m4a", "wav", "aiff":
-            return .media
-        default:
-            return .other
-        }
-    }
+    public var kind: Kind { Kind(forExtension: fileExtension) }
 
     public init?(url: URL) {
         let fm = FileManager.default

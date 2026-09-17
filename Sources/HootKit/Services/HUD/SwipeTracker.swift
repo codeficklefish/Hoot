@@ -34,6 +34,16 @@ public struct SwipeTracker: Equatable, Sendable {
 
     public init() {}
 
+    /// Whether this gesture is someone paging rather than someone scrolling.
+    ///
+    /// Public because the panel has to ask the same question a moment earlier
+    /// than `track` does: the HUD's scroll monitor swallows the events it
+    /// takes, and a list that can be scrolled must let the vertical ones
+    /// through. One rule, asked in two places.
+    public static func isHorizontal(deltaX: Double, deltaY: Double) -> Bool {
+        abs(deltaX) > abs(deltaY) * axisBias
+    }
+
     /// Feeds one event in and returns a direction the moment the gesture has
     /// earned one — once per gesture, however far it carries on afterwards.
     /// A flick is one page turn; crossing four folders in a single swipe
@@ -50,7 +60,7 @@ public struct SwipeTracker: Equatable, Sendable {
             }
         }
 
-        guard abs(deltaX) > abs(deltaY) * Self.axisBias else { return nil }
+        guard Self.isHorizontal(deltaX: deltaX, deltaY: deltaY) else { return nil }
         travel += deltaX
         guard !hasFired, abs(travel) >= Self.threshold else { return nil }
         hasFired = true

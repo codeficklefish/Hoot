@@ -11,8 +11,10 @@ public final class WatchedFolderAccess: FolderAccessing {
     private static let bookmarkKey = "watched.folder.bookmark"
 
     private let defaults: UserDefaults
-    /// The URL whose security scope is currently held open, so it can be
-    /// balanced with a matching stop.
+    /// One folder's worth. `SecurityScopes` can hold several; this one is
+    /// deliberately only ever given one, because there is only one watched
+    /// folder and safety rule 4 is written against that.
+    private let scopes = SecurityScopes()
     private var activeURL: URL?
 
     public init(defaults: UserDefaults = .standard) {
@@ -22,12 +24,7 @@ public final class WatchedFolderAccess: FolderAccessing {
     /// Stores a durable reference to `url` and begins accessing it.
     public func remember(_ url: URL) {
         do {
-            let bookmark = try url.bookmarkData(
-                options: .withSecurityScope,
-                includingResourceValuesForKeys: nil,
-                relativeTo: nil
-            )
-            defaults.set(bookmark, forKey: Self.bookmarkKey)
+            defaults.set(try FolderBookmark.make(for: url), forKey: Self.bookmarkKey)
         } catch {
             // Not fatal: the folder still works for this launch, it just
             // won't be remembered next time.
@@ -42,14 +39,8 @@ public final class WatchedFolderAccess: FolderAccessing {
     public func restore() -> URL? {
         guard let bookmark = defaults.data(forKey: Self.bookmarkKey) else { return nil }
 
-        var isStale = false
         do {
-            let url = try URL(
-                resolvingBookmarkData: bookmark,
-                options: .withSecurityScope,
-                relativeTo: nil,
-                bookmarkDataIsStale: &isStale
-            )
+            let (url, isStale) = try FolderBookmark.resolve(bookmark)
 
             if isStale {
                 // The folder moved, so the bookmark has to be re-issued from
@@ -81,20 +72,17 @@ public final class WatchedFolderAccess: FolderAccessing {
 
     private func beginAccess(to url: URL) {
         // Already holding this exact folder open: starting again would need a
-        // matching extra stop to balance, and the stop-then-start in the
-        // general path would briefly drop access Hoot is relying on.
+        // matching extra stop to balance, and the close-then-open below would
+        // briefly drop access Hoot is relying on.
         guard activeURL != url else { return }
 
         endAccess()
-        // Outside the sandbox this is a no-op that reports false; access works
-        // regardless, so a failure here shouldn't block anything.
-        if url.startAccessingSecurityScopedResource() {
-            activeURL = url
-        }
+        scopes.open(url)
+        activeURL = url
     }
 
     private func endAccess() {
-        activeURL?.stopAccessingSecurityScopedResource()
+        if let activeURL { scopes.close(activeURL) }
         activeURL = nil
     }
 

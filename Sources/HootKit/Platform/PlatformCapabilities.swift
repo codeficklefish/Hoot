@@ -89,6 +89,34 @@ public protocol FolderAccessing: AnyObject {
     func forget()
 }
 
+// MARK: - Holding on to the folders the user only wants to look at
+
+/// Keeps a *set* of folders the user has shown Hoot, across launches.
+///
+/// Separate from `FolderAccessing` rather than a generalisation of it, and
+/// the separation is the design. That protocol is the grant for the one
+/// folder Hoot *organises*; widening it to a keyed map would make every
+/// caller ask "which folder?" about a question that has exactly one answer,
+/// and would quietly invite a second root into the containment rule that
+/// safety rule 4 rests on.
+///
+/// These folders are only ever read. That is what makes having several of
+/// them affordable: every safety rule in this project is about writing, so a
+/// surface that cannot write adds no new way for any of them to fail.
+public protocol FolderSetAccessing: AnyObject {
+    /// Every folder remembered, in the order they were added, with access
+    /// opened. Entries that no longer resolve are dropped, and counted so
+    /// the caller can say so rather than silently losing one.
+    func restoreAll() -> (folders: [URL], dropped: Int)
+
+    /// Opens access and stores a durable reference. False when that folder
+    /// was already on the list.
+    @discardableResult func remember(_ url: URL) -> Bool
+
+    /// Discards one grant and closes its access. The rest are untouched.
+    func forget(_ url: URL)
+}
+
 // MARK: - Telling the user
 
 /// Posts a notification when files are waiting. Deliberately narrow: Hoot has

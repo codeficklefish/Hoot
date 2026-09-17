@@ -82,64 +82,11 @@ struct NotchAction: View {
 /// A tile rather than a row because the tray answers "how much is waiting",
 /// not "what exactly is waiting" — six tiles read as a quantity at a glance
 /// where six filenames would have to be read one at a time.
-struct NotchFileTile: View {
-    let symbol: String
-    let name: String
-    let caption: String?
-
-    private static let side: CGFloat = HUDTokens.tileSide
-
-    var body: some View {
-        VStack(spacing: 5) {
-            RoundedRectangle(cornerRadius: HUDTokens.radiusTile, style: .continuous)
-                .fill(HUDTokens.tile)
-                .overlay {
-                    RoundedRectangle(cornerRadius: HUDTokens.radiusTile, style: .continuous)
-                        .strokeBorder(HUDTokens.hairline, lineWidth: 1)
-                }
-                .overlay {
-                    Image(systemName: symbol)
-                        .font(.system(size: (Self.side * 0.36).rounded()))
-                        .foregroundStyle(HUDTokens.secondaryText)
-                }
-                .frame(width: Self.side, height: Self.side)
-
-            if let caption {
-                Text(caption)
-                    .font(HUDTokens.caption2)
-                    .foregroundStyle(HUDTokens.tertiaryText)
-                    .lineLimit(1)
-            }
-        }
-        .frame(width: Self.side)
-        .help(name)
-    }
-}
-
-/// The count of everything that did not fit as a tile.
-struct NotchMoreTile: View {
-    let count: Int
-
-    var body: some View {
-        RoundedRectangle(cornerRadius: HUDTokens.radiusTile, style: .continuous)
-            .fill(HUDTokens.tile)
-            .overlay {
-                RoundedRectangle(cornerRadius: HUDTokens.radiusTile, style: .continuous)
-                    .strokeBorder(HUDTokens.hairline, lineWidth: 1)
-            }
-            .overlay {
-                Text("+\(count)")
-                    .font(HUDTokens.caption)
-                    .foregroundStyle(HUDTokens.secondaryText)
-                    .monospacedDigit()
-            }
-            .frame(width: HUDTokens.tileSide, height: HUDTokens.tileSide)
-    }
-}
-
 /// One of the HUD's two tabs.
 struct NotchTab: View {
-    let symbol: String
+    /// Optional, because a row of folder names does not want the same glyph
+    /// repeated beside every one of them.
+    var symbol: String?
     let label: String
     let isSelected: Bool
     let action: () -> Void
@@ -147,8 +94,10 @@ struct NotchTab: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 5) {
-                Image(systemName: symbol)
-                    .font(.system(size: 12, weight: .medium))
+                if let symbol {
+                    Image(systemName: symbol)
+                        .font(.system(size: 12, weight: .medium))
+                }
                 Text(label)
                     .font(.system(size: 12, weight: .semibold))
             }

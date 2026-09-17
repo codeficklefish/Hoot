@@ -149,6 +149,65 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Shelf") {
+                Text("Folders the notch lists. Hoot only ever reads these — "
+                     + "it never moves, renames or deletes anything in them. "
+                     + "That is separate from the one folder it organizes.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                ForEach(appState.shelf.folders) { folder in
+                    HStack(spacing: 6) {
+                        Image(systemName: "folder")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(folder.name)
+                            .fontWeight(.medium)
+                        Text(folder.url.deletingLastPathComponent().path)
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(1)
+                            .truncationMode(.head)
+                        Spacer()
+                        Button {
+                            appState.removeShelfFolder(folder.url)
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.tertiary)
+                        }
+                        .buttonStyle(.plain)
+                        .help("Take this folder off the shelf")
+                    }
+                    .font(.callout)
+                }
+
+                HStack(spacing: 8) {
+                    Button("Add Folder…") { appState.presentShelfFolderPicker() }
+                        .controlSize(.small)
+                        .disabled(appState.shelf.folders.count >= FileShelf.maxFolders)
+
+                    // Offered rather than added silently. A folder appearing
+                    // on the shelf that the user did not pick would undercut
+                    // the sentence above it.
+                    if let watched = appState.watchedFolder,
+                       !appState.shelf.folders.contains(where: {
+                           FolderIdentity.same($0.url, watched)
+                       }) {
+                        Button("Add \(watched.lastPathComponent)") {
+                            appState.addShelfFolder(watched)
+                        }
+                        .controlSize(.small)
+                    }
+                }
+
+                if appState.shelf.folders.count >= FileShelf.maxFolders {
+                    Text("The shelf holds \(FileShelf.maxFolders) folders.")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+
             Section("Privacy") {
                 Toggle("Let the on-device model read a short excerpt from files",
                        isOn: $appState.settings.allowLocalContentReading)

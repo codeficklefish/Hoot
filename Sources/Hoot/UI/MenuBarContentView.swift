@@ -229,9 +229,9 @@ struct MenuBarContentView: View {
 
     /// What the HUD will do, said in the tooltip rather than assumed.
     private var hudExplanation: String {
-        appState.settings.renameMeaninglessFiles
-            ? "Files one folder at a time from the notch, renaming as it goes."
-            : "Files one folder at a time from the notch. Turn on renaming in Settings and it can fix names in the same pass."
+        appState.shelf.isEmpty
+            ? "A shelf of folders at the notch. Add the ones you want in Settings."
+            : "The folders you picked, listed at the notch. Hoot only reads them."
     }
 
     private var footer: some View {

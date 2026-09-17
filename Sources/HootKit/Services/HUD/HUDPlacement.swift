@@ -80,6 +80,17 @@ public enum HUDPlacement {
         )
     }
 
+    /// How tall a list of `rows` is, once it stops growing.
+    ///
+    /// A definite height, not a maximum, because the panel is sized from its
+    /// content's `fittingSize` — a scroll view with no fixed height reports
+    /// whatever it would like to be, which for a folder of two hundred files
+    /// is a window taller than the display. The list scrolls past this point
+    /// rather than the window growing past it.
+    public static func listHeight(rows: Int, rowHeight: Double, maxRows: Int) -> Double {
+        Double(max(0, min(rows, maxRows))) * rowHeight
+    }
+
     /// How far the panel's top edge sits below the top of the display.
     /// Zero is the only correct answer on a notched screen, and the reason
     /// this is a function rather than a comment.

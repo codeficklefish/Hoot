@@ -766,6 +766,78 @@ func stageConfidence(sandbox: URL, rawCheck: @escaping (String, Bool, String) ->
           corroborated.reason.lowercased().contains("text"),
           corroborated.reason)
 
+    print("\n[a rename is a move that stays put]")
+
+    let renameRoot = sandbox.appending(path: "hud-rename")
+    try? FileManager.default.createDirectory(at: renameRoot, withIntermediateDirectories: true)
+    let renameOriginal = renameRoot.appending(path: "32131231231.pdf")
+    try? Data("boarding pass".utf8).write(to: renameOriginal)
+
+    guard let renameItem = FileItem(url: renameOriginal) else {
+        check("the rename fixture exists", false)
+        return
+    }
+
+    let renameClassification = ClassificationResult(
+        fileID: renameItem.id,
+        category: "Travel",
+        project: nil,
+        suggestedFolder: "Travel",
+        suggestedName: "Delta boarding pass Manila.pdf",
+        confidence: 0.9,
+        reason: "Read from inside the file."
+    )
+
+    // A move whose destination folder is the folder the file is already in
+    // — an empty subpath. It arrived here with the notch's tidy walk, which
+    // is gone, but what it actually guards is the renameOrganizer's handling of
+    // "", and that is exactly the kind of value that turns into a path bug
+    // nobody notices until a file vanishes. `verifyContained` is asked about
+    // an empty subpath nowhere else.
+    let renameInPlace = PlannedMove(
+        file: renameItem,
+        classification: renameClassification,
+        destinationFolder: "",
+        roleSubfolder: nil,
+        destinationName: "Delta boarding pass Manila.pdf",
+        isApproved: true
+    )
+
+    let renameOrganizer = Organizer()
+    let (renameBatch, renameFailures) = renameOrganizer.organize(
+        OrganizationPlan(
+            root: renameRoot,
+            groups: [PlannedGroup(name: "", proposedName: "",
+                                  rationale: "Renamed in place.", moves: [renameInPlace])],
+            skipped: []
+        )
+    )
+
+    check("renaming in place does not fail", renameFailures.isEmpty,
+          renameFailures.map { $0.1.localizedDescription }.joined())
+    check("it produces exactly one operation", renameBatch.operations.count == 1)
+
+    let renamedURL = renameRoot.appending(path: "Delta boarding pass Manila.pdf")
+    check("the file is on disk under its new name",
+          FileManager.default.fileExists(atPath: renamedURL.path))
+    check("and is gone from under the old one",
+          !FileManager.default.fileExists(atPath: renameOriginal.path))
+    check("it stayed in the folder it was already in",
+          renamedURL.deletingLastPathComponent().path == renameRoot.path,
+          renamedURL.deletingLastPathComponent().path)
+    check("no folder was invented for it",
+          (try? FileManager.default.contentsOfDirectory(atPath: renameRoot.path))?.count == 1)
+    check("with the same contents",
+          (try? Data(contentsOf: renamedURL)) == Data("boarding pass".utf8))
+
+    let (renameRestored, renameUndoFailures) = renameOrganizer.undo(renameBatch)
+    check("undo puts the renameOriginal name back",
+          renameUndoFailures.isEmpty && renameRestored.count == 1)
+    check("the file is called what it was called again",
+          FileManager.default.fileExists(atPath: renameOriginal.path))
+    check("and leaves nothing behind under the new one",
+          !FileManager.default.fileExists(atPath: renamedURL.path))
+
     print("\n[one source saying the same thing twice]")
     // Noisy-OR is only honest about evidence that can fail separately, and
     // four keywords out of one filename cannot: if the name is misleading,

@@ -27,6 +27,12 @@ struct HootApp: App {
             // what makes Hoot resume watching without being opened first.
             MenuBarLabel(pendingCount: appState.detectedFiles.count)
                 .task {
+                    // Handed in before `start()`, so the notch has somewhere
+                    // to send you from its very first refresh.
+                    appState.openReviewWindow = {
+                        openWindow(id: WindowID.review)
+                        NSApp.activate(ignoringOtherApps: true)
+                    }
                     appState.start()
                     // Brought back here, not in the popover: the HUD should
                     // reappear on login without the menu bar being opened

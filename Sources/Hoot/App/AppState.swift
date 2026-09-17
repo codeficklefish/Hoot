@@ -74,16 +74,19 @@ final class AppState: ObservableObject {
     /// re-asks the model about the files it has already declined to name.
     var renameCache: [String: ProposedName?] = [:]
 
-    /// The walk through the plan the HUD is offering, one folder at a time.
-    /// nil when there is nothing to file.
-    @Published var tidyFlow: TidyFlow?
-    /// True while a group's files are actually being moved.
-    @Published var isTidyWorking = false
-    /// 0...1 across the current group's files, so the bar reflects work
-    /// rather than a timer.
-    @Published var tidyProgress: Double = 0
-    /// Batches this walk created, so Undo can take back all of them.
-    var tidyBatches: [OperationBatch] = []
+    /// The folders the notch lists. Independent of `watchedFolder`: Hoot
+    /// organizes one folder and reads as many as it is shown, and keeping
+    /// those two apart is what lets the second be plural without touching
+    /// the containment rule the first depends on.
+    @Published var shelf = FileShelf()
+    /// Guards against re-reading on every hover flicker.
+    var lastShelfRead: Date?
+    /// Opening a window is the app's business, not the state's — `openWindow`
+    /// is a SwiftUI environment value and exists only inside a scene. The app
+    /// hands this in so the notch can send you to the review window without
+    /// this type knowing what a window is.
+    var openReviewWindow: (() -> Void)?
+
     /// What the AI layer is currently able to do, for display in Settings.
     @Published var providerStatus: String = "Checking…"
 
@@ -99,6 +102,10 @@ final class AppState: ObservableObject {
     let history: OperationHistory
     let notifier: Notifying
     let folderAccess: FolderAccessing
+    /// The shelf's grants. A separate seam from `folderAccess` — see
+    /// `FolderSetAccessing`, which exists precisely so the two cannot be
+    /// confused for one another.
+    let shelfAccess: FolderSetAccessing
 
     /// Coalesces a burst of arriving files into a single notification.
     var notificationTask: Task<Void, Never>?
@@ -114,7 +121,8 @@ final class AppState: ObservableObject {
         // making a notifier is main-actor work, and a default argument is
         // evaluated before the initializer's isolation applies.
         notifier: Notifying? = nil,
-        folderAccess: FolderAccessing? = nil
+        folderAccess: FolderAccessing? = nil,
+        shelfAccess: FolderSetAccessing? = nil
     ) {
         self.watcher = watcher
         self.classifier = classifier
@@ -122,6 +130,7 @@ final class AppState: ObservableObject {
         self.history = history
         self.notifier = notifier ?? MacPlatform.makeNotifier()
         self.folderAccess = folderAccess ?? MacPlatform.makeFolderAccess()
+        self.shelfAccess = shelfAccess ?? MacPlatform.makeShelfFolderAccess()
         self.batches = history.batches
         self.settings = AISettings.load()
         self.folderPreferences = FolderPreferences.load()
@@ -149,6 +158,11 @@ final class AppState: ObservableObject {
         if let remembered = folderAccess.restore() {
             beginWatching(remembered, alreadyAuthorized: true)
         }
+
+        // The shelf's own grants, restored the same way and for the same
+        // reason. Kept out of `init` on the same principle: this opens
+        // operating-system resources, one per folder.
+        restoreShelf()
     }
 
     /// What is waiting, as the plan sees it (e.g. "Thesis  4").

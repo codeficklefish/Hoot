@@ -25,6 +25,12 @@ public enum MacPlatform {
         WatchedFolderAccess()
     }
 
+    /// The folders the shelf lists. A separate grant from the watched
+    /// folder's, and read-only by construction.
+    public static func makeShelfFolderAccess() -> FolderSetAccessing {
+        ShelfFolderAccess()
+    }
+
     /// The on-device model, when this Mac can run it.
     ///
     /// Returns nil rather than a stand-in: the caller already falls back to
