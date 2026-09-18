@@ -333,6 +333,14 @@ rather than the conclusion:
 
 [docs/coding-standards.md](docs/coding-standards.md) covers the rest.
 
+## Releasing
+
+[docs/launch.md](docs/launch.md) is what stands between this repository and a
+build somebody else can run: the Apple Developer account that everything else
+waits on, the notch interactions no check can cover, the page's claims that
+stop being true the day the shelf ships, and the three things the missing
+network entitlement costs — no update check, no crash reports, no numbers.
+
 ## Privacy
 
 The full policy is [docs/privacy.md](docs/privacy.md). In short:
