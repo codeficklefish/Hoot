@@ -134,6 +134,20 @@ shows you what is there, and deciding where things go stays where it was.
 Needs a display with a notch. Everywhere else the menu bar popover is the
 whole interface, and it is a good one.
 
+The resting bar reaches 88pt past the cutout on each side, into menu bar that
+is genuinely usable — so an app whose menu titles run past about 40% of the
+screen width has the last of them covered. Finder's reach 26%. This is the
+one part of the design that takes something from another app, and it is the
+price of the bar saying which folder it is on rather than being invisible.
+
+To see what the panel thinks is happening — it is the one surface here that
+screen capture cannot photograph, being a floating panel of an `LSUIElement`
+app — run it with its tracing on:
+
+```bash
+./Packaging/trace-hud.sh
+```
+
 ### What decides where a file goes
 
 Sorting by meaning draws on four sources of evidence, in order of how much

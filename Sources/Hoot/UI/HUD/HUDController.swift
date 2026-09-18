@@ -3,13 +3,20 @@ import SwiftUI
 import Combine
 import HootKit
 
-/// What the HUD measured, where it put itself, and what the pointer is doing
-/// on it. Off unless HOOT_TRACE_HUD is set.
+/// What the HUD measured, where it put itself, and what is being done to it.
+/// Off unless HOOT_TRACE_HUD is set.
 ///
 /// The panel is drawn over the one part of the screen that is hardest to look
 /// at — you cannot see the cursor against the bezel, and a tooltip would
-/// cover the row it is about. Being able to ask it what it thinks is
-/// happening is worth the four lines.
+/// cover the row it is about.
+///
+/// It is also the one surface here that cannot be screenshotted from outside.
+/// Screen-capture tooling filters to applications it has been granted, and an
+/// LSUIElement app running from a build directory is not one it can be
+/// granted, so the panel is simply absent from any capture. Every other
+/// window in this project can be looked at. This one has to say what happened
+/// or nobody finds out, which is why the trace covers the gestures and not
+/// only the geometry.
 enum HUDTrace {
     static func say(_ message: @autoclosure () -> String) {
         guard ProcessInfo.processInfo.environment["HOOT_TRACE_HUD"] != nil else { return }
@@ -234,6 +241,7 @@ final class HUDController: ObservableObject {
         case .next: appState.showNextShelfFolder()
         case .previous: appState.showPreviousShelfFolder()
         }
+        HUDTrace.say("swiped \(direction)")
         return nil
     }
 
@@ -461,6 +469,7 @@ final class HUDController: ObservableObject {
     /// focus.** It happens in response to a held click, never to a hover, so
     /// pointing at the notch mid-sentence still costs nothing.
     private func preview(_ url: URL) {
+        HUDTrace.say("quick look \(url.lastPathComponent)")
         NSApp.activate(ignoringOtherApps: true)
         QuickLookPanel.shared.show(url)
     }
@@ -473,6 +482,7 @@ final class HUDController: ObservableObject {
     /// before it had travelled a pixel.
     private func beginHold() {
         guard !isHoldingOpen else { return }
+        HUDTrace.say("drag began — holding the panel open")
         isHoldingOpen = true
         refresh()
 
@@ -502,6 +512,7 @@ final class HUDController: ObservableObject {
 
     private func endHold() {
         guard isHoldingOpen else { return }
+        HUDTrace.say("drag ended")
         isHoldingOpen = false
         holdTimeout?.cancel()
         holdTimeout = nil

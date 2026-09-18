@@ -75,6 +75,7 @@ extension AppState {
     }
 
     func presentShelfFolderPicker(startingAt start: URL? = nil) {
+        HUDTrace.say("opening the folder picker")
         NSApp.activate(ignoringOtherApps: true)
 
         Task { @MainActor [weak self] in
@@ -209,9 +210,13 @@ extension AppState {
     func toggleShelfFolder(_ row: ShelfRowItem) {
         guard row.isEnterable else { return }
 
-        if row.isOpen { return shelf.close(row.url) }
+        if row.isOpen {
+            HUDTrace.say("closing \(row.name)")
+            return shelf.close(row.url)
+        }
 
         guard shelf.canOpen(row) else {
+            HUDTrace.say("refusing to open \(row.name) — depth \(row.depth)")
             shelfHandoff = shelf.tooDeepMessage(row)
             return
         }
@@ -223,6 +228,8 @@ extension AppState {
                 // went, so it has no trail and nowhere to climb to.
                 ShelfReader.read(url, root: url)
             }.value
+            HUDTrace.say("opened \(row.name) at depth \(row.depth), "
+                + "\(read.entries.count) inside")
             shelf.open(url, showing: read)
         }
     }
@@ -253,6 +260,7 @@ extension AppState {
     }
 
     private func descend(to url: URL, under root: URL) {
+        HUDTrace.say("listing \(url.lastPathComponent)")
         // The picked row is in the folder you are leaving. Put down first, so
         // the footer is not describing a file that is no longer on screen —
         // and the peek goes with it, for the same reason.
@@ -299,6 +307,7 @@ extension AppState {
         let paired = shelfClicks.isSecond(row.id,
                                           at: Date(),
                                           within: NSEvent.doubleClickInterval)
+        HUDTrace.say("clicked \(row.name) — \(paired ? "paired, opening" : "picking")")
         if paired {
             openShelfEntry(row.entry)
         } else {
