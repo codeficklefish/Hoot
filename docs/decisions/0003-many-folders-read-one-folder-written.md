@@ -83,3 +83,54 @@ invites navigating into them, which is a file browser rather than a shelf.
 The design lists them, sorted first as the Finder does, and they are not
 navigable — a folder row reveals in the Finder rather than descending. That
 is one line to reverse if it proves wrong.
+
+## Amended, 18 September 2026: folders are navigable
+
+It proved wrong, and it proved wrong in exactly the way the paragraph above
+predicted somebody would notice: a list that shows you a folder and its item
+count, and then sends you to the Finder when you ask what is in it, has shown
+you the question and refused the answer.
+
+**Space opens a folder where it stands; a double-click goes into it.** The
+list opens in place, as the Finder's list view does: a triangle on the folder
+row, its contents indented beneath it, and everything else exactly where it
+was. A double-click still navigates, with a trail and a way back.
+
+It took three tries to land, and the two wrong ones were wrong in the same
+way. First space *navigated* — reported as *"when I press space, it
+automatically moves me to that folder. It didn't preview."* Then space laid a
+short card *over* the list, which still covered the thing being looked at. The
+question "what is in there" is almost always asked *while* looking at
+something else, so any answer that takes the list away has answered a
+different question — "take me there" — that nobody asked.
+
+Opening in place is capped at `FileShelf.maxDepth` levels, because each level
+costs indentation out of a 420pt panel and the names have to stay readable —
+the same constraint that caps the tabs at three.
+
+**What did not change is the reason this decision exists.** Going into a
+folder is a read. The shelf's verbs are still list, preview, hand over — and
+now go in, which is the first of those again with a different argument. There
+is no new way for any safety rule to fail, because they are all about
+writing.
+
+Nor did the sandbox change, for a third time. A security-scoped grant covers
+the granted folder's whole subtree, so everything reachable this way was
+already reachable; it simply had nowhere to be shown.
+
+Two things had to be built to keep the decision honest:
+
+- `ShelfFolder` now carries a `root` as well as a `url`. The root is the tab
+  and the grant; the url is what is on screen. Identity, the bookmark and the
+  tab's name all follow the root, so a tab does not change name or lose its
+  place because you went three folders down inside it.
+- `ShelfFolder.parent` returns nil at the root, and returns nil for any
+  listing that is not under its root. That is the containment rule for going
+  *up*, and it is in the engine with checks against it rather than being a
+  `guard` in a view — the same reasoning as
+  `Organizer.verifyContained(_:within:)`, for the same kind of boundary.
+
+The shelf is now a browser for the folders you put on it. That is a real
+change in what it is, and it is the right one: the thing it was before could
+show you that `Cowork` held six items and had no way to tell you what they
+were.

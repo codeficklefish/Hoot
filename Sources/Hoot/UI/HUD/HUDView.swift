@@ -40,10 +40,16 @@ struct HUDView: View {
     var onCycleSort: () -> Void = {}
     var onReveal: () -> Void = {}
     var onTidy: () -> Void = {}
-    var onPreview: (URL) -> Void = { _ in }
+    var onPreview: (ShelfRowItem) -> Void = { _ in }
+    /// The disclosure triangle: open this folder where it stands, or shut it.
+    var onToggleFolder: (ShelfRowItem) -> Void = { _ in }
     var onDragStart: () -> Void = {}
     var onRevealEntry: (URL) -> Void = { _ in }
     var onOpenEntry: (ShelfEntry) -> Void = { _ in }
+    /// Up one level inside the folder on screen, and all the way back to the
+    /// tab. Both stop at the tab: what is above it was never granted.
+    var onLeaveFolder: () -> Void = {}
+    var onReturnToRoot: () -> Void = {}
     var handoff: String?
     var onDismissHandoff: () -> Void = {}
     var offers: [(name: String, url: URL)] = []
@@ -168,9 +174,12 @@ struct HUDView: View {
                 onReveal: onReveal,
                 onTidy: onTidy,
                 onPreview: onPreview,
+                onToggleFolder: onToggleFolder,
                 onDragStart: onDragStart,
                 onRevealEntry: onRevealEntry,
-                onOpenEntry: onOpenEntry
+                onOpenEntry: onOpenEntry,
+                onLeaveFolder: onLeaveFolder,
+                onReturnToRoot: onReturnToRoot
             )
             .padding(.horizontal, HUDTokens.panelSidePadding)
             .padding(.bottom, HUDTokens.panelBottomPadding)

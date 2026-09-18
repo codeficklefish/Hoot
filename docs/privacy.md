@@ -34,10 +34,15 @@ back — happens inside that folder and nowhere else.
 
 **Any number of folders it shows you.** The shelf at the notch lists folders
 you add yourself, one open panel at a time. Hoot only ever reads these: it
-lists what is in them, previews a file when you hold one, and hands a file to
-another app when you drag one out. It never moves, renames or deletes
-anything in a shelf folder. That asymmetry is the whole reason it can have
-several of them.
+lists what is in them, opens a folder inside one to show what is in *that*,
+previews a file when you hold one, and hands a file to another app when you
+drag one out. It never moves, renames or deletes anything in a shelf
+folder. That asymmetry is the whole reason it can have several of them.
+
+Going into a folder needs no new permission and gets none: choosing a folder
+grants everything inside it, so what the shelf shows you this way was always
+readable — it simply had nowhere to be shown. It cannot go *above* a folder
+you added, because that was not granted.
 
 macOS grants access to the folders you picked and to nothing else. This
 needed no new entitlement, and the three above are unchanged — because
@@ -137,4 +142,4 @@ Hoot collects nothing from anyone, of any age.
 This page is versioned in the repository alongside the code it describes, so
 its history is public and any change is visible in the commit log.
 
-_Last reviewed: 17 September 2026._
+_Last reviewed: 18 September 2026._

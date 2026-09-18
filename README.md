@@ -64,30 +64,63 @@ on its own, and is put back by undo.
 
 ### The notch shelf
 
-On a Mac with a camera housing, ⌘J puts your folders at the notch. At rest the
-bar is exactly the size of the cutout, so on the hardware it is built for you
-never see it. Point at it and it opens — whether or not anything needs filing.
+On a Mac with a camera housing, ⌘J puts your folders at the notch. At rest it
+is a bar the height of the menu bar, reaching far enough past the camera to
+show the Hoot mark on one side and the name of the folder it is showing on the
+other. Point at it and it opens — whether or not anything needs filing.
 
-It lists the folders you add in **Settings → Shelf**: Desktop, Documents,
-wherever you actually leave things. Each row is a file with its size and how
-long it has been there, newest first, folders leading the way the Finder does.
-**Hold a row to preview it**, drag one out to carry it somewhere, or
-right-click to show it in the Finder.
+Each row is a file with its size and how long it has been there, newest first,
+folders leading the way the Finder does. Click a row to pick it, then:
+
+| | file | folder |
+|---|---|---|
+| **space** | preview it, the same panel the Finder opens | open it where it stands |
+| **hold** | the same as space | the same as space |
+| **▶ triangle** | — | the same as space |
+| **double-click** | open it in whatever owns it | go into it |
+| **drag** | carry it out to another app or a Finder window | the same |
+| **right-click** | open, or show in the Finder | open here, go into, or show in the Finder |
+| **escape** | put the row down, then shut the open folders, then go up a level | |
+
+**Space opens a folder where it stands.** Its contents appear indented
+underneath it and the list you were looking at stays exactly where it was —
+the Finder's list view, and for the Finder's reason: "what is in there" is
+almost always asked *while* looking at something else. Press space again and
+it shuts, along with anything you opened inside it. Four levels deep, after
+which a folder is somewhere to go rather than something to open in place.
+
+**Double-click goes in.** A line appears above the list saying how far in you
+are, with **Up** beside it, and clicking the trail goes all the way back to
+the tab. You can never climb above the folder you added: that is the one the
+sandbox granted, and its parent was not.
+
+A file that is in iCloud and not downloaded is not opened by any of these.
+Opening it would start a download you did not ask for, which is safety rule 5.
+Show it in the Finder and the download is your own doing.
+
+Sort by date, name or size with the control in the corner.
+
+Add folders with the **+** beside the tabs — Desktop, Documents, Downloads and
+Pictures are offered there by name, and *Choose Folder…* takes any other. To
+take one off, right-click its tab. **Three at a time**, because three names fit
+across the panel at a size you can still read, and a tab shortened to `Docu…`
+has stopped saying which folder it is.
+
+**Point at a tab and that folder is listed** — no click needed, which is the
+whole gesture the notch is built on carried one level in: you opened the panel
+by pointing at the housing, and you change folder by pointing at a name. It
+waits a moment first, because the way to the **+** runs across the tabs and
+crossing one is not the same as stopping on it. Clicking still works, and is
+immediate.
+
+Swipe sideways across the panel or press **⌃⌥←** / **⌃⌥→** to move between
+them as well; the keys are registered only while the panel is open, so they
+belong to whatever you are working in for the rest of the time.
 
 Hoot only ever *reads* these folders. It never moves, renames or deletes
 anything in them — that is what lets there be several of them, while the one
 folder it organizes stays one. See
 [docs/decisions/0003](docs/decisions/0003-many-folders-read-one-folder-written.md).
-
-Click a row to pick it, then **space** to preview it and **double-click** to
-open it — the same keys the Finder uses. Escape puts the preview away.
-
-Sort by date, name or size with the control in the corner. Up to three folders
-sit on the shelf, because three names fit across it at a size you can still
-read. Swipe sideways across the panel, click a folder's tab, or press
-**⌃⌥←** / **⌃⌥→** to move between them; the keys are registered only while
-the panel is open, so they belong to whatever you are working in for the rest
-of the time.
 
 Pointing at the notch never takes keyboard focus, which is what lets you open
 it mid-sentence. *Clicking* a row does, because a spacebar can only reach a
@@ -177,6 +210,14 @@ rather than trusting `PATH` — see `Packaging/find-swift.sh` — so
 running `swift` by hand is, and `xcrun swift` is the version that always means
 Xcode's.
 
+Your editor picks `swift` off `PATH` too, and gets the same wrong answer — a
+language server on a swift.org toolchain reports thousands of errors like
+`cannot find 'Data' in scope` in files whose first line is `import Foundation`.
+Measured on one machine: zero errors with Xcode's compiler, 4811 with the one
+on `PATH`. `.vscode/settings.json` pins `swift.path` to Xcode's toolchain for
+that reason; reload the window after changing it, because diagnostics are
+cached.
+
 Then:
 
 ```bash
@@ -212,7 +253,7 @@ above.
 
 ```bash
 swift test              # the engine imports nothing platform-specific
-./Verification/run.sh   # 517 behaviour and safety checks, in a sandbox
+./Verification/run.sh   # 570 behaviour and safety checks, in a sandbox
 ./Evaluation/run.sh     # accuracy against folders you organized yourself
 ```
 
@@ -247,7 +288,7 @@ way to know a decompressor is correct.
 | `Sources/HootKit` | the engine — decides where files belong, imports only Foundation |
 | `Sources/HootPlatformMac` | Apple adapters (PDFKit, Vision, FoundationModels) |
 | `Sources/Hoot` | the macOS app |
-| `Verification` | 517 behaviour and safety checks |
+| `Verification` | 570 behaviour and safety checks |
 | `Evaluation` | measures accuracy against folders you organized |
 | `Packaging` | app bundle, icon, signing, notarization and toolchain selection |
 | `CONTEXT.md` | what each term in the code means, in one place |
@@ -255,6 +296,7 @@ way to know a decompressor is correct.
 | `Website` | design artboards the page was drawn from |
 | `docs` | architecture, privacy, coding standards, and the decisions behind them |
 | `.github/workflows` | builds and runs both suites on every push and PR |
+| `.vscode` | editor toolchain and debug configuration |
 
 ## Design notes
 

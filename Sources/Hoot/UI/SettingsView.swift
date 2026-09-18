@@ -164,14 +164,14 @@ struct SettingsView: View {
                             .foregroundStyle(.secondary)
                         Text(folder.name)
                             .fontWeight(.medium)
-                        Text(folder.url.deletingLastPathComponent().path)
+                        Text(folder.root.deletingLastPathComponent().path)
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                             .lineLimit(1)
                             .truncationMode(.head)
                         Spacer()
                         Button {
-                            appState.removeShelfFolder(folder.url)
+                            appState.removeShelfFolder(folder.root)
                         } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundStyle(.tertiary)

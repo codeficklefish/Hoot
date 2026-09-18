@@ -9,13 +9,14 @@ import HootKit
 /// re-sorted. Column widths come from the design, which measured them
 /// against "3.9 GB" and "Yest.".
 struct ShelfRow: View {
-    let entry: ShelfEntry
+    let row: ShelfRowItem
     let isSelected: Bool
     let age: String
     let onSelect: () -> Void
-    /// Hold still to look inside. Never offered for a file that is in the
-    /// cloud and not downloaded: previewing one would fetch it, and safety
-    /// rule 5 says Hoot does not start a download nobody asked for.
+    /// Hold still to look inside — Quick Look for a file, a list of its
+    /// contents for a folder. Never offered for a file that is in the cloud
+    /// and not downloaded: opening one would fetch it, and safety rule 5 says
+    /// Hoot does not start a download nobody asked for.
     var onPreview: () -> Void = {}
     /// A drag has begun. The panel has to be told, because the first thing a
     /// drag out of it does is take the pointer off it.
@@ -23,8 +24,19 @@ struct ShelfRow: View {
     var onReveal: () -> Void = {}
     /// Double-click, as in the Finder.
     var onOpen: () -> Void = {}
+    /// The disclosure triangle, which is the only control on the row: every
+    /// other gesture here acts on the row as a whole.
+    var onToggle: () -> Void = {}
+
+    private var entry: ShelfEntry { row.entry }
 
     private static let glyphWidth: CGFloat = 13
+    /// The triangle's column, held even on rows that have no triangle so
+    /// every name at a given level starts at the same place.
+    private static let twistWidth: CGFloat = 12
+    /// One level of nesting. Enough to read as a step in, small enough that
+    /// four of them still leave a filename room in a 420pt panel.
+    private static let indent: CGFloat = 12
     private static let sizeWidth: CGFloat = 52
     private static let ageWidth: CGFloat = 34
 
@@ -33,10 +45,17 @@ struct ShelfRow: View {
     var body: some View {
         line
             .contentShape(Rectangle())
-            // Count 2 declared before count 1: SwiftUI resolves the longer
-            // gesture first, so a double-click opens rather than toggling the
-            // selection twice on its way there. A `Button` cannot do this at
-            // all — its action fires on the first click of the pair.
+            // Count 2 declared before count 1, which is how SwiftUI tells
+            // them apart. A `Button` cannot do this at all — its action fires
+            // on the first click of the pair.
+            //
+            // This does mean a single click waits out the double-click
+            // interval before the row highlights. A `simultaneousGesture` for
+            // the single tap removes that wait and was tried: it wins the
+            // arbitration on the first click and the double-click then never
+            // fires at all. A quarter-second before a row highlights is worth
+            // more than opening a file, so the wait stays until it can be
+            // removed by reading `clickCount` from AppKit directly.
             .onTapGesture(count: 2, perform: onOpen)
             .onTapGesture(count: 1, perform: onSelect)
             .onHover { hovering in
@@ -56,12 +75,19 @@ struct ShelfRow: View {
             .simultaneousGesture(
                 LongPressGesture(minimumDuration: 0.45)
                     .onEnded { _ in
-                        guard entry.isPreviewable else { return }
+                        guard entry.isOpenable else { return }
                         onPreview()
                     }
             )
             .contextMenu {
-                Button("Open", action: onOpen)
+                // Named for what it will actually do, which is no longer the
+                // same verb for both kinds of row.
+                if row.isEnterable {
+                    Button(row.isOpen ? "Close" : "Open Here", action: onToggle)
+                    Button("Go Into", action: onOpen)
+                } else {
+                    Button("Open", action: onOpen)
+                }
                 Button("Show in Finder", action: onReveal)
             }
             .help(helpText)
@@ -69,6 +95,10 @@ struct ShelfRow: View {
 
     private var line: some View {
         HStack(spacing: 7) {
+            Color.clear.frame(width: CGFloat(row.depth) * Self.indent, height: 1)
+
+            twist
+
             Image(systemName: entry.symbolName)
                 .font(.system(size: 11))
                 // A folder is the brighter of the two: it is a place, and
@@ -114,16 +144,50 @@ struct ShelfRow: View {
         )
     }
 
+    /// The disclosure triangle.
+    ///
+    /// A `Button` inside the row rather than another gesture on it, so that
+    /// clicking the triangle opens the folder and clicking anywhere else on
+    /// the same row still picks it — two different answers in 26 points of
+    /// height, which only works if one of them is a real control.
+    @ViewBuilder
+    private var twist: some View {
+        switch row.disclosure {
+        case .plain:
+            Color.clear.frame(width: Self.twistWidth, height: 1)
+        case .open, .closed:
+            Button(action: onToggle) {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(HUDTokens.secondaryText)
+                    .rotationEffect(.degrees(row.isOpen ? 90 : 0))
+                    .frame(width: Self.twistWidth, height: HUDTokens.shelfRowHeight)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .animation(HUDTokens.fade, value: row.isOpen)
+            .help(row.isOpen ? "Close \(entry.name)" : "Open \(entry.name) here")
+        }
+    }
+
     private var background: AnyShapeStyle {
         if isSelected { return AnyShapeStyle(HUDTokens.tileHover) }
         if isHovered { return AnyShapeStyle(HUDTokens.tile) }
         return AnyShapeStyle(Color.clear)
     }
 
+    /// Three rows, three sentences. A folder is not previewed and a file in
+    /// the cloud is not touched at all, and a tooltip that said otherwise
+    /// would be the interface promising something the rules refuse.
     private var helpText: String {
-        entry.isCloudPlaceholder
-            ? "\(entry.name) — in iCloud and not downloaded, so Hoot will not open it"
-            : "\(entry.name) — space to preview, double-click to open, drag to move it"
+        guard entry.isOpenable else {
+            return "\(entry.name) — in iCloud and not downloaded, so Hoot will not open it"
+        }
+        if entry.isEnterable {
+            return "\(entry.name) — space opens it here, double-click goes into it, "
+                + "drag to move it"
+        }
+        return "\(entry.name) — space to preview, double-click to open, drag to move it"
     }
 }
 

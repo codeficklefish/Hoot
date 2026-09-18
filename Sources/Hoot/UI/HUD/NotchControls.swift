@@ -89,6 +89,13 @@ struct NotchTab: View {
     var symbol: String?
     let label: String
     let isSelected: Bool
+    /// The pointer arriving on the tab or leaving it.
+    ///
+    /// Reported rather than acted on. Whether pointing is enough to change
+    /// folder — and how long the pointer has to stay to mean it — is the
+    /// panel's decision, and the shelf's rule; a tab only knows where the
+    /// cursor is.
+    var onHover: (Bool) -> Void = { _ in }
     let action: () -> Void
 
     var body: some View {
@@ -115,6 +122,7 @@ struct NotchTab: View {
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
+        .onHover(perform: onHover)
     }
 }
 

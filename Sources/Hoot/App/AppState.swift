@@ -79,8 +79,11 @@ final class AppState: ObservableObject {
     /// those two apart is what lets the second be plural without touching
     /// the containment rule the first depends on.
     @Published var shelf = FileShelf()
-    /// Guards against re-reading on every hover flicker.
-    var lastShelfRead: Date?
+    /// Guards against re-reading on every hover flicker. Also the instant
+    /// every age on the panel is measured from — a fresh `Date()` per refresh
+    /// meant no two renders were ever equal, so SwiftUI redrew every row of
+    /// every folder on every published change, however little had moved.
+    @Published var lastShelfRead: Date = .distantPast
     /// What the shelf last handed to something else, shown until dismissed.
     /// A handover is the one thing the panel does that has no visible result
     /// inside the panel, so it says so rather than appearing to do nothing.

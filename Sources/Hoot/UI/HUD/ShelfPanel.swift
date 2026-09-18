@@ -24,14 +24,32 @@ struct ShelfPanel: View {
     var onCycleSort: () -> Void
     var onReveal: () -> Void
     var onTidy: () -> Void
-    var onPreview: (URL) -> Void = { _ in }
+    var onPreview: (ShelfRowItem) -> Void = { _ in }
+    var onToggleFolder: (ShelfRowItem) -> Void = { _ in }
     var onDragStart: () -> Void = {}
     var onRevealEntry: (URL) -> Void = { _ in }
     var onOpenEntry: (ShelfEntry) -> Void = { _ in }
+    var onLeaveFolder: () -> Void = {}
+    var onReturnToRoot: () -> Void = {}
+
+    /// Where the pointer is on the tab row, and the wait it started.
+    ///
+    /// A box rather than two `@State` values, and that is the whole point.
+    /// Writing to `@State` from inside a hover handler re-renders the tab row
+    /// *from its parent*, which is this view — and a row rebuilt under the
+    /// pointer reports that the pointer left it. The departure cancelled the
+    /// wait the arrival had just started, the re-entry started another, and
+    /// the folder never changed. A box is mutated without the view changing,
+    /// so pointing at a tab no longer redraws the thing being pointed at.
+    @State private var hover = TabHover()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             header
+
+            if let folder = shelf.current, !folder.isAtRoot {
+                breadcrumb(folder)
+            }
 
             if let handoff {
                 handoffBanner(handoff)
@@ -91,6 +109,34 @@ struct ShelfPanel: View {
         )
     }
 
+    /// Where you are, once you are not at the tab.
+    ///
+    /// Absent at the root rather than showing the folder's own name, because
+    /// the tab above is already saying it — and a line that is always there
+    /// stops being read. It appearing *is* the signal that going back is now
+    /// a thing you might want to do.
+    private func breadcrumb(_ folder: ShelfFolder) -> some View {
+        HStack(spacing: 6) {
+            NotchPill(symbol: "chevron.left", label: "Up", tone: .tile, action: onLeaveFolder)
+                .help("Back to \(folder.parent?.lastPathComponent ?? folder.name)")
+
+            Button(action: onReturnToRoot) {
+                Text(folder.trailLabel)
+                    .font(HUDTokens.caption3)
+                    .foregroundStyle(HUDTokens.tertiaryText)
+                    .lineLimit(1)
+                    // The end is the part that changes and the part you are
+                    // in, so the front is what gets dropped.
+                    .truncationMode(.head)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("Back to \(folder.name)")
+        }
+        .frame(height: HUDTokens.pillHeight)
+    }
+
     // MARK: - Which folder
 
     private var header: some View {
@@ -146,16 +192,20 @@ struct ShelfPanel: View {
             ScrollView(.horizontal) {
                 HStack(spacing: 4) {
                     ForEach(Array(shelf.folders.enumerated()), id: \.element.id) { index, folder in
-                        NotchTab(label: folder.name, isSelected: index == shelf.showing) {
-                            onShowFolder(index)
-                        }
+                        NotchTab(
+                            label: folder.name,
+                            isSelected: index == shelf.showing,
+                            onHover: { point(at: index, $0) },
+                            action: { show(index) }
+                        )
+                        .help("Show \(folder.name)")
                         // Taking a folder off the shelf belongs where the
                         // folder is, not only in Settings: the tab is the
                         // thing you are looking at when you decide you no
                         // longer want it.
                         .contextMenu {
                             Button("Remove \(folder.name) from Shelf") {
-                                onRemoveFolder(folder.url)
+                                onRemoveFolder(folder.root)
                             }
                         }
                         .id(folder.id)
@@ -165,12 +215,62 @@ struct ShelfPanel: View {
             .scrollIndicators(.never)
             .frame(height: HUDTokens.tabHeight)
             .onChange(of: shelf.showing) { _ in
-                guard let current = shelf.current else { return }
+                // Not while the pointer is on the row. The tabs move under it
+                // otherwise, which puts a *different* folder under the cursor
+                // — and that is another hover, and another folder, and the
+                // row walks itself along. Somebody pointing at the tabs can
+                // already see them; this is for the swipe and the hot keys,
+                // where the row is the only thing that says where you are.
+                guard hover.pointingAt == nil, let current = shelf.current else { return }
                 withAnimation(HUDTokens.resize) {
                     proxy.scrollTo(current.id, anchor: .center)
                 }
             }
+            .onDisappear { hover.cancel() }
         }
+    }
+
+    // MARK: - Pointing at a tab
+
+    /// Pointing at a folder lists it, once the pointer has stayed.
+    ///
+    /// The wait is the whole design. Clicking a tab is unambiguous; crossing
+    /// one on the way to the `+` beside it is not, and switching on contact
+    /// would change the folder three times on one trip along the row. The
+    /// shelf owns how long "stayed" is, and whether this tab is worth
+    /// switching to at all.
+    private func point(at index: Int, _ isInside: Bool) {
+        HUDTrace.say("tab \(index) \(isInside ? "entered" : "left")")
+
+        guard isInside else {
+            // Only when this is still the tab being waited on. Sliding from
+            // one tab to the next can deliver the arrival before the
+            // departure, and cancelling on the late "left the last one" would
+            // kill the wait that had just started on the new one — leaving a
+            // pointer sitting on a tab that never opens.
+            guard hover.pointingAt == index else { return }
+            hover.pointingAt = nil
+            hover.cancel()
+            return
+        }
+
+        hover.pointingAt = index
+        guard shelf.shouldShow(folderAt: index) else {
+            hover.cancel()
+            return
+        }
+
+        hover.begin(after: FileShelf.hoverDwell) {
+            HUDTrace.say("tab \(index) waited out, showing it")
+            onShowFolder(index)
+        }
+    }
+
+    /// A click says the same thing the dwell would have, immediately — so the
+    /// pending one is dropped rather than left to fire again behind it.
+    private func show(_ index: Int) {
+        hover.cancel()
+        onShowFolder(index)
     }
 
     // MARK: - What is in it
@@ -182,16 +282,17 @@ struct ShelfPanel: View {
     private var list: some View {
         ScrollView(.vertical) {
             LazyVStack(spacing: 0) {
-                ForEach(shelf.rows) { entry in
+                ForEach(shelf.rows) { row in
                     ShelfRow(
-                        entry: entry,
-                        isSelected: shelf.selected == entry.id,
-                        age: entry.ageLabel(now: now),
-                        onSelect: { onSelect(entry.id) },
-                        onPreview: { onPreview(entry.url) },
+                        row: row,
+                        isSelected: shelf.selected == row.id,
+                        age: row.entry.ageLabel(now: now),
+                        onSelect: { onSelect(row.id) },
+                        onPreview: { onPreview(row) },
                         onDragStart: onDragStart,
-                        onReveal: { onRevealEntry(entry.url) },
-                        onOpen: { onOpenEntry(entry) }
+                        onReveal: { onRevealEntry(row.url) },
+                        onOpen: { onOpenEntry(row.entry) },
+                        onToggle: { onToggleFolder(row) }
                     )
                 }
             }
@@ -229,5 +330,34 @@ struct ShelfPanel: View {
                     .help("Open the review window for these")
             }
         }
+    }
+}
+
+/// The pointer's place on the tab row, and the wait it started.
+///
+/// A reference on purpose — see `ShelfPanel.hover`. Hover bookkeeping that
+/// lives in `@State` redraws the row it is bookkeeping for, and a tab redrawn
+/// under the pointer reports a departure that never happened.
+@MainActor
+final class TabHover {
+    /// The tab the pointer is on, or nil. Read by the tab row, which holds
+    /// still rather than scrolling a different folder under a stationary
+    /// cursor.
+    var pointingAt: Int?
+
+    private var task: Task<Void, Never>?
+
+    func begin(after seconds: TimeInterval, then act: @escaping () -> Void) {
+        cancel()
+        task = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(seconds))
+            guard !Task.isCancelled else { return }
+            act()
+        }
+    }
+
+    func cancel() {
+        task?.cancel()
+        task = nil
     }
 }

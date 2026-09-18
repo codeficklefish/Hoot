@@ -16,8 +16,15 @@ public enum ShelfReader {
     /// in order to print nine rows.
     public static let defaultLimit = FileShelf.maxRows * 8
 
+    /// Reads `folder`, and says which tab it belongs to.
+    ///
+    /// `root` is the folder the user put on the shelf. It is passed in rather
+    /// than inferred because a listing below the root cannot work out on its
+    /// own how far down it is — and how far down it is decides whether there
+    /// is anywhere above to go back to.
     public static func read(
         _ folder: URL,
+        root: URL? = nil,
         limit: Int = defaultLimit,
         fileManager: FileManager = .default
     ) -> ShelfFolder {
@@ -35,7 +42,8 @@ public enum ShelfReader {
             // Told apart from empty deliberately. A folder on an ejected disk
             // is not a folder with nothing in it, and saying so lets the panel
             // keep the tab rather than dropping a folder the user chose.
-            return ShelfFolder(url: folder, state: .unavailable, entries: [])
+            return ShelfFolder(root: root ?? folder, url: folder,
+                               state: .unavailable, entries: [])
         }
 
         var entries: [ShelfEntry] = []
@@ -64,6 +72,7 @@ public enum ShelfReader {
         }
 
         return ShelfFolder(
+            root: root ?? folder,
             url: folder,
             state: entries.isEmpty ? .empty : .listed,
             entries: entries

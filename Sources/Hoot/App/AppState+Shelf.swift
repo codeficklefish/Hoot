@@ -22,7 +22,7 @@ extension AppState {
         let (folders, dropped) = shelfAccess.restoreAll()
         var restored = FileShelf()
         for url in folders {
-            restored.add(ShelfFolder(url: url, state: .empty, entries: []))
+            restored.add(ShelfFolder(root: url, state: .empty, entries: []))
         }
         shelf = restored
 
@@ -71,7 +71,7 @@ extension AppState {
 
     /// True when that folder is not already a tab.
     func isOnShelf(_ url: URL) -> Bool {
-        shelf.folders.contains { FolderIdentity.same($0.url, url) }
+        shelf.folders.contains { FolderIdentity.same($0.root, url) }
     }
 
     func presentShelfFolderPicker(startingAt start: URL? = nil) {
@@ -112,7 +112,7 @@ extension AppState {
             return
         }
         guard shelfAccess.remember(url) else { return }
-        guard shelf.add(ShelfFolder(url: url, state: .empty, entries: [])) else { return }
+        guard shelf.add(ShelfFolder(root: url, state: .empty, entries: [])) else { return }
         Task { await refreshShelf(force: true) }
     }
 
@@ -139,25 +139,138 @@ extension AppState {
     func refreshShelf(force: Bool = false) async {
         guard let folder = shelf.current else { return }
 
-        if !force, let last = lastShelfRead,
-           Date().timeIntervalSince(last) < Self.shelfReadInterval {
+        if !force, Date().timeIntervalSince(lastShelfRead) < Self.shelfReadInterval {
             return
         }
         lastShelfRead = Date()
 
-        let url = folder.url
+        await list(folder.url, under: folder.root)
+    }
+
+    /// Reads one directory and puts it in its tab.
+    ///
+    /// `root` rather than the directory itself, so a listing below the tab
+    /// still belongs to the tab: `FileShelf.replace` matches on the root, and
+    /// the way back up is measured from it.
+    private func list(_ url: URL, under root: URL) async {
         let read = await Task.detached(priority: .userInitiated) {
-            ShelfReader.read(url)
+            ShelfReader.read(url, root: root)
         }.value
 
         // An unchanged folder reads back equal, so this assignment publishes
         // nothing and the panel does not redraw under the pointer.
         shelf.replace(read)
+        await relistOpenFolders()
+    }
+
+    /// Re-reads the folders that are open in place.
+    ///
+    /// Otherwise a list that refreshed would be current at the top level and
+    /// minutes old two rows below it, which is a worse lie than being old
+    /// throughout. One detached pass for all of them, and `refreshOpen`
+    /// discards anything closed while it was running.
+    private func relistOpenFolders() async {
+        let folders = shelf.openFolders
+        guard !folders.isEmpty else { return }
+
+        let reads = await Task.detached(priority: .userInitiated) { () -> [String: ShelfFolder] in
+            var out: [String: ShelfFolder] = [:]
+            for url in folders {
+                out[FolderIdentity.key(url)] = ShelfReader.read(url, root: url)
+            }
+            return out
+        }.value
+
+        shelf.refreshOpen(reads)
+    }
+
+    // MARK: - Going into one, and coming back out
+
+    /// Lists what is inside a folder row, in the panel.
+    ///
+    /// Still a read, which is the only reason this is allowed to exist at
+    /// all: going into a folder adds no verb the shelf did not already have,
+    /// so the one-folder-written rule is untouched. See decision 0003, which
+    /// ruled the other way and says what would have to change.
+    ///
+    /// The sandbox needs nothing new either. A security-scoped grant covers
+    /// the folder's whole subtree, so everything reachable this way was
+    /// already reachable — it simply had nowhere to be shown.
+    /// Opens a folder row where it stands, or closes it again.
+    ///
+    /// What space does to a folder, and what the triangle does. The list you
+    /// were looking at stays exactly where it was and the folder's contents
+    /// appear underneath it, indented — the Finder's list view, which is what
+    /// makes this answerable without going anywhere.
+    ///
+    /// Two earlier shapes were wrong in the same way: navigating on space
+    /// took the list away, and a card laid over the list covered it. Both
+    /// answered "take me there" when the question was "what is in there".
+    func toggleShelfFolder(_ row: ShelfRowItem) {
+        guard row.isEnterable else { return }
+
+        if row.isOpen { return shelf.close(row.url) }
+
+        guard shelf.canOpen(row) else {
+            shelfHandoff = shelf.tooDeepMessage(row)
+            return
+        }
+
+        let url = row.url
+        Task { @MainActor in
+            let read = await Task.detached(priority: .userInitiated) {
+                // Its own root: a folder opened in place is not somewhere you
+                // went, so it has no trail and nowhere to climb to.
+                ShelfReader.read(url, root: url)
+            }.value
+            shelf.open(url, showing: read)
+        }
+    }
+
+    func collapseShelfFolders() {
+        guard shelf.hasOpenFolders else { return }
+        shelf.collapseAll()
+    }
+
+    func enterShelfFolder(_ entry: ShelfEntry) {
+        guard entry.isEnterable, let folder = shelf.current else { return }
+        descend(to: entry.url, under: folder.root)
+    }
+
+    /// Back up one level, stopping at the tab's own folder.
+    ///
+    /// `ShelfFolder.parent` is what refuses to go above the root, and it
+    /// refuses in the engine where it is checked rather than here.
+    func leaveShelfFolder() {
+        guard let folder = shelf.current, let parent = folder.parent else { return }
+        descend(to: parent, under: folder.root)
+    }
+
+    /// All the way back to the tab.
+    func returnToShelfRoot() {
+        guard let folder = shelf.current, !folder.isAtRoot else { return }
+        descend(to: folder.root, under: folder.root)
+    }
+
+    private func descend(to url: URL, under root: URL) {
+        // The picked row is in the folder you are leaving. Put down first, so
+        // the footer is not describing a file that is no longer on screen —
+        // and the peek goes with it, for the same reason.
+        shelf.deselect()
+        lastShelfRead = Date()
+        Task { await list(url, under: root) }
     }
 
     // MARK: - Moving between them
 
+    /// Lists a different folder — by a click on its tab, or by the pointer
+    /// resting on one.
+    ///
+    /// The guard is what makes pointing affordable. Every hover along the tab
+    /// row arrives here, and without it the folder already on screen would be
+    /// read off the disk again each time the cursor passed over its own tab.
     func showShelfFolder(at index: Int) {
+        guard shelf.shouldShow(folderAt: index) else { return }
         shelf.show(folderAt: index)
         Task { await refreshShelf(force: true) }
     }
@@ -177,7 +290,13 @@ extension AppState {
     }
 
     func selectShelfEntry(_ id: String?) {
+        guard shelf.selected != id else { return }
         shelf.select(id)
+    }
+
+    func deselectShelfEntry() {
+        guard shelf.selected != nil else { return }
+        shelf.deselect()
     }
 
     // MARK: - The two things it hands off to something else
@@ -210,18 +329,29 @@ extension AppState {
         shelfHandoff = nil
     }
 
-    /// Opens a file the way double-clicking it in the Finder would.
+    /// Opens a row the way double-clicking it in the Finder would.
     ///
     /// Still not a write: handing a file to the application that owns it is
     /// what the Finder does, and Hoot does not touch the file either way.
-    /// A folder opens in the Finder rather than being descended into — the
-    /// shelf lists, it does not browse.
+    ///
+    /// A folder is listed here rather than handed to the Finder. It used to
+    /// be handed over, because the shelf showed folders and refused to go
+    /// into them — decision 0003 says why, and now says why not. Right-click
+    /// → Show in Finder is still the way out to the Finder.
     func openShelfEntry(_ entry: ShelfEntry) {
-        if entry.isFolder {
-            NSWorkspace.shared.activateFileViewerSelecting([entry.url])
-        } else {
-            NSWorkspace.shared.open(entry.url)
+        if entry.isEnterable { return enterShelfFolder(entry) }
+
+        guard entry.isOpenable else {
+            // Safety rule 5. The row already says Hoot will not open this
+            // one; handing it to `NSWorkspace` would have downloaded it,
+            // which is the whole of what the rule is about. Revealing it in
+            // the Finder still works, and there the download is the person's
+            // own doing rather than a side effect of a double-click.
+            shelfHandoff = "\(entry.name) is in iCloud and not downloaded"
+            return
         }
+
+        NSWorkspace.shared.open(entry.url)
         shelfHandoff = "Opened \(entry.name)"
     }
 

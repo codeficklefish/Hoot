@@ -3,6 +3,20 @@ import SwiftUI
 import Combine
 import HootKit
 
+/// What the HUD measured, where it put itself, and what the pointer is doing
+/// on it. Off unless HOOT_TRACE_HUD is set.
+///
+/// The panel is drawn over the one part of the screen that is hardest to look
+/// at — you cannot see the cursor against the bezel, and a tooltip would
+/// cover the row it is about. Being able to ask it what it thinks is
+/// happening is worth the four lines.
+enum HUDTrace {
+    static func say(_ message: @autoclosure () -> String) {
+        guard ProcessInfo.processInfo.environment["HOOT_TRACE_HUD"] != nil else { return }
+        FileHandle.standardError.write(Data("[hud] \(message())\n".utf8))
+    }
+}
+
 /// Hosts the HUD in a floating panel over the camera housing.
 ///
 /// macOS has no Dynamic Island — that is iPhone hardware — so this is a
@@ -125,6 +139,7 @@ final class HUDController: ObservableObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.refresh() }
             .store(in: &cancellables)
+
     }
 
     // MARK: - Paging by keyboard
@@ -245,7 +260,7 @@ final class HUDController: ObservableObject {
             notch: Self.notch(for: NSScreen.main),
             isHoldingOpen: isHoldingOpen,
             untidy: appState.shelf.current.map { appState.untidyCount(in: $0.url) } ?? 0,
-            now: Date(),
+            now: appState.lastShelfRead,
             onShowFolder: { appState.showShelfFolder(at: $0) },
             onSelect: { [weak self] id in
                 appState.selectShelfEntry(id)
@@ -259,12 +274,15 @@ final class HUDController: ObservableObject {
             onCycleSort: { appState.cycleShelfSort() },
             onReveal: { appState.revealInFinder() },
             onTidy: { appState.openReviewForTidying() },
-            onPreview: { [weak self] url in self?.preview(url) },
+            onPreview: { [weak self] row in self?.lookInside(row, appState) },
+            onToggleFolder: { appState.toggleShelfFolder($0) },
             onDragStart: { [weak self] in self?.beginHold() },
             onRevealEntry: { url in
                 NSWorkspace.shared.activateFileViewerSelecting([url])
             },
             onOpenEntry: { appState.openShelfEntry($0) },
+            onLeaveFolder: { appState.leaveShelfFolder() },
+            onReturnToRoot: { appState.returnToShelfRoot() },
             handoff: appState.shelfHandoff,
             onDismissHandoff: { appState.dismissShelfHandoff() },
             offers: AppState.standardFolders.filter { !appState.isOnShelf($0.url) },
@@ -358,8 +376,11 @@ final class HUDController: ObservableObject {
     /// between an ambient indicator and an interruption.
     private func takeFocus() {
         guard let panel else { return }
-        NSApp.activate(ignoringOtherApps: true)
-        panel.makeKeyAndOrderFront(nil)
+        // Activating is not free and is visible when it is needless: asking
+        // for it while already frontmost still churns the window server and
+        // flickers the menu bar.
+        if !NSApp.isActive { NSApp.activate(ignoringOtherApps: true) }
+        if !panel.isKeyWindow { panel.makeKeyAndOrderFront(nil) }
         watchForKeys()
     }
 
@@ -379,13 +400,24 @@ final class HUDController: ObservableObject {
 
                 switch event.keyCode {
                 case 49:   // space
-                    guard let picked = appState.shelf.pickedEntry,
-                          picked.isPreviewable else { return nil }
-                    self.preview(picked.url)
+                    // A toggle, as it is over a file in the Finder: pressing
+                    // it again on an open folder shuts it.
+                    guard let picked = appState.shelf.pickedRow else { return nil }
+                    self.lookInside(picked, appState)
                     return nil
                 case 53:   // escape
-                    appState.selectShelfEntry(nil)
                     QuickLookPanel.shared.close()
+                    // Outermost undo last. Escape should clear the row before
+                    // it shuts the folders, and shut the folders before it
+                    // moves the list — it must never take you somewhere when
+                    // you only meant to dismiss something.
+                    if appState.shelf.selected != nil {
+                        appState.deselectShelfEntry()
+                    } else if appState.shelf.hasOpenFolders {
+                        appState.collapseShelfFolders()
+                    } else {
+                        appState.leaveShelfFolder()
+                    }
                     return nil
                 default:
                     return event
@@ -400,6 +432,22 @@ final class HUDController: ObservableObject {
     }
 
     // MARK: - Looking inside a file, and carrying one out
+
+    /// Looking into a row without going anywhere.
+    ///
+    /// One verb for two gestures — space, and holding a row still — because
+    /// they are the same request and the row is what decides the answer. A
+    /// file gets Quick Look; a folder opens where it stands and its contents
+    /// appear indented beneath it, which is what a folder has instead of a
+    /// preview; a file that is in the cloud and not downloaded gets nothing
+    /// at all, because opening it would fetch it.
+    private func lookInside(_ row: ShelfRowItem, _ appState: AppState) {
+        if row.isEnterable {
+            appState.toggleShelfFolder(row)
+        } else if row.isPreviewable {
+            preview(row.url)
+        }
+    }
 
     /// Quick Look, the same panel the Finder opens on space.
     ///
@@ -482,13 +530,8 @@ final class HUDController: ObservableObject {
         )
     }
 
-    /// What the HUD measured and where it put itself, off unless
-    /// HOOT_TRACE_HUD is set. The panel is drawn over the one part of the
-    /// screen that is hardest to look at, so being able to ask it for its
-    /// numbers is worth the four lines.
     private static func trace(_ message: @autoclosure () -> String) {
-        guard ProcessInfo.processInfo.environment["HOOT_TRACE_HUD"] != nil else { return }
-        FileHandle.standardError.write(Data("[hud] \(message())\n".utf8))
+        HUDTrace.say(message())
     }
 
     private func resize(_ panel: NSPanel, to size: NSSize) {
@@ -502,10 +545,15 @@ final class HUDController: ObservableObject {
             notch: notch,
             screenTopY: screen.frame.maxY
         )
-        panel.setFrame(
-            NSRect(x: placed.x, y: placed.y, width: placed.width, height: placed.height),
-            display: true
-        )
+        let target = NSRect(x: placed.x, y: placed.y,
+                            width: placed.width, height: placed.height)
+        // Most refreshes do not move the window at all — a folder re-read, a
+        // row picked, a banner dismissed. Setting the same frame again still
+        // costs a display pass and a shadow rebuild, and `refresh()` has
+        // eight callers.
+        guard panel.frame != target else { return }
+
+        panel.setFrame(target, display: true)
         // A borderless panel's shadow lags a size change without this.
         panel.invalidateShadow()
 

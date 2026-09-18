@@ -130,6 +130,35 @@ for it is *invisible*; pointing at it opens the panel. Hover rather than a
 click, because there is no affordance to aim at when the thing at rest cannot
 be seen — aiming at the housing has to be enough.
 
+**Root and listing** — a shelf tab has two URLs. `ShelfFolder.root` is the
+folder that was added and the one the sandbox granted; `url` is the directory
+on screen, which is the root or somewhere under it. Identity, the tab's name
+and the bookmark all follow the root, so going three folders down does not
+rename a tab or lose its place. `parent` is the way back up and returns nil at
+the root — the containment rule for climbing, in the engine where it is
+checked, for the same reason `Organizer.verifyContained` is.
+
+**Open in place** — a folder row's triangle, and what space does to one:
+its contents are spliced into the list beneath it, indented, and the list is
+otherwise untouched. `FileShelf.open` holds which folders are open and
+`rows` flattens the tree into `ShelfRowItem`s carrying a depth. Capped at
+`maxDepth`, because indentation costs width out of a 420pt panel.
+
+Two earlier shapes were wrong the same way: space *navigated*, and then space
+laid a card *over* the list. Both took away the thing being looked at in
+order to answer a question asked while looking at it.
+
+**Key** — `ShelfEntry.key`, the canonical spelling of a row's path, resolved
+once by the reader. Open folders are keyed on it, not on the path as written:
+the reader hands back `/private/var/…` where a path built by hand says
+`/var/…`, and closing a folder under one spelling left it open under the
+other. Same rule as `FolderIdentity`, same reason, third place it has bitten.
+
+**Going in** — double-click on a folder row lists it in the panel.
+It is still a read, which is the whole reason it is allowed: see decision
+0003, which ruled the other way first and records why that was wrong. Escape
+puts down the picked row, and then climbs a level.
+
 **The shelf** — what the HUD shows: the contents of folders the user picked,
 one folder at a time, as a list. `FileShelf` owns which folders there are,
 which is showing, the order they are read in and which row is picked;
@@ -146,11 +175,20 @@ and a *tray* counting what was waiting, which was the popover's. The walk was
 also conditional on there being something to file, so a tidy folder left
 nothing at the notch to point at.
 
-**Paging** — moving between shelf folders, by swipe, by clicking a tab, or
-with ⌃⌥←/→. It no longer leaves anything owed: a folder is a thing to look
-at, not a question to answer, so there is nothing to come back round for.
-The tab row scrolls to follow the selection rather than being scrolled by
-hand, because the horizontal gesture over the panel is already paging.
+**Paging** — moving between shelf folders, by swipe, by pointing at a tab or
+clicking one, or with ⌃⌥←/→. It no longer leaves anything owed: a folder is a
+thing to look at, not a question to answer, so there is nothing to come back
+round for. The tab row scrolls to follow the selection rather than being
+scrolled by hand, because the horizontal gesture over the panel is already
+paging — and it holds still while the pointer is on it, or a tab moving under
+the cursor would be read as the next hover.
+
+**Dwell** — how long the pointer has to stay on a tab before it counts as
+pointing at it rather than crossing it. `FileShelf.hoverDwell`. The row is
+also the way to the `+`, so every trip to that control passes over every tab;
+without the wait, one reach would change folder three times. `shouldShow` is
+the other half: the tab already showing answers no, so a cursor crossing its
+own tab neither re-reads the folder nor puts down the picked row.
 
 **Focus** — the panel takes keyboard focus when a row is *clicked*, and never
 when it is merely pointed at. The distinction is the whole of it: hovering

@@ -358,7 +358,7 @@ func stageHUD(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) 
                        isFolder: false, byteCount: 1, childCount: 0,
                        sortDate: anchorNow, isCloudPlaceholder: false)
         }
-        let long = FileShelf(folders: [ShelfFolder(url: shelfDir, state: .listed, entries: many)])
+        let long = FileShelf(folders: [ShelfFolder(root: shelfDir, state: .listed, entries: many)])
         return long.rows.count == 40 && long.listHeight == 234
     }())
 
@@ -370,8 +370,13 @@ func stageHUD(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) 
           shelf.selectionDetail(now: anchorNow) ?? "nil")
     check("and the reveal button changes what it offers",
           shelf.revealLabel == "Show in Finder", shelf.revealLabel)
+    // Clicking a selected row leaves it selected, as the Finder does. It also
+    // has to: a double-click is two clicks, and a toggle would put the row
+    // down again on its way to opening the file.
     shelf.select(firstFile.id)
-    check("picking it again unpicks it", shelf.pickedEntry == nil)
+    check("picking it again leaves it picked", shelf.pickedEntry?.id == firstFile.id)
+    shelf.deselect()
+    check("escape is what puts it down", shelf.pickedEntry == nil)
     check("and the button goes back to the folder",
           shelf.revealLabel == "Open folder", shelf.revealLabel)
 
@@ -401,7 +406,7 @@ func stageHUD(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) 
     print("\n[keeping the tabs straight]")
 
     func folderNamed(_ name: String) -> ShelfFolder {
-        ShelfFolder(url: sandbox.appending(path: name), state: .empty, entries: [])
+        ShelfFolder(root: sandbox.appending(path: name), state: .empty, entries: [])
     }
     var tabs = FileShelf()
     // It used to send you to Settings. The standard folders are offered at
@@ -429,6 +434,34 @@ func stageHUD(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) 
     tabs.showPrevious()
     check("nor off the front", tabs.showing == 0, "\(tabs.showing)")
 
+    print("\n[pointing at a tab is enough to list it]")
+
+    // The tab row is also the way to the `+` beside it, so the cursor crosses
+    // every tab on a trip somebody did not mean as a folder change. What makes
+    // that affordable is the shelf refusing the tab it is already on, and the
+    // panel waiting a moment before it believes any of the others.
+    tabs.show(folderAt: 0)
+    check("pointing at another folder's tab shows it", tabs.shouldShow(folderAt: 1))
+    check("pointing at the one already showing does nothing",
+          !tabs.shouldShow(folderAt: 0))
+    check("and a tab that is not there is refused",
+          !tabs.shouldShow(folderAt: 99) && !tabs.shouldShow(folderAt: -1))
+
+    // A picked row and its folder go together. Crossing your own tab must not
+    // put the row down — which it did, until `show` started asking first.
+    var picky = FileShelf(folders: [folderNamed("A"), folderNamed("B")])
+    picky.select("kept")
+    picky.show(folderAt: 0)
+    check("the folder you are on keeps the row you picked",
+          picky.selected == "kept", picky.selected ?? "nil")
+    picky.show(folderAt: 1)
+    check("and a different folder cannot, so the row goes down",
+          picky.selected == nil, picky.selected ?? "nil")
+
+    check("the dwell is a pause, not a wait",
+          FileShelf.hoverDwell > 0 && FileShelf.hoverDwell <= 0.3,
+          "\(FileShelf.hoverDwell)")
+
     tabs.show(folderAt: last)
     tabs.remove(sandbox.appending(path: "F\(last)"))
     check("removing the folder being shown clamps rather than jumping home",
@@ -454,6 +487,182 @@ func stageHUD(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) 
     check("but a different folder is a different folder",
           !FolderIdentity.same(identityDir, sandbox.appending(path: "identity-other")))
 
+    print("\n[going into a folder, and coming back out]")
+
+    // Decision 0003 ruled the other way: folders were listed and not
+    // navigable, "one line to reverse if it proves wrong". It proved wrong.
+    // What did not change is the reason the shelf may have several folders —
+    // going in is still a read, and there is still no verb here that writes.
+    // Its own tree rather than the one above, which earlier checks count.
+    let nest = sandbox.appending(path: "nest")
+    let inner = nest.appending(path: "inner")
+    let deeper = inner.appending(path: "deeper")
+    try? FileManager.default.createDirectory(at: deeper, withIntermediateDirectories: true)
+    FileManager.default.createFile(atPath: deeper.appending(path: "buried.txt").path,
+                                   contents: Data("x".utf8))
+
+    let atRoot = ShelfReader.read(nest)
+    check("a tab starts at its own folder", atRoot.isAtRoot)
+    check("so there is nowhere above it to go", atRoot.parent == nil)
+    check("and no trail to print", atRoot.trailLabel.isEmpty, atRoot.trailLabel)
+
+    let inside = ShelfReader.read(inner, root: nest)
+    check("going in keeps the tab's identity", inside.id == atRoot.id, inside.id)
+    check("so the tab is still named after what was added",
+          inside.name == atRoot.name, inside.name)
+    check("while the panel names what is on screen",
+          inside.listingName == "inner", inside.listingName)
+    check("the trail says how far down you are",
+          inside.trailLabel == "\(atRoot.name) / inner", inside.trailLabel)
+    check("and there is somewhere above to go",
+          inside.parent.map { FolderIdentity.same($0, nest) } == true)
+
+    let deep = ShelfReader.read(deeper, root: nest)
+    check("two levels down reads as two levels down",
+          deep.trail == ["inner", "deeper"], "\(deep.trail)")
+    check("and the way back is one level, not all of it",
+          deep.parent.map { FolderIdentity.same($0, inner) } == true)
+
+    // The tab is what the sandbox granted. Its parent was not, so climbing
+    // has to stop there however it is asked.
+    let escapee = ShelfReader.read(sandbox, root: nest)
+    check("a listing outside its own tab claims no trail", escapee.isAtRoot)
+    check("so nothing offers to climb out of the granted folder",
+          escapee.parent == nil)
+
+    // Replacing works on the root, so a descended folder still lands in its
+    // own tab rather than being dropped for not matching.
+    var descending = FileShelf(folders: [ShelfFolder(root: nest, state: .empty, entries: [])])
+    descending.replace(inside)
+    check("a folder read from inside still lands in its tab",
+          descending.current?.listingName == "inner",
+          descending.current?.listingName ?? "nil")
+    check("and the empty message names what is on screen, not the tab", {
+        let emptyInner = ShelfFolder(root: nest, url: inner, state: .empty, entries: [])
+        return emptyInner.emptyMessage == "Nothing in inner."
+    }(), ShelfFolder(root: nest, url: inner, state: .empty, entries: []).emptyMessage)
+
+    // Taking the tab off the shelf is about the tab, whatever is listed.
+    descending.remove(nest)
+    check("removing the tab works from inside it", descending.isEmpty)
+
+    print("\n[opening a folder where it stands]")
+
+    // Two earlier shapes were wrong the same way. Space navigated, and then
+    // space laid a card over the list. Both took away the thing you were
+    // looking at in order to answer a question you asked *while* looking at
+    // it. The list opens in place now, as the Finder's does.
+    let treeDir = sandbox.appending(path: "tree")
+    let branch = treeDir.appending(path: "branch")
+    try? FileManager.default.createDirectory(at: branch, withIntermediateDirectories: true)
+    for name in ["leaf-a.txt", "leaf-b.txt"] {
+        FileManager.default.createFile(atPath: branch.appending(path: name).path,
+                                       contents: Data("x".utf8))
+    }
+    FileManager.default.createFile(atPath: treeDir.appending(path: "top.txt").path,
+                                   contents: Data("x".utf8))
+
+    var tree = FileShelf(folders: [ShelfReader.read(treeDir)])
+    // By name, because the two leaves were written in the same instant and
+    // "newest first" between them is a coin toss.
+    tree.sort = .name
+    check("closed, the list is just what is in the folder",
+          tree.rows.map(\.name) == ["branch", "top.txt"], "\(tree.rows.map(\.name))")
+    check("a folder row offers a triangle",
+          tree.rows.first?.disclosure == .closed, "\(tree.rows.first?.disclosure as Any)")
+    check("and a file does not",
+          tree.rows.last?.disclosure == .plain, "\(tree.rows.last?.disclosure as Any)")
+    check("nothing is open to begin with", !tree.hasOpenFolders)
+
+    let branchRow = tree.rows.first!
+    tree.open(branchRow.url, showing: ShelfReader.read(branch, root: branch))
+    check("opening one splices its contents in under it",
+          tree.rows.map(\.name) == ["branch", "leaf-a.txt", "leaf-b.txt", "top.txt"],
+          "\(tree.rows.map(\.name))")
+    check("the rows inside it are one level in",
+          tree.rows.map(\.depth) == [0, 1, 1, 0], "\(tree.rows.map(\.depth))")
+    check("and the folder now points down", tree.rows.first?.disclosure == .open)
+    check("the list knows something is open", tree.hasOpenFolders)
+
+    // The panel has to grow for them, or the folder would open into rows
+    // nobody can see.
+    check("the panel counts the opened rows in its height",
+          tree.listHeight == 4 * FileShelf.rowHeight, "\(tree.listHeight)")
+
+    check("closing it puts the list back",
+          { var t = tree; t.close(branchRow.url)
+            return t.rows.map(\.name) == ["branch", "top.txt"] && !t.hasOpenFolders }())
+
+    // A folder closed while holding open folders inside it must not remember
+    // them: re-opening it would silently re-open three more, showing whatever
+    // was on the disk minutes ago.
+    check("closing a folder closes what was open inside it", {
+        var t = tree
+        let leafFolder = ShelfFolder(root: branch, state: .empty, entries: [])
+        t.open(branch.appending(path: "deeper"), showing: leafFolder)
+        t.close(branchRow.url)
+        return t.open.isEmpty
+    }(), "row \(branchRow.key) vs folder \(FolderIdentity.key(branch))")
+
+    // But a sibling whose path merely starts with the same characters is a
+    // different folder, and stays open.
+    check("a folder that only shares a prefix is left alone", {
+        var t = FileShelf(folders: [ShelfReader.read(treeDir)])
+        let twin = treeDir.appending(path: "branch-two")
+        t.open(branch, showing: ShelfFolder(root: branch, state: .empty, entries: []))
+        t.open(twin, showing: ShelfFolder(root: twin, state: .empty, entries: []))
+        t.close(branch)
+        return t.open == [FolderIdentity.key(twin)]
+    }())
+
+    check("changing tab closes everything that was open", {
+        var t = FileShelf(folders: [ShelfReader.read(treeDir),
+                                    ShelfFolder(root: sandbox, state: .empty, entries: [])])
+        t.open(branch, showing: ShelfFolder(root: branch, state: .empty, entries: []))
+        t.show(folderAt: 1)
+        return !t.hasOpenFolders
+    }())
+
+    // Indentation costs width out of a 420pt panel, so the list stops going
+    // in and says the row is somewhere to go instead.
+    check("the list opens four levels and no further",
+          FileShelf.maxDepth == 4, "\(FileShelf.maxDepth)")
+    check("a row near the top may be opened where it stands",
+          tree.canOpen(branchRow))
+    check("one at the bottom of that may not", {
+        let deep = ShelfRowItem(entry: branchRow.entry,
+                                depth: FileShelf.maxDepth - 1, disclosure: .closed)
+        return !tree.canOpen(deep)
+    }())
+    check("and is told what to do instead", {
+        let deep = ShelfRowItem(entry: branchRow.entry,
+                                depth: FileShelf.maxDepth - 1, disclosure: .closed)
+        return tree.tooDeepMessage(deep).contains("double-click")
+    }())
+    check("a file is never openable in place, however shallow", {
+        let file = tree.rows.last!
+        return !tree.canOpen(file)
+    }())
+
+    // The bug this caught, kept as its own check. The reader hands back
+    // `/private/var/...` where a path built by hand says `/var/...`, so a
+    // folder closed under one spelling stayed open under the other.
+    check("a folder is closed however its path is spelled", {
+        var t = tree
+        let spelled = URL(fileURLWithPath: "/private" + branchRow.url.path)
+        let other = FileManager.default.fileExists(atPath: spelled.path) ? spelled : branchRow.url
+        t.close(other)
+        return !t.hasOpenFolders
+    }())
+
+    // A late read must not resurrect a folder somebody just closed.
+    check("contents arriving after a close are dropped", {
+        var t = tree
+        t.close(branchRow.url)
+        t.refreshOpen([branchRow.key: ShelfReader.read(branch, root: branch)])
+        return !t.hasOpenFolders && t.rows.count == 2
+    }())
+
     print("\n[a file in the cloud is still not opened]")
 
     // Safety rule 5's first appearance on a surface that is not the organizer:
@@ -465,12 +674,27 @@ func stageHUD(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) 
     check("the row knows before anything offers to open it",
           placeholder.isCloudPlaceholder)
     check("and nothing will preview it", !placeholder.isPreviewable)
-    check("a folder is not previewed either — the Finder opens those", {
-        let dir = ShelfEntry(url: shelfDir, symbolName: "folder", isFolder: true,
-                             byteCount: 0, childCount: 3, sortDate: anchorNow,
-                             isCloudPlaceholder: false)
-        return !dir.isPreviewable
+    // The gap this closed: a double-click used to go straight to NSWorkspace
+    // whatever the row was, so the one gesture the tooltip promised was safe
+    // would have downloaded the file.
+    check("nor will a double-click open it", !placeholder.isOpenable)
+    check("and it is not somewhere to go either", !placeholder.isEnterable)
+
+    let dir = ShelfEntry(url: shelfDir, symbolName: "folder", isFolder: true,
+                         byteCount: 0, childCount: 3, sortDate: anchorNow,
+                         isCloudPlaceholder: false)
+    check("a folder is not previewed — it has contents, not a preview",
+          !dir.isPreviewable)
+    check("it is somewhere to go instead", dir.isEnterable)
+
+    // A folder in the cloud is still a folder, and still not touched.
+    check("a folder that is not downloaded is neither", {
+        let far = ShelfEntry(url: shelfDir.appending(path: "away"), symbolName: "folder",
+                             isFolder: true, byteCount: 0, childCount: 0,
+                             sortDate: anchorNow, isCloudPlaceholder: true)
+        return !far.isEnterable && !far.isPreviewable && !far.isOpenable
     }())
+
     check("but an ordinary file on this disk may be looked inside",
           shelf.rows.first { !$0.isFolder }?.isPreviewable == true)
     check("and an ordinary file does not",
