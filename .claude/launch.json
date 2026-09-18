@@ -3,10 +3,11 @@
   "configurations": [
     {
       "name": "Hoot landing page",
-      "runtimeExecutable": "/bin/sh",
+      "runtimeExecutable": "/usr/bin/python3",
       "runtimeArgs": [
+        "-I",
         "-c",
-        "cd /Users/patrickhans/Documents/GitHub/Hoot/Website && exec /usr/bin/python3 -m http.server 4173"
+        "import os; os.chdir('/Users/patrickhans/Documents/GitHub/Hoot/Website/public'); from http.server import test, SimpleHTTPRequestHandler; test(SimpleHTTPRequestHandler, port=4173, bind='127.0.0.1')"
       ],
       "port": 4173
     }

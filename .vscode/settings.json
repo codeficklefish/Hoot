@@ -1,0 +1,24 @@
+{
+  // Xcode's Swift, not whatever is first on PATH.
+  //
+  // The editor's language server picks up `swift` from PATH, and on a machine
+  // with swiftly, swiftenv, asdf or a swift.org installer that is not Xcode's.
+  // A swift.org toolchain cannot parse this project at all — it opens with
+  // `unknown argument: '-target-arch-variant'` and then reports thousands of
+  // errors like `cannot find 'Data' in scope` in files whose first line is
+  // `import Foundation`. Measured on one machine: 0 errors with Xcode's
+  // compiler, 4811 with the one on PATH.
+  //
+  // It has to be Xcode's specifically, not merely a working Swift:
+  // AppleOnDeviceProvider uses the @Generable and @Guide macros, which Swift
+  // expands with a compiler plugin Apple ships only inside Xcode. The build
+  // scripts resolve this for themselves — see Packaging/find-swift.sh — and
+  // this is the same resolution for the editor.
+  "swift.path": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin",
+
+  // Same reason, for anyone whose editor drives sourcekit-lsp directly rather
+  // than through the Swift extension.
+  "swift.sourcekit-lsp.serverPath": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp",
+
+  "lldb.verboseLogging": false
+}
