@@ -12,7 +12,10 @@ struct ShelfRow: View {
     let row: ShelfRowItem
     let isSelected: Bool
     let age: String
-    let onSelect: () -> Void
+    /// A click. Picking the row and opening it are the same gesture now —
+    /// which of the two it turns out to be is decided from how soon it
+    /// followed the last one, not by waiting to see. See `ClickPair`.
+    let onClick: () -> Void
     /// Hold still to look inside — Quick Look for a file, a list of its
     /// contents for a folder. Never offered for a file that is in the cloud
     /// and not downloaded: opening one would fetch it, and safety rule 5 says
@@ -45,19 +48,23 @@ struct ShelfRow: View {
     var body: some View {
         line
             .contentShape(Rectangle())
-            // Count 2 declared before count 1, which is how SwiftUI tells
-            // them apart. A `Button` cannot do this at all — its action fires
-            // on the first click of the pair.
+            // One tap gesture, which fires the moment the click lands.
             //
-            // This does mean a single click waits out the double-click
-            // interval before the row highlights. A `simultaneousGesture` for
-            // the single tap removes that wait and was tried: it wins the
-            // arbitration on the first click and the double-click then never
-            // fires at all. A quarter-second before a row highlights is worth
-            // more than opening a file, so the wait stays until it can be
-            // removed by reading `clickCount` from AppKit directly.
-            .onTapGesture(count: 2, perform: onOpen)
-            .onTapGesture(count: 1, perform: onSelect)
+            // There were two — count 2 declared before count 1, which is how
+            // SwiftUI tells them apart. It works, and it costs a quarter of a
+            // second: the single tap cannot fire until the double-click
+            // interval has passed with no second click, so a row did not look
+            // clicked until well after it had been. Making the single tap a
+            // `simultaneousGesture` removes the wait and the double-click
+            // with it — it wins the arbitration on the first click, and
+            // `count: 2` never fires at all.
+            //
+            // So the pairing moved out of the gesture system entirely, into
+            // `ClickPair`, which decides from how soon a click followed the
+            // last one rather than by waiting to find out. A `Button` still
+            // cannot do this: its action fires on the first click of a pair,
+            // and it would swallow the drag besides.
+            .onTapGesture(perform: onClick)
             .onHover { hovering in
                 withAnimation(HUDTokens.fade) { isHovered = hovering }
             }

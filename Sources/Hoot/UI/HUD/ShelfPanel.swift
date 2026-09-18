@@ -20,7 +20,7 @@ struct ShelfPanel: View {
     var onRemoveFolder: (URL) -> Void = { _ in }
 
     var onShowFolder: (Int) -> Void
-    var onSelect: (String) -> Void
+    var onClick: (ShelfRowItem) -> Void
     var onCycleSort: () -> Void
     var onReveal: () -> Void
     var onTidy: () -> Void
@@ -287,7 +287,7 @@ struct ShelfPanel: View {
                         row: row,
                         isSelected: shelf.selected == row.id,
                         age: row.entry.ageLabel(now: now),
-                        onSelect: { onSelect(row.id) },
+                        onClick: { onClick(row) },
                         onPreview: { onPreview(row) },
                         onDragStart: onDragStart,
                         onReveal: { onRevealEntry(row.url) },

@@ -262,14 +262,14 @@ final class HUDController: ObservableObject {
             untidy: appState.shelf.current.map { appState.untidyCount(in: $0.url) } ?? 0,
             now: appState.lastShelfRead,
             onShowFolder: { appState.showShelfFolder(at: $0) },
-            onSelect: { [weak self] id in
-                appState.selectShelfEntry(id)
+            onClick: { [weak self] row in
                 // Clicking is what earns focus, not pointing. Hovering still
                 // leaves whatever you are typing in alone; a click is a
                 // deliberate act, and every other window on the Mac takes
                 // focus on one. Without it the spacebar below goes to the app
                 // that *is* frontmost.
                 self?.takeFocus()
+                appState.clickShelfRow(row)
             },
             onCycleSort: { appState.cycleShelfSort() },
             onReveal: { appState.revealInFinder() },

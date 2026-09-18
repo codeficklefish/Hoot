@@ -663,6 +663,49 @@ func stageHUD(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) 
         return !t.hasOpenFolders && t.rows.count == 2
     }())
 
+    print("\n[a row answers the first click, not the second]")
+
+    // The row used to wait out the double-click interval before it looked
+    // clicked, because `onTapGesture(count: 1)` cannot fire until a second
+    // click has failed to arrive. Removing the wait with a simultaneous
+    // gesture removed the double-click — "the double click isn't working" —
+    // so the pairing is done here instead, from the timing, and nothing waits.
+    let interval: TimeInterval = 0.5
+    let clickAt = anchorNow
+    var clicks = ClickPair()
+
+    check("the first click on a row is a first click",
+          !clicks.isSecond("row-a", at: clickAt, within: interval))
+    check("a second on the same row, soon enough, completes the pair",
+          clicks.isSecond("row-a", at: clickAt.addingTimeInterval(0.2), within: interval))
+
+    clicks = ClickPair()
+    _ = clicks.isSecond("row-a", at: clickAt, within: interval)
+    check("but not once the interval has passed",
+          !clicks.isSecond("row-a", at: clickAt.addingTimeInterval(0.9), within: interval))
+
+    // Picking your way down a list is quick clicks on different rows, and
+    // none of them is a double-click. The Finder agrees.
+    clicks = ClickPair()
+    _ = clicks.isSecond("row-a", at: clickAt, within: interval)
+    check("two quick clicks on different rows are two first clicks",
+          !clicks.isSecond("row-b", at: clickAt.addingTimeInterval(0.1), within: interval))
+
+    // A pair that has completed starts over, or a third click would pair with
+    // the second and the row would open twice.
+    clicks = ClickPair()
+    _ = clicks.isSecond("row-a", at: clickAt, within: interval)
+    _ = clicks.isSecond("row-a", at: clickAt.addingTimeInterval(0.1), within: interval)
+    check("a rapid third click does not open the row a second time",
+          !clicks.isSecond("row-a", at: clickAt.addingTimeInterval(0.2), within: interval))
+
+    // A clock that steps backwards gives a negative gap, which is "less than
+    // the interval" to anything that only checks the upper bound.
+    clicks = ClickPair()
+    _ = clicks.isSecond("row-a", at: clickAt, within: interval)
+    check("a clock going backwards does not pair two distant clicks",
+          !clicks.isSecond("row-a", at: clickAt.addingTimeInterval(-3600), within: interval))
+
     print("\n[a file in the cloud is still not opened]")
 
     // Safety rule 5's first appearance on a surface that is not the organizer:

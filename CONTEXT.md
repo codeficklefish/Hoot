@@ -154,6 +154,13 @@ the reader hands back `/private/var/…` where a path built by hand says
 `/var/…`, and closing a folder under one spelling left it open under the
 other. Same rule as `FolderIdentity`, same reason, third place it has bitten.
 
+**Click pairing** — `ClickPair`. A row picks on the first click and opens on
+the second, and which one a click is gets decided from how soon it followed
+the last, not by waiting to find out. Two tap gestures (`count: 2` before
+`count: 1`) is SwiftUI's way and costs the double-click interval before a row
+looks clicked; a `simultaneousGesture` removes the wait and the double-click
+with it. The pairing is out of the gesture system for that reason.
+
 **Going in** — double-click on a folder row lists it in the panel.
 It is still a read, which is the whole reason it is allowed: see decision
 0003, which ruled the other way first and records why that was wrong. Escape

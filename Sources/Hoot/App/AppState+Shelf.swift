@@ -289,6 +289,23 @@ extension AppState {
         shelf.sort = shelf.sort.next
     }
 
+    /// A click on a row: pick it, or open it if it completed a pair.
+    ///
+    /// One gesture does both, so nothing waits — see `ClickPair` for what the
+    /// two-gesture version cost. `NSEvent.doubleClickInterval` is the
+    /// person's own setting, read here at the platform edge and handed to the
+    /// rule, which lives in the engine where it is checked.
+    func clickShelfRow(_ row: ShelfRowItem) {
+        let paired = shelfClicks.isSecond(row.id,
+                                          at: Date(),
+                                          within: NSEvent.doubleClickInterval)
+        if paired {
+            openShelfEntry(row.entry)
+        } else {
+            selectShelfEntry(row.id)
+        }
+    }
+
     func selectShelfEntry(_ id: String?) {
         guard shelf.selected != id else { return }
         shelf.select(id)

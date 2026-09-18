@@ -87,6 +87,12 @@ final class AppState: ObservableObject {
     /// What the shelf last handed to something else, shown until dismissed.
     /// A handover is the one thing the panel does that has no visible result
     /// inside the panel, so it says so rather than appearing to do nothing.
+    /// Tells the second click of a pair from the first, so a row can
+    /// highlight on the first without waiting to find out. Not published: it
+    /// is timing rather than content, and a redraw per click is exactly the
+    /// cost this exists to remove. See `ClickPair`.
+    var shelfClicks = ClickPair()
+
     @Published var shelfHandoff: String?
     /// Opening a window is the app's business, not the state's — `openWindow`
     /// is a SwiftUI environment value and exists only inside a scene. The app

@@ -36,7 +36,7 @@ struct HUDView: View {
     var now: Date = Date()
 
     var onShowFolder: (Int) -> Void = { _ in }
-    var onSelect: (String) -> Void = { _ in }
+    var onClick: (ShelfRowItem) -> Void = { _ in }
     var onCycleSort: () -> Void = {}
     var onReveal: () -> Void = {}
     var onTidy: () -> Void = {}
@@ -169,7 +169,7 @@ struct HUDView: View {
                 onAddFolder: onAddFolder,
                 onRemoveFolder: onRemoveFolder,
                 onShowFolder: onShowFolder,
-                onSelect: onSelect,
+                onClick: onClick,
                 onCycleSort: onCycleSort,
                 onReveal: onReveal,
                 onTidy: onTidy,
