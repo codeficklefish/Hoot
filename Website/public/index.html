@@ -11,6 +11,18 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&family=Caveat:wght@400..700&display=swap">
 <link rel="stylesheet" href="styles.css">
+<script>
+  /* Set before the first paint, so the entrance styles below only ever apply
+     where there is JavaScript to finish them. Without this the page would
+     load hidden and stay hidden for anybody whose scripts fail.
+
+     The timer is a dead man's switch, not a schedule: if app.js never runs —
+     blocked, errored, still downloading on a slow connection — everything is
+     shown anyway. A page that hides its own content behind a script it cannot
+     guarantee is a page that sometimes shows nothing. */
+  document.documentElement.className += " js";
+  setTimeout(function () { document.documentElement.className += " reveal-all"; }, 2200);
+</script>
 </head>
 <body>
 
@@ -32,7 +44,7 @@
   <symbol id="i-turn" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.3" d="M3.4 3v4.2a2 2 0 0 0 2 2h6.4"/><path fill="none" stroke="currentColor" stroke-width="1.3" d="m9.6 7 2.6 2.2-2.6 2.2"/></symbol>
 </defs></svg>
 
-<header class="nav wrap">
+<header class="nav wrap" data-reveal data-entrance>
   <a class="wordmark" href="#top" aria-label="Hoot, home">
     <img src="assets/HootMark-Black.png" alt="" width="26" height="26">
     <span>Hoot</span>
@@ -50,7 +62,7 @@
 
   <!-- ---------- hero ---------- -->
   <section>
-    <div class="wrap hero">
+    <div class="wrap hero" data-reveal data-entrance>
       <figure class="demo">
         <div class="demo-frame">
           <div class="demo-bar">
@@ -108,7 +120,7 @@
         <figcaption class="annotation" aria-hidden="true">nothing has moved yet</figcaption>
       </figure>
 
-      <div class="hero-copy">
+      <div class="hero-copy" data-reveal data-entrance>
         <span class="status-dot">Runs entirely on your Mac</span>
         <h1>Sorted by what<br>they’re <em>about.</em></h1>
         <p class="lede">Hoot watches one folder and works out what belongs together. A boarding pass, a hotel booking and an itinerary become one trip folder — not three piles sorted by file type.</p>
@@ -132,7 +144,7 @@
 
   <!-- ---------- see it in action ---------- -->
   <section class="band" id="demo">
-    <div class="wrap demo-split">
+    <div class="wrap demo-split" data-reveal>
       <div class="demo-intro">
         <h2>See it<br>in action</h2>
         <p>A minute, start to finish. Every file you see is one Hoot named by reading it.</p>
@@ -140,146 +152,16 @@
 
       <figure class="player">
         <div class="bezel">
-          <div class="screen" id="stage" data-scene="pile">
-            <div class="mb">
-              <b>Finder</b><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Window</span><span>Help</span>
-              <span class="mb-right">
-                <span class="hootmark"><img src="assets/HootMark-White.png" alt=""><i id="mb-count">45</i></span>
-                <span class="clock">Tue 9:41</span>
-              </span>
-            </div>
-
-            <div class="popover" id="popover" hidden>
-              <b>Watching Downloads</b>
-              <span>49 files. Click Review to decide.</span>
-              <div class="pv-row is-on"><svg aria-hidden="true"><use href="#i-folder"></use></svg>Review files<em>45</em></div>
-              <div class="pv-row"><svg aria-hidden="true"><use href="#i-turn"></use></svg>History</div>
-            </div>
-
-            <div class="win" id="win">
-              <div class="win-bar"><i></i><i></i><i></i><span id="win-title">Downloads</span></div>
-              <div class="win-body">
-                <div class="sidebar">
-                  <b>Favourites</b><span>AirDrop</span><span>Recents</span><span>Applications</span>
-                  <span>Desktop</span><span class="on">Downloads</span><span>Documents</span>
-                </div>
-                <div class="pane">
-                  <div class="scene" data-scene="pile"><div class="pile">
-                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>Screenshot 2026-08-21 at 11.43.02 AM.png</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>Screenshot 2026-08-29 at 2.17.44 PM.png</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>IMG_8392.png</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>IMG_8401.jpg</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>123123123.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>123456789.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Document.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Document (1).pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Document (2).pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>download.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>download (1).pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>download (2).pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>file.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>file_2.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>final.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>final (1).pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>FINAL_FINAL.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>receipt.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>receipt (1).pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>invoice.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>invoice (1).pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>school.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>assignment.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>paper.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>research.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>manual.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>image.png</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>image (1).png</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>image.webp</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>image_2.webp</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>Screenshot.png</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>Screenshot (1).png</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-film"></use></svg><figcaption>IMG_1234.MOV</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-film"></use></svg><figcaption>video.mp4</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-film"></use></svg><figcaption>video (1).mp4</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>archive.zip</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>archive (1).zip</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>project.zip</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>assets.zip</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>files.zip</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>Untitled.zip</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-box"></use></svg><figcaption>installer.dmg</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-box"></use></svg><figcaption>setup.dmg</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-box"></use></svg><figcaption>app.dmg</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-box"></use></svg><figcaption>something.pkg</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Untitled.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Untitled (1).pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>New Document.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Copy of Document.pdf</figcaption></figure>
-                  </div></div>
-
-                  <div class="scene" data-scene="review"><div class="mini">
-                    <div class="mini-head"><b>45 files to file away</b><span>Untick anything you disagree with. Nothing moves until you apply.</span></div>
-              <div class="mv"><span class="dot hi"></span><span class="nm">Document (2).pdf</span><span class="to">Coursework</span><span class="pc">91%</span></div>
-              <div class="mv"><span class="dot hi"></span><span class="nm">download (1).pdf</span><span class="to">Receipts</span><span class="pc">86%</span></div>
-              <div class="mv"><span class="dot hi"></span><span class="nm">Untitled.zip</span><span class="to">Archives</span><span class="pc">78%</span></div>
-              <div class="mv"><span class="dot lo"></span><span class="nm">123123123.pdf</span><span class="to grey">Stays in Downloads</span><span class="pc">22%</span></div>
-                    <span class="more">and 42 more</span>
-                    <div class="mini-foot"><span>45 selected · 8 folders</span><span class="btn">Not now</span><span class="btn go">Move 45 Files</span></div>
-                  </div></div>
-
-                  <div class="scene" data-scene="approve"><div class="pile">
-                <figure class="dir"><svg aria-hidden="true"><use href="#i-folder"></use></svg><figcaption>Coursework<b>14 items</b></figcaption></figure>
-                <figure class="dir"><svg aria-hidden="true"><use href="#i-folder"></use></svg><figcaption>Receipts<b>7 items</b></figcaption></figure>
-                <figure class="dir"><svg aria-hidden="true"><use href="#i-folder"></use></svg><figcaption>Photos<b>6 items</b></figcaption></figure>
-                <figure class="dir"><svg aria-hidden="true"><use href="#i-folder"></use></svg><figcaption>Screenshots<b>4 items</b></figcaption></figure>
-                <figure class="dir"><svg aria-hidden="true"><use href="#i-folder"></use></svg><figcaption>Archives<b>6 items</b></figcaption></figure>
-                <figure class="dir"><svg aria-hidden="true"><use href="#i-folder"></use></svg><figcaption>Installers<b>4 items</b></figcaption></figure>
-                <figure class="dir"><svg aria-hidden="true"><use href="#i-folder"></use></svg><figcaption>Video<b>3 items</b></figcaption></figure>
-                <figure class="dir"><svg aria-hidden="true"><use href="#i-folder"></use></svg><figcaption>Manuals<b>1 items</b></figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>123123123.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>123456789.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Untitled.pdf</figcaption></figure>
-                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Untitled (1).pdf</figcaption></figure>
-                  </div></div>
-
-                  <div class="scene" data-scene="undo"><div class="mini">
-                    <div class="hist"><svg aria-hidden="true"><use href="#i-turn"></use></svg>
-                      <span class="nm"><b>45 files moved to 8 folders</b><em>Undone. Every file is back where it was.</em></span>
-                      <span class="ok">Put back</span></div>
-                    <span class="more">Files go back exactly where they came from. Nothing is ever deleted.</span>
-                  </div></div>
-
-                  <div class="scene" data-scene="rename"><div class="mini">
-                    <span class="more">Only these two names say nothing. Every other name was left alone.</span>
-              <div class="rn"><span class="old">123123123.pdf</span><span class="arrow"><svg aria-hidden="true"><use href="#i-turn"></use></svg><span class="new">Electricity bill — February 2026.pdf</span></span><span class="why">Its text mentions an account number, a billing period and the supplier.</span></div>
-              <div class="rn"><span class="old">Untitled (1).pdf</span><span class="arrow"><svg aria-hidden="true"><use href="#i-turn"></use></svg><span class="new">ARCH 210 — final brief.pdf</span></span><span class="why">Its first page carries the course code and the words final brief.</span></div>
-                    <div class="mini-foot"><span>Undo puts every old name back.</span><span class="btn">Keep names</span><span class="btn go">Rename 2</span></div>
-                  </div></div>
-                </div>
-              </div>
-              <div class="win-foot" id="win-foot">49 items · 214.6 GB available</div>
-            </div>
-
-            <div class="desk" id="desk" hidden>
-              <div class="np">
-                <div class="tabs"><span class="on">Desktop</span><span>Downloads</span><span>Documents</span></div>
-              <div class="r grp"><svg aria-hidden="true"><use href="#i-folder"></use></svg><b>Studio brief</b><em>6 items</em><em>55m</em></div>
-              <div class="r grp kid"><svg aria-hidden="true"><use href="#i-doc"></use></svg><b>brief — v3.pdf</b><em>1.1 MB</em><em></em></div>
-              <div class="r grp kid end"><svg aria-hidden="true"><use href="#i-photo"></use></svg><b>moodboard.png</b><em>4.2 MB</em><em></em></div>
-              <div class="r "><svg aria-hidden="true"><use href="#i-doc"></use></svg><b>ARCH 210 — final brief.pdf</b><em>18.6 MB</em><em>2h</em></div>
-              <div class="r "><svg aria-hidden="true"><use href="#i-photo"></use></svg><b>Screenshot 2026-09-16 at 14.02.11.png</b><em>1.9 MB</em><em>12m</em></div>
-              <div class="r "><svg aria-hidden="true"><use href="#i-film"></use></svg><b>render-test.mov</b><em>1.1 GB</em><em>1d</em></div>
-                <div class="np-foot"><span>Date added</span><span class="hint"><i>space</i> opens it where it stands</span></div>
-              </div>
-            </div>
-
-            <div class="closing" id="closing" hidden>
-              <span class="cl-mark"><img src="assets/HootMark-Black.png" alt=""><b>hoot</b></span>
-              <h3>Sorted by what they’re <em>about.</em></h3>
-              <p>Runs entirely on your Mac. Version 0.6.0 · macOS 13 or later.</p>
-            </div>
-
-            <p class="cap" id="cap"></p>
-          </div>
+          <!-- Self-hosted, for the reason the privacy section exists: a page
+               that tells people the app reaches nothing cannot itself hand the
+               visitor to a third-party player. `preload="none"` so the nine
+               megabytes are only fetched by somebody who scrolls this far. -->
+          <video id="demo-video" class="screen" width="1440" height="810"
+                 poster="assets/hoot-demo-poster.jpg"
+                 preload="none" muted playsinline loop
+                 aria-label="A minute of Hoot: the pile, review, undo, renaming and the shelf">
+            <source src="assets/hoot-demo.mp4" type="video/mp4">
+          </video>
         </div>
 
         <div class="controls">
@@ -287,7 +169,7 @@
           <button type="button" id="restart" aria-label="Start again"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path fill="currentColor" d="M3.4 2.2h1.5v9.6H3.4zM12 2.2 5.6 7 12 11.8z"/></svg></button>
           <span class="t" id="elapsed">0:00.00</span>
           <input type="range" id="seek" min="0" max="60" step="0.05" value="0" aria-label="Seek">
-          <span class="t">1:00.00</span>
+          <span class="t" id="total">1:00.00</span>
         </div>
 
         <figcaption class="chapters" id="chapters"></figcaption>
@@ -297,12 +179,12 @@
 
   <!-- ---------- two ways to sort ---------- -->
   <section id="how">
-    <div class="wrap">
+    <div class="wrap" data-reveal>
       <span class="eyebrow">Two ways to sort</span>
       <h2 style="font: var(--text-display-3); font-size: clamp(30px, 3.4vw, 40px); max-width: 720px;">By what they’re about, or by what they are.</h2>
       <p class="lede" style="margin-block: var(--space-8) var(--space-12); max-width: 680px;">Switch between them in the menu bar popover or in Settings, where each mode is shown as the folders it would produce rather than described.</p>
 
-      <div class="cards">
+      <div class="cards" data-reveal>
         <div class="card">
           <h3>By meaning</h3>
           <p>Folders named after subjects. It reads inside files and takes a few seconds.</p>
@@ -332,7 +214,7 @@
 
   <!-- ---------- renaming ---------- -->
   <section class="band">
-    <div class="wrap split">
+    <div class="wrap split" data-reveal>
       <div style="max-width: 460px;">
         <span class="eyebrow">Renaming</span>
         <h2 style="font: var(--text-display-3); font-size: clamp(30px, 3.4vw, 40px);">A name that says nothing is only half the problem.</h2>
@@ -370,7 +252,7 @@
 
   <!-- ---------- the shelf ---------- -->
   <section id="notch">
-    <div class="wrap">
+    <div class="wrap" data-reveal>
       <span class="eyebrow">The shelf</span>
       <h2 style="font: var(--text-display-3); font-size: clamp(30px, 3.4vw, 40px); max-width: 700px;">Your folders, hanging off the camera housing.</h2>
       <p class="lede" style="margin-block: var(--space-8) var(--space-11); max-width: 680px;">Press ⌘J and the shelf comes down at the notch. Point at it and it opens — whether or not anything needs filing. Three folders at a time, newest files first, folders leading the way the Finder does.</p>
@@ -397,7 +279,7 @@
         <p class="stage-caption" id="shelf-caption">Space opened Studio brief where it stands — the list underneath it never moved.</p>
       </div>
 
-      <div class="keys">
+      <div class="keys" data-reveal>
         <div>
           <span class="keycap">space</span>
           <h3>Opens a folder where it stands</h3>
@@ -421,12 +303,12 @@
 
   <!-- ---------- safety ---------- -->
   <section id="safety" class="band">
-    <div class="wrap">
+    <div class="wrap" data-reveal>
       <span class="eyebrow">Before anything moves</span>
       <h2 style="font: var(--text-display-3); font-size: clamp(30px, 3.4vw, 40px); max-width: 680px;">Nothing moves until you say so.</h2>
       <p class="lede" style="margin-block: var(--space-8) var(--space-12); max-width: 680px;">An app that rearranges your files has to earn that. Hoot shows every suggestion, tells you what it based each one on, and can put it all back.</p>
 
-      <div class="promises">
+      <div class="promises" data-reveal>
         <div class="promise">
           <h3>You approve every move</h3>
           <p>Suggestions arrive in a review window. Untick anything you disagree with, or hold a row to preview the file the way the Finder does — the filename is usually what failed to say what it is.</p>
@@ -450,7 +332,7 @@
 
   <!-- ---------- corrections ---------- -->
   <section>
-    <div class="wrap split">
+    <div class="wrap split" data-reveal>
       <div style="max-width: 460px;">
         <span class="eyebrow">Corrections</span>
         <h2 style="font: var(--text-display-3); font-size: clamp(30px, 3.4vw, 40px);">It learns your filing, not someone else’s.</h2>
@@ -472,7 +354,7 @@
 
   <!-- ---------- privacy ---------- -->
   <section id="privacy">
-    <div class="wrap">
+    <div class="wrap" data-reveal>
       <span class="eyebrow">Privacy</span>
       <h2 style="font: var(--text-display-3); font-size: clamp(30px, 3.4vw, 40px); max-width: 620px;">Hoot cannot reach the network.</h2>
       <p class="lede" style="margin-block: var(--space-8) var(--space-9); max-width: 680px;">Not “does not” — <em>cannot</em>. macOS requires an app to hold the network entitlement before it may open an outgoing connection. Hoot ships without one. These are the only permissions it has:</p>
@@ -484,7 +366,7 @@
       </ul>
       <p class="lede" style="margin-bottom: var(--space-12);">And the source is public, so you can check — <a href="https://github.com/codeficklefish/Hoot" style="text-decoration: underline; text-underline-offset: 3px;">every line of it</a>.</p>
 
-      <div class="claims">
+      <div class="claims" data-reveal>
         <div>
           <svg width="18" height="18" aria-hidden="true"><use href="#i-folder"></use></svg>
           <h3>One folder organised, any number read</h3>
@@ -508,7 +390,7 @@
 
   <!-- ---------- close ---------- -->
   <section class="band">
-    <div class="close">
+    <div class="close" data-reveal>
       <img src="assets/AppIcon-256.png" alt="" width="96" height="96">
       <h2>Try it on your Downloads folder.</h2>
       <p>It will show you what it would do before it does any of it. Nothing moves until you agree, and everything can be put back.</p>

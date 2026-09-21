@@ -10,6 +10,55 @@
 (function () {
   "use strict";
 
+  // ---- entrance and reveal -------------------------------------------
+  //
+  // The head script has already put `.js` on the document, so the entrance
+  // styles are live and everything marked `data-reveal` is currently hidden.
+  // It also armed a timer that shows the lot after 2.2s no matter what, so a
+  // failure anywhere below this line costs an animation and never the page.
+
+  var root = document.documentElement;
+  var stages = [].slice.call(document.querySelectorAll("[data-reveal]"));
+
+  function show(el) { el.classList.add("is-in"); }
+
+  if (!("IntersectionObserver" in window)) {
+    // No observer, no staged reveal. Everything at once beats nothing at all.
+    root.className += " reveal-all";
+  } else {
+    var watcher = new IntersectionObserver(function (entries, self) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        show(entry.target);
+        // One reveal each. A section that faded back out as you scrolled past
+        // it would be an effect rather than an entrance.
+        self.unobserve(entry.target);
+      });
+    }, { rootMargin: "0px 0px -12% 0px", threshold: 0.08 });
+
+    stages.forEach(function (el) {
+      // The first screen is not scrolled to, so it is not the observer's job.
+      if (!el.hasAttribute("data-entrance")) watcher.observe(el);
+    });
+
+    // The first screen waits for the typefaces. That wait is what makes the
+    // entrance feel controlled rather than slow: the headline comes in already
+    // set in Figtree instead of arriving in a fallback and jumping when the
+    // real face lands. Capped, because a font that never loads must not hold
+    // the page hostage — and `document.fonts` is not everywhere.
+    var opened = false;
+    function openTheCurtain() {
+      if (opened) return;
+      opened = true;
+      stages.forEach(function (el) { if (el.hasAttribute("data-entrance")) show(el); });
+    }
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(openTheCurtain);
+    }
+    setTimeout(openTheCurtain, 700);
+  }
+
+
   // ---- the hero window -----------------------------------------------
 
   var listing = document.getElementById("listing");
@@ -134,156 +183,116 @@
 
   // ---- "See it in action" --------------------------------------------
   //
-  // The design fills this with a sixty-second animation built as a React
-  // artboard. That runtime cannot ship on a page with no framework, and an
-  // embedded third-party player is refused for the reason the privacy section
-  // exists — so the minute is rebuilt here from the artboard's own content:
-  // its eight scene cues, its captions word for word, and the folders and
-  // renames it actually shows.
+  // A self-hosted file, for the reason the privacy section exists: a page that
+  // tells people the app reaches nothing cannot hand its visitor to somebody
+  // else's player. It is fetched only by a visitor who scrolls this far
+  // (`preload="none"`), starts when the section is actually on screen, and
+  // stops when it is not — nine megabytes decoding behind you is a warm phone
+  // and nothing else.
   //
-  // Nothing autoplays. A page that starts moving while you are reading it has
-  // taken a decision that belongs to the reader, and `prefers-reduced-motion`
-  // is people saying so outright.
+  // Muted and `playsinline`, which is not a style choice: no browser will
+  // autoplay a video with sound, and one that asked to would deserve the
+  // refusal.
 
-  // The cues are the running total of the artboard's scene durations:
+  // The artboard's own scene cues, as the running total of its durations:
   // Opening 8, Notice 5.5, Review 8, Approve 5.5, Undo 6, Rename 9, Shelf 11,
-  // Close 7 — one minute exactly, which is what the page promises.
-  var CUE = { Opening: 0, Notice: 8, Review: 13.5, Approve: 21.5,
-              Undo: 27, Rename: 33, Shelf: 42, Close: 53 };
-  var RUNTIME = 60;
-
-  // What is on screen, and the line across it. Captions are the artboard's,
-  // unchanged: they are the argument the minute is making.
-  var BEATS = [
-    { at: CUE.Opening, scene: "pile",    title: "Downloads", foot: "49 items · 214.6 GB available",
-      caption: "A year of Downloads. Not one of these names says what the file is." },
-    { at: CUE.Notice,  scene: "notice",  title: "Downloads", foot: "49 items · 214.6 GB available",
-      caption: "Hoot watches the folder and reads what is inside each file." },
-    { at: CUE.Review,  scene: "review",  title: "Review",    foot: "",
-      caption: "It says where each file should go, and what it based that on." },
-    { at: CUE.Approve, scene: "approve", title: "Downloads", foot: "8 folders, 4 items · 214.6 GB available",
-      caption: "Nothing moves until you say so. Unsure files stay where they are." },
-    { at: CUE.Undo,    scene: "undo",    title: "History",   foot: "",
-      caption: "Any batch can be undone — files go back exactly where they came from." },
-    { at: CUE.Rename,  scene: "rename",  title: "Rename",    foot: "2 of 49 files",
-      caption: "A name that says nothing gets a real one, read out of the file itself." },
-    { at: CUE.Shelf,   scene: "shelf",   title: "",          foot: "",
-      caption: "And your folders sit at the notch. Space opens one where it stands." },
-    { at: CUE.Close,   scene: "close",   title: "",          foot: "", caption: "" }
-  ];
-
-  // Five labels, because that is what the page shows. They are the beats
-  // somebody would want to jump to; the other three are things that happen on
-  // the way and have no separate name.
+  // Close 7. Five of them have names somebody would jump to; the rest happen
+  // on the way.
   var CHAPTERS = [
-    { label: "The pile",  at: CUE.Opening },
-    { label: "Review",    at: CUE.Review },
-    { label: "Undo",      at: CUE.Undo },
-    { label: "Renaming",  at: CUE.Rename },
-    { label: "The shelf", at: CUE.Shelf }
+    { label: "The pile", at: 0 }, { label: "Review", at: 13.5 },
+    { label: "Undo", at: 27 }, { label: "Renaming", at: 33 }, { label: "The shelf", at: 42 }
   ];
 
-  var stage = document.getElementById("stage");
-  if (!stage) return;
+  var video = document.getElementById("demo-video");
+  if (!video) return;
 
-  var parts = {
-    win: document.getElementById("win"),
-    desk: document.getElementById("desk"),
-    closing: document.getElementById("closing"),
-    popover: document.getElementById("popover")
-  };
-  var cap = document.getElementById("cap");
-  var winTitle = document.getElementById("win-title");
-  var winFoot = document.getElementById("win-foot");
   var playBtn = document.getElementById("play");
   var playGlyph = document.getElementById("play-glyph");
   var restartBtn = document.getElementById("restart");
   var elapsed = document.getElementById("elapsed");
+  var total = document.getElementById("total");
   var seek = document.getElementById("seek");
   var chapterBar = document.getElementById("chapters");
 
   var PLAY = "M3.5 2.2 11.8 7l-8.3 4.8z";
   var PAUSE = "M3.4 2.2h2.6v9.6H3.4zM8 2.2h2.6v9.6H8z";
 
-  var at = 0, playing = false, last = 0;
-
-  function beatAt(t) {
-    var found = BEATS[0];
-    BEATS.forEach(function (b) { if (t >= b.at) found = b; });
-    return found;
-  }
-
   function clock(t) {
-    var whole = Math.floor(t);
-    var hundredths = Math.floor((t - whole) * 100);
+    var whole = Math.floor(t || 0);
+    var hundredths = Math.floor(((t || 0) - whole) * 100);
     return Math.floor(whole / 60) + ":" + String(whole % 60).padStart(2, "0")
       + "." + String(hundredths).padStart(2, "0");
   }
 
   function paint() {
-    var b = beatAt(at);
-    stage.dataset.scene = b.scene;
-
-    // The shelf is not a window: it hangs off the camera housing, over the
-    // desktop. Drawing it inside a Finder window would be the single most
-    // misleading thing this surface could say about itself.
-    parts.win.hidden = b.scene === "shelf" || b.scene === "close";
-    parts.desk.hidden = b.scene !== "shelf";
-    parts.closing.hidden = b.scene !== "close";
-    parts.popover.hidden = b.scene !== "notice";
-
-    cap.textContent = b.caption;
-    cap.hidden = !b.caption;
-    winTitle.textContent = b.title;
-    winFoot.textContent = b.foot;
-    winFoot.hidden = !b.foot;
-
-    elapsed.textContent = clock(at);
-    if (document.activeElement !== seek) seek.value = String(at);
-
-    var reached = CHAPTERS.reduce(function (acc, c) { return at >= c.at ? c.label : acc; },
+    var t = video.currentTime || 0;
+    elapsed.textContent = clock(t);
+    if (document.activeElement !== seek) seek.value = String(t);
+    var reached = CHAPTERS.reduce(function (acc, c) { return t >= c.at ? c.label : acc; },
                                   CHAPTERS[0].label);
-    chapterBar.querySelectorAll("button").forEach(function (button) {
-      button.setAttribute("aria-current", String(button.dataset.chapter === reached));
+    chapterBar.querySelectorAll("button").forEach(function (b) {
+      b.setAttribute("aria-current", String(b.dataset.chapter === reached));
     });
   }
 
-  function tick(now) {
-    if (!playing) return;
-    at += (now - last) / 1000;
-    last = now;
-    if (at >= RUNTIME) { at = RUNTIME; pause(); paint(); return; }
-    paint();
-    requestAnimationFrame(tick);
-  }
-
-  function play() {
-    if (at >= RUNTIME) at = 0;
-    playing = true;
+  video.addEventListener("loadedmetadata", function () {
+    // The duration comes off the file rather than being written in the markup,
+    // so re-cutting the video cannot leave the page quoting a length it no
+    // longer has.
+    if (isFinite(video.duration)) {
+      seek.max = String(video.duration);
+      total.textContent = clock(video.duration);
+    }
+  });
+  video.addEventListener("timeupdate", paint);
+  video.addEventListener("play", function () {
     playGlyph.setAttribute("d", PAUSE);
     playBtn.setAttribute("aria-label", "Pause");
-    last = performance.now();
-    requestAnimationFrame(tick);
-  }
-
-  function pause() {
-    playing = false;
+  });
+  video.addEventListener("pause", function () {
     playGlyph.setAttribute("d", PLAY);
     playBtn.setAttribute("aria-label", "Play");
+  });
+
+  function start() {
+    // Autoplay can be refused — a browser setting, a data saver, a policy this
+    // page does not get to see. The promise rejecting is not an error; it is
+    // the visitor's answer, and the poster and the play button are already
+    // there for it.
+    var attempt = video.play();
+    if (attempt && attempt.catch) attempt.catch(function () {});
   }
 
-  playBtn.addEventListener("click", function () { playing ? pause() : play(); });
-  restartBtn.addEventListener("click", function () { at = 0; paint(); if (!playing) play(); });
-  seek.addEventListener("input", function () { at = Number(seek.value); paint(); });
+  playBtn.addEventListener("click", function () {
+    video.paused ? start() : video.pause();
+  });
+  restartBtn.addEventListener("click", function () { video.currentTime = 0; start(); });
+  seek.addEventListener("input", function () { video.currentTime = Number(seek.value); paint(); });
 
   CHAPTERS.forEach(function (c) {
     var button = document.createElement("button");
     button.type = "button";
     button.dataset.chapter = c.label;
     button.textContent = c.label;
-    button.addEventListener("click", function () { at = c.at; paint(); });
+    button.addEventListener("click", function () { video.currentTime = c.at; start(); });
     chapterBar.appendChild(button);
   });
+
+  // Plays itself when you arrive at it, and only then.
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          if (video.preload === "none") video.preload = "auto";
+          start();
+        } else if (!video.paused) {
+          video.pause();
+        }
+      });
+    }, { threshold: 0.45 }).observe(video);
+  } else {
+    video.preload = "auto";
+  }
 
   paint();
 })();
