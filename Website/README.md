@@ -102,12 +102,14 @@ were all fixed in that pass, and the mobile overflow with them. What is left:
 - **The version number is written by hand.** One place, in the hero, marked
   with a comment. The links cannot rot; this can.
 
-- **"See it in action" is not implemented.** The artboard fills it with an
-  iframe to `Hoot Demo Video.dc.html`, which is a sixty-second React animation
-  in eight scenes. It cannot go into a page with no framework, and an embedded
-  third-party player is refused for the reason in *The page* above. Record that
-  artboard to an MP4, put it in `public/assets/`, and it becomes a
-  self-hosted `<video>` in a few lines.
+- **"See it in action" is built, not embedded.** The artboard fills it with an
+  iframe to `Hoot Demo Video.dc.html`, a sixty-second React animation in eight
+  scenes. That cannot ship on a page with no framework, and an embedded
+  third-party player is refused for the reason in *The page* above. The minute
+  is instead five states of one mock — the pile, review, undo, renaming, the
+  shelf — stepped through by a timeline the scrubber and the chapter list both
+  drive, served from this origin like everything else. If a recorded MP4 ever
+  replaces it, it is self-hosted for the same reason.
 
 - **The unsigned-build warning is still true** and still in the hero. It comes
   out when a notarized build exists — see `docs/launch.md` phase 2 — and not

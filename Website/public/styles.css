@@ -464,6 +464,134 @@ footer { box-shadow: inset 0 1px 0 var(--border-subtle); }
   font: var(--text-small); color: var(--ink-3); font-family: var(--font-display);
 }
 
+/* ---------- "See it in action" ----------
+   A device, a screen, and a scrubber that actually moves. The design fills
+   this with a sixty-second animation built as a React artboard; that cannot
+   ship on a page with no framework, and an embedded third-party player is
+   refused for the reason the privacy section exists. So the five chapters are
+   five states of the same mock, the timeline steps between them, and the whole
+   thing is served from this origin like everything else here. */
+.demo-split { display: grid; grid-template-columns: minmax(min(240px, 100%), 280px) minmax(0, 1fr); gap: var(--space-12); align-items: center; }
+.demo-intro h2 { font: var(--text-display-3); font-size: clamp(26px, 2.6vw, 34px); }
+.demo-intro p { margin-top: var(--space-6); font: var(--text-body); color: var(--text-secondary); max-width: 26ch; }
+@media (max-width: 860px) { .demo-split { grid-template-columns: minmax(0, 1fr); } }
+
+.player { margin: 0; display: grid; gap: var(--space-6); min-width: 0; }
+.bezel {
+  background: #1A1919; border-radius: var(--radius-2xl);
+  padding: var(--space-4); box-shadow: var(--shadow-card);
+}
+.screen {
+  aspect-ratio: 16 / 10; border-radius: var(--radius-lg); overflow: hidden;
+  background: #CFCDC9; position: relative;
+  font-family: var(--font-system); container-type: inline-size;
+}
+
+/* Everything inside the screen is sized in cqw so the mock keeps its
+   proportions from a phone to a wide desktop — a fixed 11px caption would be
+   unreadable at 320px and lost at 900. */
+.screen .mb {
+  display: flex; align-items: center; gap: 2.2cqw; height: 4.4cqw;
+  padding-inline: 2cqw; background: rgba(255,250,244,.8);
+  font-size: 1.5cqw; color: var(--ink-3);
+}
+.screen .mb b { color: var(--ink-1); font-weight: 700; }
+.screen .mb .clock { margin-left: auto; }
+
+.win {
+  position: absolute; left: 6cqw; right: 6cqw; top: 8cqw; bottom: 4cqw;
+  background: var(--paper-0); border-radius: 1.2cqw; overflow: hidden;
+  box-shadow: 0 2cqw 4cqw rgba(0,0,0,.18); display: flex; flex-direction: column;
+}
+.win-bar { display: flex; align-items: center; gap: 1.2cqw; height: 4.2cqw; padding-inline: 1.6cqw; background: var(--mac-window); box-shadow: inset 0 -1px 0 var(--mac-separator); }
+.win-bar i { width: 1.1cqw; height: 1.1cqw; border-radius: 999px; display: block; }
+.win-bar i:nth-child(1) { background: #FF5F57; } .win-bar i:nth-child(2) { background: #FEBC2E; } .win-bar i:nth-child(3) { background: #28C840; }
+.win-bar span { font-size: 1.5cqw; color: var(--ink-2); margin-left: 1.4cqw; }
+.win-body { flex: 1; display: flex; min-height: 0; }
+.sidebar { width: 14cqw; flex: 0 0 auto; padding: 1.6cqw 1.2cqw; background: rgba(0,0,0,.02); box-shadow: inset -1px 0 0 var(--mac-separator); font-size: 1.35cqw; color: var(--ink-3); display: grid; gap: .9cqw; align-content: start; }
+.sidebar b { font-size: 1.1cqw; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-4); font-weight: 600; }
+.sidebar span.on { color: var(--ink-1); font-weight: 600; }
+.pane { flex: 1; min-width: 0; position: relative; overflow: hidden; }
+
+/* One scene on screen at a time. Crossfaded rather than cut, because the
+   chapters are one continuous minute rather than five slides. */
+.scene { position: absolute; inset: 0; padding: 1.8cqw; overflow: hidden; opacity: 0; visibility: hidden; transition: opacity var(--dur-base) var(--ease-standard), visibility var(--dur-base); }
+.stage[data-scene="pile"]   .scene[data-scene="pile"],
+.stage[data-scene="review"] .scene[data-scene="review"],
+.stage[data-scene="undo"]   .scene[data-scene="undo"],
+.stage[data-scene="rename"] .scene[data-scene="rename"],
+.stage[data-scene="shelf"]  .scene[data-scene="shelf"] { opacity: 1; visibility: visible; }
+
+/* The pile. Real filenames, because invented ones are always tidier than the
+   folder they are meant to be standing in for. */
+.pile { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1cqw .4cqw; }
+.pile figure { margin: 0; display: grid; justify-items: center; gap: .4cqw; }
+.pile svg { width: 3.2cqw; height: 3.2cqw; color: var(--ink-4); }
+.pile figcaption { font-size: 1.05cqw; line-height: 1.25; color: var(--ink-2); text-align: center; max-width: 11cqw; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-all; }
+
+/* The sorted result, and the rename proposals, at the same scale. */
+.mini { display: grid; gap: .8cqw; align-content: start; font-size: 1.5cqw; }
+.mini .g { font-weight: 600; color: var(--ink-1); display: flex; gap: .8cqw; align-items: center; }
+.mini .g em { font-style: normal; margin-left: auto; font-weight: 400; font-size: 1.3cqw; color: var(--ink-4); }
+.mini .f { display: flex; gap: .8cqw; align-items: center; padding-left: 2.4cqw; color: var(--ink-3); }
+.mini svg { width: 1.8cqw; height: 1.8cqw; flex: 0 0 auto; }
+.mini .mv { display: flex; align-items: center; gap: 1cqw; padding: 1cqw; border-radius: .8cqw; background: var(--paper-1); box-shadow: inset 0 0 0 1px var(--line-1); }
+.mini .mv .dot { width: .9cqw; height: .9cqw; border-radius: 999px; flex: 0 0 auto; }
+.mini .mv .to { margin-left: auto; padding: .2cqw 1cqw; border-radius: 999px; background: var(--orange-50); color: var(--orange-700); font-weight: 600; font-size: 1.3cqw; }
+.mini .mv .to.grey { background: var(--paper-3); color: var(--ink-3); font-weight: 400; }
+.mini .old { font-family: var(--font-mono); color: var(--ink-4); text-decoration: line-through; font-size: 1.3cqw; }
+.mini .new { font-weight: 600; color: var(--ink-1); }
+
+/* The shelf scene has no Finder window — it is the desktop with the panel
+   hanging out of the camera housing, which is where it actually lives. */
+.screen .desk { position: absolute; inset: 4.4cqw 0 0; display: grid; place-items: start center; }
+.screen .desk .np {
+  width: 46cqw; background: #000; color: #fff; border-radius: 0 0 2.4cqw 2.4cqw;
+  padding: 0 1.6cqw 1.6cqw; box-shadow: 0 2cqw 3cqw rgba(0,0,0,.45); font-size: 1.5cqw;
+}
+.screen .desk .np .tabs { display: flex; gap: .4cqw; align-items: center; height: 3.4cqw; }
+.screen .desk .np .tabs span { padding: .4cqw 1cqw; border-radius: 999px; font-size: 1.35cqw; font-weight: 600; color: var(--notch-ink-2); }
+.screen .desk .np .tabs span.on { background: var(--notch-tile-hover); color: #fff; }
+.screen .desk .np .r { display: grid; grid-template-columns: 2cqw minmax(0,1fr) auto; gap: .8cqw; align-items: center; height: 2.8cqw; padding-inline: .6cqw; border-radius: .6cqw; }
+.screen .desk .np .r.grp { background: var(--notch-tile); }
+.screen .desk .np .r.kid { padding-left: 2.8cqw; }
+.screen .desk .np .r svg { width: 1.6cqw; height: 1.6cqw; color: var(--notch-ink-3); }
+.screen .desk .np .r b { font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.screen .desk .np .r em { font-style: normal; font-size: 1.2cqw; color: var(--notch-ink-2); }
+
+/* The line the design puts across the window — the one sentence each chapter
+   is making. */
+.cap {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 1.4cqw 2cqw; background: rgba(255,255,255,.94);
+  box-shadow: inset 0 1px 0 var(--mac-separator);
+  font-family: var(--font-display); font-weight: 600;
+  font-size: 1.9cqw; line-height: 1.35; color: var(--ink-1); text-align: center;
+}
+.win-foot { height: 3.4cqw; display: grid; place-items: center; font-size: 1.2cqw; color: var(--ink-4); background: var(--paper-1); box-shadow: inset 0 1px 0 var(--mac-separator); }
+
+/* ---------- player chrome ---------- */
+.controls { display: flex; align-items: center; gap: var(--space-5); }
+.controls button {
+  display: grid; place-items: center; width: 34px; height: 34px;
+  border: 0; border-radius: var(--radius-md); cursor: pointer;
+  background: var(--paper-0); box-shadow: 0 0 0 1px var(--line-1), var(--shadow-card);
+  color: var(--ink-1);
+}
+.controls button:hover { box-shadow: 0 0 0 1px var(--line-2), var(--shadow-card-hover); }
+.controls .t { font: var(--text-small); color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.controls input[type="range"] { flex: 1; min-width: 0; accent-color: var(--orange-500); height: 4px; cursor: pointer; }
+
+.chapters { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-7); }
+.chapters button {
+  border: 0; background: none; cursor: pointer; padding: 0;
+  font: var(--text-small); color: var(--text-tertiary); white-space: nowrap;
+}
+.chapters button:hover { color: var(--ink-1); }
+.chapters button[aria-current="true"] { color: var(--ink-1); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) { .scene { transition: none; } }
+
 /* ---------- keycaps ---------- */
 .keys { margin-top: var(--space-12); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: var(--space-10); }
 .keys > div { display: grid; gap: var(--space-6); justify-items: start; }
