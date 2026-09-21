@@ -87,45 +87,31 @@ There is no network entitlement, so macOS will not let the app open a
 connection at all. "Cannot, not does not" is the page's strongest claim and it
 is still true.
 
-## What the page currently gets wrong
+## What the page still needs
 
-- **The one-folder promise — only once the shelf ships.** The hero says "Hoot
-  watches one folder" and the privacy section says "macOS grants access to
-  that folder alone. Hoot has no way to see anything else on your Mac." Both
-  are still true of the *released* build, and both stop being true the moment
-  the notch shelf is released.
-  `docs/privacy.md` has the replacement wording: one folder organized, any
-  number read, never written. Say that the entitlements did not change —
-  `files.user-selected.read-write` and `files.bookmarks.app-scope` already
-  meant "whatever you pick, however many times" — or a promise that grew
-  reads as a promise being walked back.
+The page was rebuilt from `Hoot Landing Page.dc.html` on 21 September 2026.
+Version, links, renaming, sorting by type, the shelf and the privacy wording
+were all fixed in that pass, and the mobile overflow with them. What is left:
 
-- **The version and the download links.** The page says 0.5.0 in two places
-  and its four release links are pinned to `v0.5.0`. `v0.6.0` has been public
-  since 12 September with its own `Hoot.dmg`, so the page is actively handing
-  out a superseded build. `releases/latest/download/Hoot.dmg` and
-  `releases/latest` resolve to whatever is newest and cannot rot again; the
-  printed version number is written by hand and still has to be updated when a
-  release is cut.
+- **Do not deploy it before 0.7.0 is tagged.** Three sections — the shelf, the
+  keycaps and the read-many-write-one privacy card — describe work that is on
+  `main` and in no release. The download button resolves to `releases/latest`,
+  so the page starts telling the truth the moment the tag exists and is a lie
+  until then.
 
-- **Nothing about renaming.** The word does not appear on the page once, and
-  renaming shipped in 0.6.0 — it is the answer to the page's own opening line
-  ("a filename is often the least informative thing about a file"), and the
-  page currently only solves half of it by moving the file to a good folder
-  while leaving it called `3721984.pdf`.
+- **The version number is written by hand.** One place, in the hero, marked
+  with a comment. The links cannot rot; this can.
 
-- **Nothing about sorting by type.** Also absent — no "Screenshots", no
-  "by type", no mention that there is a mode which opens no file and reaches
-  no model. That is the mode with the strongest privacy story of the two, and
-  the page's privacy section does not know it exists.
+- **"See it in action" is not implemented.** The artboard fills it with an
+  iframe to `Hoot Demo Video.dc.html`, which is a sixty-second React animation
+  in eight scenes. It cannot go into a page with no framework, and an embedded
+  third-party player is refused for the reason in *The page* above. Record that
+  artboard to an MP4, put it in `public/assets/`, and it becomes a
+  self-hosted `<video>` in a few lines.
 
-- **Nothing about the notch**, correctly for now: 0.6.0 *removed* the old
-  Dynamic Island HUD and the shelf that replaced it is unreleased. There is
-  nothing to add here until it ships.
-
-- **Mobile.** At 375px the page overflows horizontally by about nine points —
-  two `.wrap` elements, most likely `.split`'s `minmax(320px, 1fr)` against
-  the gutters. Worth fixing in any redesign rather than carrying over.
+- **The unsigned-build warning is still true** and still in the hero. It comes
+  out when a notarized build exists — see `docs/launch.md` phase 2 — and not
+  before.
 
 ## Things that are still accurate
 

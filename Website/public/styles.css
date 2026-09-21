@@ -30,6 +30,18 @@
 
   --mac-window:#ECECEC; --mac-separator:rgba(0,0,0,.09);
 
+  /* The notch HUD — the one dark register in the system. The panel is true
+     black so it reads as an extension of the display bezel, never as a
+     dark-mode window. Copied from the design system's semantic.css. */
+  --notch-surface:#000000;
+  --notch-tile:rgba(255,255,255,.07);
+  --notch-tile-hover:rgba(255,255,255,.12);
+  --notch-hairline:rgba(255,255,255,.10);
+  --notch-ink-1:#FFFFFF;
+  --notch-ink-2:rgba(255,255,255,.62);
+  --notch-ink-3:rgba(255,255,255,.38);
+  --notch-radius:26px;
+
   /* semantic aliases — consume these, not the ramps above */
   --text-primary:var(--ink-1);   --text-secondary:var(--ink-3);
   --text-tertiary:var(--ink-4);  --text-link:var(--ink-1);
@@ -52,6 +64,9 @@
   --text-body:400 16px/1.55 var(--font-display);
   --text-small:400 14px/1.5 var(--font-display);
   --text-micro:500 12px/1.4 var(--font-display);
+  --text-app-title:600 15px/20px var(--font-system);
+  --text-app-headline:600 13px/16px var(--font-system);
+  --text-app-body:400 13px/17px var(--font-system);
   --text-app-caption:400 11px/14px var(--font-system);
   --text-app-caption2:400 10px/13px var(--font-system);
   --tracking-display:-0.025em; --tracking-tight:-0.012em; --tracking-wide:0.04em;
@@ -63,6 +78,7 @@
   --site-max:1180px; --site-gutter:32px;
   /* nav = 20px padding + 38px pill + 20px padding; stable at every width */
   --nav-h:78px;
+  --row-height-app:28px;
 
   --radius-sm:5px; --radius-md:7px; --radius-lg:10px;
   --radius-xl:14px; --radius-2xl:20px; --radius-pill:999px;
@@ -104,41 +120,11 @@ p { margin: 0; text-wrap: pretty; }
 .band { background: var(--paper-1); box-shadow: inset 0 1px 0 var(--border-subtle), inset 0 -1px 0 var(--border-subtle); }
 section > .wrap { padding-block: var(--space-14); }
 
-/* ---------- full-screen scenes ----------
-   Each major section fills the viewport and centres its own content, so one
-   scene is on screen at a time and the next never peeks above the fold.
-
-   min-height, never height: a section whose content is taller than the screen
-   grows rather than clipping. That is what keeps the six feature cards and the
-   long safety copy whole on a short phone, where a fixed height would cut them.
-
-   svh rather than vh because mobile browsers collapse their chrome as you
-   scroll; vh measures the taller state and leaves every scene overshooting by
-   the toolbar's height.
-
-   The existing padding is left exactly as it was — the centring does the work,
-   not extra space. */
-/* A column flexbox, not a grid: a grid's implicit track sizes itself to the
-   item's min-content width, so on a narrow phone the wrapper was measured at
-   394px inside a 375px screen and the page scrolled sideways. A column flex
-   stretches its children to the container instead of measuring them. */
-main > section {
-  min-height: 100vh;   /* for engines without svh */
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-main > section > * { min-width: 0; }
-
-/* The hero shares the first screen with the nav above it, so it takes the
-   viewport less the nav's height. A full 100svh here would push the hero 78px
-   past the fold and put the nav on a screen of its own. */
-.hero {
-  min-height: calc(100vh - var(--nav-h));
-  min-height: calc(100svh - var(--nav-h));
-  align-content: center;
-}
+/* Sections pace themselves with padding rather than filling the viewport.
+   An earlier build gave every section `min-height: 100svh` so one scene was on
+   screen at a time. The design this page is now built from does not ask for
+   that, and against its longer sections it opened gaps taller than the content
+   — a heading alone on a screen, its paragraph on the next. */
 
 /* ---------- nav ---------- */
 .nav { display: flex; align-items: center; gap: var(--space-9); padding-block: var(--space-8); }
@@ -176,7 +162,7 @@ main > section > * { min-width: 0; }
 
 /* ---------- hero ---------- */
 .hero {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
   gap: var(--space-12); align-items: center;
   padding-block: var(--space-11) var(--space-14);
 }
@@ -282,7 +268,7 @@ main > section > * { min-width: 0; }
 }
 
 /* ---------- feature cards ---------- */
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(272px, 1fr)); gap: var(--space-9); }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(272px, 100%), 1fr)); gap: var(--space-9); }
 .card {
   background: var(--surface-card); border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-card); padding: var(--space-10);
@@ -296,7 +282,7 @@ main > section > * { min-width: 0; }
 
 /* ---------- promises ---------- */
 .promise {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
   gap: var(--space-9); padding-block: var(--space-10);
   box-shadow: inset 0 1px 0 var(--border-subtle);
 }
@@ -315,7 +301,7 @@ main > section > * { min-width: 0; }
 .aside p { font: var(--text-body); color: var(--ink-2); }
 
 /* ---------- corrections ---------- */
-.split { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-12); align-items: center; }
+.split { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: var(--space-12); align-items: center; }
 .review {
   background: var(--surface-card); border-radius: var(--radius-2xl); box-shadow: var(--shadow-card);
   padding: var(--space-9); font-family: var(--font-system);
@@ -349,7 +335,7 @@ main > section > * { min-width: 0; }
   font-family: var(--font-mono); font-size: 13px; color: var(--ink-2);
   overflow-wrap: anywhere;
 }
-.claims { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-10); }
+.claims { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: var(--space-10); }
 .claims > div { display: grid; gap: var(--space-5); align-content: start; }
 .claims h3 { font: var(--text-heading); font-size: 17px; letter-spacing: var(--tracking-tight); }
 .claims p { font: var(--text-small); color: var(--text-secondary); }
@@ -366,7 +352,137 @@ footer { box-shadow: inset 0 1px 0 var(--border-subtle); }
 .foot a:hover { color: var(--ink-1); }
 .foot nav { display: flex; gap: var(--space-9); margin-left: auto; }
 
+/* ---------- two ways to sort ----------
+   Each mode is shown as the folders it would produce rather than described,
+   which is also how Settings shows it. */
+.chips { display: flex; flex-wrap: wrap; gap: var(--space-4); font-family: var(--font-system); }
+.chip {
+  display: inline-flex; align-items: center; gap: var(--space-3);
+  height: 22px; padding-inline: var(--space-5);
+  border-radius: var(--radius-pill); background: var(--paper-2);
+  box-shadow: inset 0 0 0 1px var(--line-1);
+  font: var(--text-app-caption); color: var(--ink-2); white-space: nowrap;
+}
+.chip b { font-weight: 600; }
+.chip .n { color: var(--ink-4); font-variant-numeric: tabular-nums; }
+
+/* ---------- renaming ---------- */
+.renames { display: grid; gap: var(--space-7); }
+.rename {
+  display: grid; gap: var(--space-4);
+  padding-bottom: var(--space-6); box-shadow: inset 0 -1px 0 var(--mac-separator);
+}
+.rename .from {
+  font-family: var(--font-mono); font-size: 13px; color: var(--ink-4);
+  text-decoration: line-through;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rename .to-row { display: flex; align-items: center; gap: var(--space-4); min-width: 0; }
+.rename .to-row svg { flex: 0 0 auto; color: var(--ink-4); }
+.rename .to {
+  min-width: 0; font: var(--text-app-body); font-weight: 600; color: var(--ink-1);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rename .why { font: var(--text-app-caption); color: var(--ink-3); }
+.kept { display: flex; gap: var(--space-5); align-items: flex-start; }
+.kept svg { flex: 0 0 auto; margin-top: 1px; color: var(--green-500); }
+.kept p { font: var(--text-app-caption); color: var(--ink-3); }
+.kept code { font-family: var(--font-mono); }
+
+/* ---------- the shelf at the notch ----------
+   A desktop with a menu bar, and the panel hanging out of the camera housing
+   where the hardware would put it. Black on purpose: see --notch-surface. */
+.stage {
+  position: relative; overflow: hidden;
+  border-radius: var(--radius-2xl); box-shadow: var(--shadow-card);
+  background: #E6E4E0; min-height: 420px;
+}
+.menubar {
+  display: flex; align-items: center; gap: var(--space-7);
+  height: 26px; padding-inline: var(--space-6);
+  background: rgba(255,250,244,.72); box-shadow: inset 0 -1px 0 var(--mac-separator);
+  font-family: var(--font-system);
+}
+.menubar b { font: var(--text-app-caption); font-weight: 700; color: var(--ink-1); }
+.menubar span { font: var(--text-app-caption); color: var(--ink-3); }
+.menubar .clock { margin-left: auto; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+.notch {
+  position: absolute; left: 50%; top: 0; transform: translateX(-50%);
+  width: min(420px, calc(100% - var(--space-9) * 2));
+  background: var(--notch-surface); color: var(--notch-ink-1);
+  /* Square at the top: a rounded corner there would open a sliver of desktop
+     between the panel and the bezel and give the join away. */
+  border-radius: 0 0 var(--notch-radius) var(--notch-radius);
+  box-shadow: 0 26px 30px rgba(0,0,0,.40);
+  padding: 0 var(--space-7) var(--space-8);
+  font-family: var(--font-system);
+}
+.notch-tabs { display: flex; align-items: center; gap: var(--space-2); height: 34px; }
+.notch-tabs button {
+  border: 0; cursor: pointer; background: transparent;
+  height: 24px; padding-inline: var(--space-5); border-radius: var(--radius-pill);
+  font: 600 12px/1 var(--font-system); color: var(--notch-ink-2);
+  transition: background var(--dur-fast) var(--ease-standard);
+}
+.notch-tabs button[aria-pressed="true"] { background: var(--notch-tile-hover); color: var(--notch-ink-1); }
+.notch-tabs .count { margin-left: auto; font: var(--text-app-caption2); color: var(--notch-ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.shelf { display: grid; }
+.shelf .r {
+  display: grid; grid-template-columns: 13px minmax(0, 1fr) 54px 30px;
+  align-items: center; gap: 7px; height: 26px; padding-inline: 6px;
+  border-radius: var(--radius-sm);
+}
+/* A folder opened where it stands: the row and its children share one tile,
+   which is what "the list underneath never moved" looks like. */
+.shelf .r.open-top { background: var(--notch-tile); border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+.shelf .r.open-mid { background: var(--notch-tile); border-radius: 0; }
+.shelf .r.open-end { background: var(--notch-tile); border-radius: 0 0 var(--radius-sm) var(--radius-sm); }
+.shelf .r.child { padding-left: 26px; }
+.shelf .r svg { color: var(--notch-ink-3); }
+.shelf .r.is-folder svg { color: var(--notch-ink-2); }
+.shelf .n { font: var(--text-app-body); color: var(--notch-ink-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.shelf .s, .shelf .a { font: var(--text-app-caption2); color: var(--notch-ink-2); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.notch-foot { display: flex; align-items: center; gap: var(--space-4); margin-top: var(--space-4); padding-top: var(--space-4); box-shadow: inset 0 1px 0 var(--notch-hairline); }
+.notch-foot .sort { font: var(--text-app-caption); font-weight: 600; color: var(--notch-ink-2); }
+.notch-foot .tidy {
+  margin-left: auto; display: inline-flex; align-items: center; height: 20px;
+  padding-inline: var(--space-5); border-radius: var(--radius-pill);
+  background: var(--orange-500); color: #241300;
+  font: var(--text-app-caption); font-weight: 600; white-space: nowrap;
+}
+.stage-caption {
+  position: absolute; left: 0; right: 0; bottom: var(--space-9);
+  padding-inline: var(--space-9); text-align: center;
+  font: var(--text-small); color: var(--ink-3); font-family: var(--font-display);
+}
+
+/* ---------- keycaps ---------- */
+.keys { margin-top: var(--space-12); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: var(--space-10); }
+.keys > div { display: grid; gap: var(--space-6); justify-items: start; }
+.keys h3 { font: var(--text-heading); font-size: 17px; letter-spacing: var(--tracking-tight); }
+.keys p { font: var(--text-small); color: var(--text-secondary); }
+.keycap {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 52px; height: 52px; padding-inline: var(--space-5);
+  border-radius: var(--radius-lg); background: var(--paper-0);
+  box-shadow: inset 0 -2px 0 var(--line-2), 0 1px 2px rgba(0,0,0,.10);
+  font: 600 15px/1 var(--font-system); color: var(--ink-2);
+}
+
+/* ---------- the two-column split used by three sections ---------- */
+.aside-note { margin-top: var(--space-11); font: var(--text-small); color: var(--text-tertiary); max-width: 660px; }
+
+/* A 32pt gutter is a tenth of a phone's width from each side. The design is
+   drawn at desktop, where it is right; at 375px it is most of the reason the
+   text column feels cramped. */
+@media (max-width: 480px) {
+  :root { --site-gutter: 20px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .pill, .card, .seg button { transition: none; }
+  .pill, .card, .seg button, .notch-tabs button { transition: none; }
   .card:hover { transform: none; }
 }

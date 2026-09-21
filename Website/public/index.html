@@ -1,162 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hoot for macOS</title>
+<title>Hoot — files sorted by what they're about</title>
+<meta name="description" content="Hoot watches one folder on your Mac and works out what files are about, then proposes where they belong. Nothing moves until you approve it. Runs entirely on your Mac and cannot reach the network.">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="assets/AppIcon-256.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&family=Caveat:wght@400..700&display=swap">
 <link rel="stylesheet" href="styles.css">
+</head>
+<body>
 
-<div class="wrap">
-  <header class="nav">
-    <a class="wordmark" href="#top">
-      <img src="assets/HootMark-Black.png" alt="" width="26" height="26">
-      <span>hoot</span>
-    </a>
-    <div class="nav-links">
-      <a href="#how">How it works</a>
-      <a href="#safety">Safety</a>
-      <a href="#privacy">Privacy</a>
-      <a class="pill pill-sm" href="https://github.com/codeficklefish/Hoot/releases/download/v0.5.0/Hoot.dmg">Download</a>
-    </div>
-  </header>
-</div>
+<!-- Glyphs, once. The app draws these as SF Symbols; here they are the same
+     shapes as paths, so the page still needs nothing from the network but its
+     typefaces. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <symbol id="i-doc" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.2" d="M4 1.6h5l3 3v9.8H4z"/><path fill="none" stroke="currentColor" stroke-width="1.2" d="M9 1.6v3h3"/></symbol>
+  <symbol id="i-photo" viewBox="0 0 16 16"><rect x="1.8" y="3.2" width="12.4" height="9.6" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="5.6" cy="6.4" r="1.1" fill="currentColor"/><path fill="none" stroke="currentColor" stroke-width="1.2" d="m2.6 11.4 3.2-3 2.4 2.2 2.6-2.4 3 2.8"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.2" d="M1.8 4.2a1.4 1.4 0 0 1 1.4-1.4h2.6l1.4 1.6h5.6a1.4 1.4 0 0 1 1.4 1.4v6a1.4 1.4 0 0 1-1.4 1.4H3.2a1.4 1.4 0 0 1-1.4-1.4z"/></symbol>
+  <symbol id="i-film" viewBox="0 0 16 16"><rect x="1.8" y="3.4" width="12.4" height="9.2" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.2"/><path fill="none" stroke="currentColor" stroke-width="1.2" d="M4.6 3.4v9.2M11.4 3.4v9.2M1.8 8h12.4"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.2" d="M1.8 4.4h12.4v8.2a1.4 1.4 0 0 1-1.4 1.4H3.2a1.4 1.4 0 0 1-1.4-1.4z"/><rect x="1.2" y="1.8" width="13.6" height="2.6" rx=".8" fill="none" stroke="currentColor" stroke-width="1.2"/><path fill="none" stroke="currentColor" stroke-width="1.2" d="M6.6 7.6h2.8"/></symbol>
+  <symbol id="i-box" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.2" d="m8 1.8 6 3v6.4l-6 3-6-3V4.8z"/><path fill="none" stroke="currentColor" stroke-width="1.2" d="M2 4.8l6 3 6-3M8 7.8v6.4"/></symbol>
+  <symbol id="i-sheet" viewBox="0 0 16 16"><rect x="1.8" y="2.6" width="12.4" height="10.8" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.2"/><path fill="none" stroke="currentColor" stroke-width="1.2" d="M1.8 6.2h12.4M1.8 9.8h12.4M6.4 2.6v10.8"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 16 16"><path fill="currentColor" d="m6 1.6 1.1 3L10 5.8 7.1 7 6 10 4.8 7 2 5.8 4.8 4.6zM12 8.6l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 16 16"><rect x="3.2" y="7" width="9.6" height="7" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><path fill="none" stroke="currentColor" stroke-width="1.2" d="M5.4 7V5.2a2.6 2.6 0 0 1 5.2 0V7"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.3" d="M8 1.6 13.4 3.4v4.4c0 3.2-2.2 5.6-5.4 6.6-3.2-1-5.4-3.4-5.4-6.6V3.4z"/><path fill="none" stroke="currentColor" stroke-width="1.3" d="m5.6 7.8 1.8 1.8 3.2-3.4"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.3" d="M8 2.2 14.6 13.4H1.4z"/><path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" d="M8 6.4v3.2M8 11.6h.01"/></symbol>
+  <symbol id="i-turn" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.3" d="M3.4 3v4.2a2 2 0 0 0 2 2h6.4"/><path fill="none" stroke="currentColor" stroke-width="1.3" d="m9.6 7 2.6 2.2-2.6 2.2"/></symbol>
+</defs></svg>
+
+<header class="nav wrap">
+  <a class="wordmark" href="#top" aria-label="Hoot, home">
+    <img src="assets/HootMark-Black.png" alt="" width="26" height="26">
+    <span>Hoot</span>
+  </a>
+  <nav class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#notch">The shelf</a>
+    <a href="#safety">Safety</a>
+    <a href="#privacy">Privacy</a>
+    <a class="pill pill-sm" href="https://github.com/codeficklefish/Hoot/releases/latest/download/Hoot.dmg">Download</a>
+  </nav>
+</header>
 
 <main id="top">
-  <div class="wrap">
-    <section class="hero">
+
+  <!-- ---------- hero ---------- -->
+  <section>
+    <div class="wrap hero">
       <figure class="demo">
         <div class="demo-frame">
           <div class="demo-bar">
-            <span class="lights"><i></i><i></i><i></i></span>
+            <div class="lights" aria-hidden="true"><i></i><i></i><i></i></div>
             <span class="demo-path">~/Downloads</span>
-            <span class="seg" role="group" aria-label="Folder view">
+            <div class="seg" role="group" aria-label="Before or after Hoot">
               <button type="button" data-view="before" aria-pressed="false">Before</button>
               <button type="button" data-view="after" aria-pressed="true">After</button>
-            </span>
+            </div>
           </div>
 
           <div class="listing" id="listing" data-view="after">
             <div class="state-after">
               <div class="group">
-                <div class="group-head"><span class="tri">&#9656;</span>Cebu Trip<span class="count">3 files</span></div>
-                <div class="row"><span class="kind"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 1.8H4.6a1.3 1.3 0 0 0-1.3 1.3v9.8a1.3 1.3 0 0 0 1.3 1.3h6.8a1.3 1.3 0 0 0 1.3-1.3V4.9z"/><path d="M9.3 1.8v3.1h3.1"/></svg></span><span class="fname">boarding-pass-cebu.pdf</span></div>
-                <div class="row"><span class="kind"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 1.8H4.6a1.3 1.3 0 0 0-1.3 1.3v9.8a1.3 1.3 0 0 0 1.3 1.3h6.8a1.3 1.3 0 0 0 1.3-1.3V4.9z"/><path d="M9.3 1.8v3.1h3.1"/></svg></span><span class="fname">cebu_itinerary.docx</span></div>
-                <div class="row"><span class="kind"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 1.8H4.6a1.3 1.3 0 0 0-1.3 1.3v9.8a1.3 1.3 0 0 0 1.3 1.3h6.8a1.3 1.3 0 0 0 1.3-1.3V4.9z"/><path d="M9.3 1.8v3.1h3.1"/></svg></span><span class="fname">hotel_confirmation_cebu.pdf</span></div>
+                <div class="group-head"><span class="tri" aria-hidden="true">▾</span>Cebu Trip<span class="count">3 files</span></div>
+                <div class="row"><span class="kind"><svg><use href="#i-doc"></use></svg></span><span class="fname">boarding-pass-cebu.pdf</span></div>
+                <div class="row"><span class="kind"><svg><use href="#i-doc"></use></svg></span><span class="fname">cebu_itinerary.docx</span></div>
+                <div class="row"><span class="kind"><svg><use href="#i-doc"></use></svg></span><span class="fname">hotel_confirmation_cebu.pdf</span></div>
               </div>
               <div class="group">
-                <div class="group-head"><span class="tri">&#9656;</span>Electricity Bills<span class="count">2 files</span></div>
-                <div class="row"><span class="kind"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 1.8H4.6a1.3 1.3 0 0 0-1.3 1.3v9.8a1.3 1.3 0 0 0 1.3 1.3h6.8a1.3 1.3 0 0 0 1.3-1.3V4.9z"/><path d="M9.3 1.8v3.1h3.1"/></svg></span><span class="fname">electricity_bill_jan.pdf</span></div>
-                <div class="row"><span class="kind"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 1.8H4.6a1.3 1.3 0 0 0-1.3 1.3v9.8a1.3 1.3 0 0 0 1.3 1.3h6.8a1.3 1.3 0 0 0 1.3-1.3V4.9z"/><path d="M9.3 1.8v3.1h3.1"/></svg></span><span class="fname">electricity_bill_feb.pdf</span></div>
+                <div class="group-head"><span class="tri" aria-hidden="true">▾</span>Electricity Bills<span class="count">2 files</span></div>
+                <div class="row"><span class="kind"><svg><use href="#i-doc"></use></svg></span><span class="fname">electricity_bill_jan.pdf</span></div>
+                <div class="row"><span class="kind"><svg><use href="#i-doc"></use></svg></span><span class="fname">electricity_bill_feb.pdf</span></div>
               </div>
               <div class="group">
-                <div class="group-head"><span class="tri">&#9656;</span>Finance<span class="count">1 file</span></div>
-                <div class="row"><span class="kind"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.4" y="3" width="11.2" height="10" rx="1.3"/><path d="M2.4 6.3h11.2M8 6.3V13"/></svg></span><span class="fname">open case summary.xlsx</span></div>
+                <div class="group-head"><span class="tri" aria-hidden="true">▾</span>Finance<span class="count">1 file</span></div>
+                <div class="row"><span class="kind"><svg><use href="#i-sheet"></use></svg></span><span class="fname">open case summary.xlsx</span></div>
               </div>
               <div class="group">
-                <div class="group-head"><span class="tri">&#9656;</span>Food<span class="count">1 file</span></div>
-                <div class="row"><span class="kind"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.4" y="3" width="11.2" height="10" rx="1.3"/><circle cx="5.9" cy="6.4" r="1"/><path d="M2.7 11.4l2.7-2.6a1.3 1.3 0 0 1 1.8 0l3.9 3.7"/></svg></span><span class="fname">301847592_118273640591827_44729…n.jpg</span></div>
+                <div class="group-head"><span class="tri" aria-hidden="true">▾</span>Food<span class="count">1 file</span></div>
+                <div class="row"><span class="kind"><svg><use href="#i-photo"></use></svg></span><span class="fname">301847592_118273640591827_44729…n.jpg</span></div>
               </div>
               <div class="group">
-                <div class="group-head"><span class="tri">&#9656;</span>Software<span class="count">1 file</span></div>
-                <div class="row"><span class="kind"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.4 6h9.2v6.2a1.3 1.3 0 0 1-1.3 1.3H4.7a1.3 1.3 0 0 1-1.3-1.3z"/><rect x="2.5" y="2.6" width="11" height="3.4" rx=".9"/><path d="M6.9 8.7h2.2"/></svg></span><span class="fname">DaVinci_Resolve_21.0.4_Mac.zip</span></div>
+                <div class="group-head"><span class="tri" aria-hidden="true">▾</span>Software<span class="count">1 file</span></div>
+                <div class="row"><span class="kind"><svg><use href="#i-archive"></use></svg></span><span class="fname">DaVinci_Resolve_21.0.4_Mac.zip</span></div>
               </div>
             </div>
 
             <div class="state-before">
-              <div class="row"><span class="kind"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 1.8H4.6a1.3 1.3 0 0 0-1.3 1.3v9.8a1.3 1.3 0 0 0 1.3 1.3h6.8a1.3 1.3 0 0 0 1.3-1.3V4.9z"/><path d="M9.3 1.8v3.1h3.1"/></svg></span><span class="fname">boarding-pass-cebu.pdf</span><span class="when">2m</span></div>
-              <div class="row"><span class="kind"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 1.8H4.6a1.3 1.3 0 0 0-1.3 1.3v9.8a1.3 1.3 0 0 0 1.3 1.3h6.8a1.3 1.3 0 0 0 1.3-1.3V4.9z"/><path d="M9.3 1.8v3.1h3.1"/></svg></span><span class="fname">electricity_bill_feb.pdf</span><span class="when">14m</span></div>
-              <div class="row"><span class="kind"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.4" y="3" width="11.2" height="10" rx="1.3"/><circle cx="5.9" cy="6.4" r="1"/><path d="M2.7 11.4l2.7-2.6a1.3 1.3 0 0 1 1.8 0l3.9 3.7"/></svg></span><span class="fname">301847592_118273640591827_44729…n.jpg</span><span class="when">1h</span></div>
-              <div class="row"><span class="kind"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 1.8H4.6a1.3 1.3 0 0 0-1.3 1.3v9.8a1.3 1.3 0 0 0 1.3 1.3h6.8a1.3 1.3 0 0 0 1.3-1.3V4.9z"/><path d="M9.3 1.8v3.1h3.1"/></svg></span><span class="fname">cebu_itinerary.docx</span><span class="when">3h</span></div>
-              <div class="row"><span class="kind"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.4" y="3" width="11.2" height="10" rx="1.3"/><path d="M2.4 6.3h11.2M8 6.3V13"/></svg></span><span class="fname">open case summary.xlsx</span><span class="when">Yesterday</span></div>
-              <div class="row"><span class="kind"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.4 6h9.2v6.2a1.3 1.3 0 0 1-1.3 1.3H4.7a1.3 1.3 0 0 1-1.3-1.3z"/><rect x="2.5" y="2.6" width="11" height="3.4" rx=".9"/><path d="M6.9 8.7h2.2"/></svg></span><span class="fname">DaVinci_Resolve_21.0.4_Mac.zip</span><span class="when">Yesterday</span></div>
-              <div class="row"><span class="kind"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 1.8H4.6a1.3 1.3 0 0 0-1.3 1.3v9.8a1.3 1.3 0 0 0 1.3 1.3h6.8a1.3 1.3 0 0 0 1.3-1.3V4.9z"/><path d="M9.3 1.8v3.1h3.1"/></svg></span><span class="fname">hotel_confirmation_cebu.pdf</span><span class="when">Mon</span></div>
-              <div class="row"><span class="kind"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 1.8H4.6a1.3 1.3 0 0 0-1.3 1.3v9.8a1.3 1.3 0 0 0 1.3 1.3h6.8a1.3 1.3 0 0 0 1.3-1.3V4.9z"/><path d="M9.3 1.8v3.1h3.1"/></svg></span><span class="fname">electricity_bill_jan.pdf</span><span class="when">Mon</span></div>
+              <div class="row"><span class="kind"><svg><use href="#i-doc"></use></svg></span><span class="fname">boarding-pass-cebu.pdf</span><span class="when">2m</span></div>
+              <div class="row"><span class="kind"><svg><use href="#i-doc"></use></svg></span><span class="fname">electricity_bill_feb.pdf</span><span class="when">14m</span></div>
+              <div class="row"><span class="kind"><svg><use href="#i-photo"></use></svg></span><span class="fname">301847592_118273640591827_44729…n.jpg</span><span class="when">1h</span></div>
+              <div class="row"><span class="kind"><svg><use href="#i-doc"></use></svg></span><span class="fname">cebu_itinerary.docx</span><span class="when">3h</span></div>
+              <div class="row"><span class="kind"><svg><use href="#i-sheet"></use></svg></span><span class="fname">open case summary.xlsx</span><span class="when">Yesterday</span></div>
+              <div class="row"><span class="kind"><svg><use href="#i-archive"></use></svg></span><span class="fname">DaVinci_Resolve_21.0.4_Mac.zip</span><span class="when">Yesterday</span></div>
+              <div class="row"><span class="kind"><svg><use href="#i-doc"></use></svg></span><span class="fname">hotel_confirmation_cebu.pdf</span><span class="when">Mon</span></div>
+              <div class="row"><span class="kind"><svg><use href="#i-doc"></use></svg></span><span class="fname">electricity_bill_jan.pdf</span><span class="when">Mon</span></div>
             </div>
           </div>
 
-          <figcaption class="demo-note">
-            <p>That photo has no readable name. Hoot read the words in the picture — a café
-            menu — and filed it under <strong>Food</strong>. The spreadsheet is called
-            <code>open case summary</code>, but it holds tax records, so it went to
-            <strong>Finance</strong>.</p>
-          </figcaption>
+          <div class="demo-note">
+            <p>That photo has no readable name. Hoot read the words in the picture — a café menu — and filed it under <strong>Food</strong>. The spreadsheet is called <code>open case summary</code>, but it holds tax records, so it went to <strong>Finance</strong>.</p>
+          </div>
         </div>
-        <span class="annotation">nothing has moved yet</span>
+        <figcaption class="annotation" aria-hidden="true">nothing has moved yet</figcaption>
       </figure>
 
       <div class="hero-copy">
         <span class="status-dot">Runs entirely on your Mac</span>
-        <h1>Sorted by what<br>they're <em>about.</em></h1>
-        <p class="lede">Hoot watches one folder and works out what belongs together. A boarding
-          pass, a hotel booking and an itinerary become one trip folder — not three piles sorted
-          by file type.</p>
+        <h1>Sorted by what<br>they’re <em>about.</em></h1>
+        <p class="lede">Hoot watches one folder and works out what belongs together. A boarding pass, a hotel booking and an itinerary become one trip folder — not three piles sorted by file type.</p>
         <div class="cta-row">
-          <a class="pill pill-lg" href="https://github.com/codeficklefish/Hoot/releases/download/v0.5.0/Hoot.dmg">Download for macOS</a>
+          <a class="pill pill-lg" href="https://github.com/codeficklefish/Hoot/releases/latest/download/Hoot.dmg">Download for macOS</a>
           <a class="pill pill-lg pill-secondary" href="#how">See how it decides</a>
         </div>
-        <span class="meta">Version 0.5.0 · 1.2 MB · macOS 13 or later · Apple silicon</span>
+        <!-- One place for the version. It is written by hand and has to be
+             changed when a release is cut; the download links resolve to
+             whatever is latest and cannot rot. -->
+        <span class="meta">Version 0.6.0 · 1.2 MB · macOS 13 or later · Apple silicon</span>
         <div class="notice">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="var(--orange-700)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.4 2.6 16.2h14.8z"/><path d="M10 8v3.6M10 14.1v.1"/></svg>
-          <p><strong>The first launch takes one extra step.</strong> This build isn't notarized by
-          Apple yet, so macOS will refuse it once and you approve it in System Settings →
-          Privacy &amp; Security.
-          <a href="https://github.com/codeficklefish/Hoot/releases/tag/v0.5.0">The four steps are here.</a></p>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <section id="how" class="band">
-    <div class="wrap">
-      <span class="eyebrow">What it reads</span>
-      <h2 style="font: var(--text-display-3); font-size: clamp(30px, 3.4vw, 40px); max-width: 760px; margin-bottom: var(--space-8);">A filename is often the least informative thing about a file.</h2>
-      <p class="lede" style="max-width: 680px; margin-bottom: var(--space-12);">Hoot opens documents, spreadsheets and archives, and reads the words in photos and scans — so a file whose name says nothing still says what it is.</p>
-
-      <div class="cards">
-        <div class="card">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
-          <h3>Documents</h3>
-          <p>PDFs, Word files and plain text. A book's title page identifies it even when the filename is a hash.</p>
-        </div>
-        <div class="card">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M12 9.5v10"/></svg>
-          <h3>Spreadsheets</h3>
-          <p>A sheet called open case summary.xlsx turns out to hold tax records. It goes to Finance, not to a folder named after its file type.</p>
-        </div>
-        <div class="card">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9h14v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><rect x="3.5" y="4" width="17" height="5" rx="1.4"/><path d="M10 13h4"/></svg>
-          <h3>Archives</h3>
-          <p>A zip is judged by what it contains. One holding a single installer is software; one holding a project's source is that project.</p>
-        </div>
-        <div class="card">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="9.5" r="1.5"/><path d="M4 17l4.2-4a2 2 0 0 1 2.7 0l5.9 5.6"/></svg>
-          <h3>Photos and scans</h3>
-          <p>Text is read out of images on your Mac. A scanned receipt with no text layer is still recognised as a receipt.</p>
-        </div>
-        <div class="card">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7a2 2 0 0 1 2-2h3.7c.5 0 1 .2 1.4.6l1.4 1.4h6.5a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg>
-          <h3>Your existing folders</h3>
-          <p>A folder you called Books is a description of what you mean by books — better than any general rule about file types.</p>
-        </div>
-        <div class="card">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l1.5 4.3 4.3 1.5-4.3 1.5L12 15.1l-1.5-4.3L6.2 9.3l4.3-1.5z"/><path d="M18 15l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7z"/></svg>
-          <h3>An on-device model</h3>
-          <p>Apple Intelligence groups related files and suggests folders. Without it, Hoot falls back to filename rules and says so.</p>
+          <svg width="16" height="16" aria-hidden="true"><use href="#i-warn"></use></svg>
+          <p><strong>The first launch takes one extra step.</strong> This build isn’t notarized by Apple yet, so macOS will refuse it once and you approve it in System Settings → Privacy &amp; Security. <a href="https://github.com/codeficklefish/Hoot/releases/latest">The steps are in the release notes.</a></p>
         </div>
       </div>
     </div>
   </section>
 
-  <section id="safety">
+  <!-- ---------- two ways to sort ---------- -->
+  <section id="how">
+    <div class="wrap">
+      <span class="eyebrow">Two ways to sort</span>
+      <h2 style="font: var(--text-display-3); font-size: clamp(30px, 3.4vw, 40px); max-width: 720px;">By what they’re about, or by what they are.</h2>
+      <p class="lede" style="margin-block: var(--space-8) var(--space-12); max-width: 680px;">Switch between them in the menu bar popover or in Settings, where each mode is shown as the folders it would produce rather than described.</p>
+
+      <div class="cards">
+        <div class="card">
+          <h3>By meaning</h3>
+          <p>Folders named after subjects. It reads inside files and takes a few seconds.</p>
+          <div class="chips">
+            <span class="chip"><b>Cebu Trip</b><span class="n">3</span></span>
+            <span class="chip"><b>Electricity Bills</b><span class="n">2</span></span>
+            <span class="chip"><b>Finance</b><span class="n">1</span></span>
+            <span class="chip"><b>Food</b><span class="n">1</span></span>
+            <span class="chip"><b>Software</b><span class="n">1</span></span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>By type</h3>
+          <p>Folders named after what files are. It decides from the filename alone, so it is instant, never opens a file, and reaches no model at all.</p>
+          <div class="chips">
+            <span class="chip"><b>Screenshots</b></span><span class="chip"><b>Images</b></span>
+            <span class="chip"><b>PDFs</b></span><span class="chip"><b>Spreadsheets</b></span>
+            <span class="chip"><b>Videos</b></span><span class="chip"><b>Audio</b></span>
+            <span class="chip"><b>Archives</b></span><span class="chip"><b>Installers</b></span>
+          </div>
+        </div>
+      </div>
+
+      <p class="aside-note" style="max-width: 620px;">Screenshots get their own folder because nothing but the name separates one from a photograph. Files whose type Hoot doesn’t recognise are left where they are — a junk drawer named by the app is worse than not moving them.</p>
+    </div>
+  </section>
+
+  <!-- ---------- renaming ---------- -->
+  <section class="band">
+    <div class="wrap split">
+      <div style="max-width: 460px;">
+        <span class="eyebrow">Renaming</span>
+        <h2 style="font: var(--text-display-3); font-size: clamp(30px, 3.4vw, 40px);">A name that says nothing is only half the problem.</h2>
+        <p class="lede" style="margin-block: var(--space-8) var(--space-7);">Moving <code style="font-family: var(--font-mono); font-size: 14px;">32131231231.pdf</code> to the right folder still leaves you unable to find it. Hoot proposes a real name, taken only from text actually read out of the file.</p>
+        <p style="font: var(--text-small); color: var(--text-tertiary);">Every rename is shown before it happens, can be refused on its own, and is put back by undo.</p>
+      </div>
+
+      <div class="review">
+        <span class="review-label">Proposed names</span>
+        <div class="renames">
+          <div class="rename">
+            <span class="from">32131231231.pdf</span>
+            <div class="to-row">
+              <svg width="13" height="13" aria-hidden="true"><use href="#i-turn"></use></svg>
+              <span class="to">Electricity bill — February 2026.pdf</span>
+            </div>
+            <span class="why">Its text mentions an account number, a billing period and the supplier.</span>
+          </div>
+          <div class="rename">
+            <span class="from">ASJKDHASDASD.png</span>
+            <div class="to-row">
+              <svg width="13" height="13" aria-hidden="true"><use href="#i-turn"></use></svg>
+              <span class="to">Café menu — Marrickville.png</span>
+            </div>
+            <span class="why">The words in the picture name the café and read as a menu.</span>
+          </div>
+        </div>
+        <div class="kept">
+          <svg width="16" height="16" aria-hidden="true"><use href="#i-shield"></use></svg>
+          <p>A name you chose is never touched. <code>CV.pdf</code> is short, vowel-poor and completely meaningful, so Hoot leaves it alone.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- the shelf ---------- -->
+  <section id="notch">
+    <div class="wrap">
+      <span class="eyebrow">The shelf</span>
+      <h2 style="font: var(--text-display-3); font-size: clamp(30px, 3.4vw, 40px); max-width: 700px;">Your folders, hanging off the camera housing.</h2>
+      <p class="lede" style="margin-block: var(--space-8) var(--space-11); max-width: 680px;">Press ⌘J and the shelf comes down at the notch. Point at it and it opens — whether or not anything needs filing. Three folders at a time, newest files first, folders leading the way the Finder does.</p>
+
+      <div class="stage">
+        <div class="menubar" aria-hidden="true">
+          <b>Finder</b><span>File</span><span>Edit</span><span class="clock">Tue 9:41</span>
+        </div>
+
+        <div class="notch">
+          <div class="notch-tabs" role="group" aria-label="Shelf folder">
+            <button type="button" data-shelf="Desktop" aria-pressed="true">Desktop</button>
+            <button type="button" data-shelf="Downloads" aria-pressed="false">Downloads</button>
+            <button type="button" data-shelf="Documents" aria-pressed="false">Documents</button>
+            <span class="count" id="shelf-count">3 files · 2 folders</span>
+          </div>
+          <div class="shelf" id="shelf"></div>
+          <div class="notch-foot">
+            <span class="sort">Date added</span>
+            <span class="tidy" id="shelf-tidy" hidden>Tidy 4</span>
+          </div>
+        </div>
+
+        <p class="stage-caption" id="shelf-caption">Space opened Studio brief where it stands — the list underneath it never moved.</p>
+      </div>
+
+      <div class="keys">
+        <div>
+          <span class="keycap">space</span>
+          <h3>Opens a folder where it stands</h3>
+          <p>Its contents appear indented underneath and the list you were looking at stays exactly where it was. On a file, the same panel the Finder opens. Press it again and it shuts.</p>
+        </div>
+        <div>
+          <span class="keycap">⌘J</span>
+          <h3>Never takes your focus</h3>
+          <p>Pointing at the notch doesn’t take keyboard focus, which is what lets you open it mid-sentence. Clicking a row does, because a spacebar can only reach a window that has it.</p>
+        </div>
+        <div>
+          <span class="keycap">⌃⌥→</span>
+          <h3>Three folders, by name</h3>
+          <p>Three, because three names fit across the panel at a size you can still read — a tab shortened to <code style="font-family: var(--font-mono); font-size: 12px;">Docu…</code> has stopped saying which folder it is.</p>
+        </div>
+      </div>
+
+      <p class="aside-note">Hoot only ever reads these folders — it never moves, renames or deletes anything in them. That is what lets there be several, while the one folder it organises stays one. Needs a display with a notch; everywhere else the menu bar popover is the whole interface.</p>
+    </div>
+  </section>
+
+  <!-- ---------- safety ---------- -->
+  <section id="safety" class="band">
     <div class="wrap">
       <span class="eyebrow">Before anything moves</span>
-      <h2 style="font: var(--text-display-3); font-size: clamp(30px, 3.4vw, 40px); max-width: 680px; margin-bottom: var(--space-8);">Nothing moves until you say so.</h2>
-      <p class="lede" style="max-width: 680px; margin-bottom: var(--space-12);">An app that rearranges your files has to earn that. Hoot shows every suggestion, tells you what it based each one on, and can put it all back.</p>
+      <h2 style="font: var(--text-display-3); font-size: clamp(30px, 3.4vw, 40px); max-width: 680px;">Nothing moves until you say so.</h2>
+      <p class="lede" style="margin-block: var(--space-8) var(--space-12); max-width: 680px;">An app that rearranges your files has to earn that. Hoot shows every suggestion, tells you what it based each one on, and can put it all back.</p>
 
       <div class="promises">
         <div class="promise">
           <h3>You approve every move</h3>
-          <p>Suggestions arrive in a review window. Untick anything you disagree with, or open a file to see the evidence behind the decision.</p>
+          <p>Suggestions arrive in a review window. Untick anything you disagree with, or hold a row to preview the file the way the Finder does — the filename is usually what failed to say what it is.</p>
         </div>
         <div class="promise">
           <h3>Every move is reversible</h3>
@@ -169,52 +275,40 @@
       </div>
 
       <div class="aside">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green-500)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 2.6v5.6c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9V5.6z"/><path d="M9 11.8l2.2 2.2L15.4 10"/></svg>
-        <p>Confidence comes from independent signals agreeing — the filename, the text inside the file, and the on-device model — never from the model rating its own answer. When Hoot is unsure, it says so and leaves the file where it is.</p>
+        <svg width="20" height="20" aria-hidden="true"><use href="#i-shield"></use></svg>
+        <p>Confidence comes from independent signals agreeing — your corrections, your existing folders, the text inside the file, and the on-device model — never from the model rating its own answer. When Hoot is unsure, it says so and leaves the file where it is.</p>
       </div>
     </div>
   </section>
 
-  <section class="band">
-    <div class="wrap">
-      <div class="split">
-        <div style="max-width: 460px;">
-          <span class="eyebrow">Corrections</span>
-          <h2 style="font: var(--text-display-3); font-size: clamp(30px, 3.4vw, 40px); margin-bottom: var(--space-8);">It learns your filing, not someone else's.</h2>
-          <p class="lede">Drag a file to a different folder and Hoot remembers. Correct a few invoices into Finance, and the next one — from a client you have never had — goes there by itself.</p>
-        </div>
+  <!-- ---------- corrections ---------- -->
+  <section>
+    <div class="wrap split">
+      <div style="max-width: 460px;">
+        <span class="eyebrow">Corrections</span>
+        <h2 style="font: var(--text-display-3); font-size: clamp(30px, 3.4vw, 40px);">It learns your filing, not someone else’s.</h2>
+        <p class="lede" style="margin-top: var(--space-8);">Drag a file to a different folder and Hoot remembers. Correct a few invoices into Finance, and the next one — from a client you have never had — goes there by itself.</p>
+      </div>
 
-        <div class="review">
-          <span class="review-label">Review</span>
-          <div class="move-row">
-            <span class="conf conf-low"></span>
-            <span class="name">invoice_hooli.pdf</span>
-            <span class="dest">Documents</span>
-          </div>
-          <span class="annotation">you drag it to Finance</span>
-          <div class="move-row">
-            <span class="conf conf-high"></span>
-            <span class="name">invoice_hooli.pdf</span>
-            <span class="dest is-final">Finance</span>
-          </div>
-          <div class="next-time">
-            <span>Next time</span>
-            <div class="move-row">
-              <span class="conf conf-high"></span>
-              <span class="name">invoice_initech.pdf</span>
-              <span class="dest is-final">Finance</span>
-            </div>
-          </div>
+      <div class="review">
+        <span class="review-label">Review</span>
+        <div class="move-row"><span class="conf conf-low" aria-hidden="true"></span><span class="name">invoice_hooli.pdf</span><span class="dest">Documents</span></div>
+        <p class="annotation" aria-hidden="true">you drag it to Finance</p>
+        <div class="move-row"><span class="conf conf-high" aria-hidden="true"></span><span class="name">invoice_hooli.pdf</span><span class="dest is-final">Finance</span></div>
+        <div class="next-time">
+          <span>Next time</span>
+          <div class="move-row"><span class="conf conf-high" aria-hidden="true"></span><span class="name">invoice_initech.pdf</span><span class="dest is-final">Finance</span></div>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- ---------- privacy ---------- -->
   <section id="privacy">
     <div class="wrap">
       <span class="eyebrow">Privacy</span>
-      <h2 style="font: var(--text-display-3); font-size: clamp(30px, 3.4vw, 40px); max-width: 620px; margin-bottom: var(--space-8);">Hoot cannot reach the network.</h2>
-      <p class="lede" style="max-width: 680px; margin-bottom: var(--space-9);">Not “does not” — <em>cannot</em>. macOS requires an app to hold the network entitlement before it may open an outgoing connection. Hoot ships without one. These are the only permissions it has:</p>
+      <h2 style="font: var(--text-display-3); font-size: clamp(30px, 3.4vw, 40px); max-width: 620px;">Hoot cannot reach the network.</h2>
+      <p class="lede" style="margin-block: var(--space-8) var(--space-9); max-width: 680px;">Not “does not” — <em>cannot</em>. macOS requires an app to hold the network entitlement before it may open an outgoing connection. Hoot ships without one. These are the only permissions it has:</p>
 
       <ul class="entitlements">
         <li>com.apple.security.app-sandbox</li>
@@ -225,40 +319,44 @@
 
       <div class="claims">
         <div>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7a2 2 0 0 1 2-2h3.7c.5 0 1 .2 1.4.6l1.4 1.4h6.5a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg>
-          <h3>One folder, chosen by you</h3>
-          <p>macOS grants access to that folder alone. Hoot has no way to see anything else on your Mac.</p>
+          <svg width="18" height="18" aria-hidden="true"><use href="#i-folder"></use></svg>
+          <h3>One folder organised, any number read</h3>
+          <p>Hoot organises the one folder you choose. The shelf shows any number you add and only ever reads them — it never moves, renames or deletes anything there. That asymmetry is what makes several folders safe.</p>
         </div>
         <div>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8.2 10.5V7.8a3.8 3.8 0 0 1 7.6 0v2.7"/></svg>
+          <svg width="18" height="18" aria-hidden="true"><use href="#i-lock"></use></svg>
           <h3>No account, no server</h3>
           <p>No sign-in, no analytics, no telemetry, no crash reporting. There is no networking code in the app at all, and no third-party dependencies.</p>
         </div>
         <div>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l1.5 4.3 4.3 1.5-4.3 1.5L12 15.1l-1.5-4.3L6.2 9.3l4.3-1.5z"/><path d="M18 15l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7z"/></svg>
+          <svg width="18" height="18" aria-hidden="true"><use href="#i-sparkles"></use></svg>
           <h3>The model runs here</h3>
           <p>Apple Intelligence runs on your Mac. Prefer not to use it? Choose filename rules and no model is involved.</p>
         </div>
       </div>
+
+      <p class="aside-note">Choosing a folder is what grants access to it, and nothing else. Adding folders to the shelf needed no new entitlement — the two above already meant “whatever you pick, however many times”.</p>
     </div>
   </section>
 
+  <!-- ---------- close ---------- -->
   <section class="band">
     <div class="close">
-      <img src="assets/AppIcon-256.png" alt="" width="64" height="64">
+      <img src="assets/AppIcon-256.png" alt="" width="96" height="96">
       <h2>Try it on your Downloads folder.</h2>
       <p>It will show you what it would do before it does any of it. Nothing moves until you agree, and everything can be put back.</p>
-      <a class="pill pill-lg" href="https://github.com/codeficklefish/Hoot/releases/download/v0.5.0/Hoot.dmg">Download for macOS</a>
-      <span class="meta">Version 0.5.0 · 1.2 MB · <a href="https://github.com/codeficklefish/Hoot" style="color: var(--ink-3); text-decoration: underline; text-underline-offset: 3px;">source on GitHub</a></span>
+      <a class="pill pill-lg" href="https://github.com/codeficklefish/Hoot/releases/latest/download/Hoot.dmg">Download for macOS</a>
+      <span class="meta">Version 0.6.0 · 1.2 MB · <a href="https://github.com/codeficklefish/Hoot" style="color: var(--ink-3); text-decoration: underline; text-underline-offset: 3px;">source on GitHub</a></span>
     </div>
   </section>
+
 </main>
 
 <footer>
   <div class="wrap foot">
     <span>© 2026 Hoot</span>
     <nav>
-      <a href="https://github.com/codeficklefish/Hoot/blob/main/docs/privacy.md">Privacy</a>
+      <a href="#privacy">Privacy</a>
       <a href="https://github.com/codeficklefish/Hoot/issues">Support</a>
       <a href="https://github.com/codeficklefish/Hoot">Source</a>
     </nav>
@@ -266,3 +364,5 @@
 </footer>
 
 <script src="app.js" defer></script>
+</body>
+</html>
