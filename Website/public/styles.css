@@ -486,11 +486,9 @@ footer { box-shadow: inset 0 1px 0 var(--border-subtle); }
 .bezel {
   background: #1A1919; border-radius: var(--radius-2xl);
   padding: var(--space-4); box-shadow: var(--shadow-card);
-  /* A grid item's min-width is `auto`, so this refused to shrink below the
-     min-content of the menu bar inside it — and that text is sized in `cqw`
-     against a container whose width it was itself deciding, so the figure it
-     settled on was nonsense: 688px inside a 335px column, and 333px of the
-     page hanging off the side of a phone. */
+  /* A grid item's min-width is `auto`. Defensive rather than load-bearing —
+     the overflow this was first blamed for turned out to be a class-name
+     collision, not this. */
   min-width: 0;
 }
 .screen {
@@ -531,11 +529,11 @@ footer { box-shadow: inset 0 1px 0 var(--border-subtle); }
 /* One scene on screen at a time. Crossfaded rather than cut, because the
    chapters are one continuous minute rather than five slides. */
 .scene { position: absolute; inset: 0; padding: 1.8cqw; overflow: hidden; opacity: 0; visibility: hidden; transition: opacity var(--dur-base) var(--ease-standard), visibility var(--dur-base); }
-.stage[data-scene="pile"]   .scene[data-scene="pile"],
-.stage[data-scene="review"] .scene[data-scene="review"],
-.stage[data-scene="undo"]   .scene[data-scene="undo"],
-.stage[data-scene="rename"] .scene[data-scene="rename"],
-.stage[data-scene="shelf"]  .scene[data-scene="shelf"] { opacity: 1; visibility: visible; }
+.screen[data-scene="pile"]   .scene[data-scene="pile"],
+.screen[data-scene="review"] .scene[data-scene="review"],
+.screen[data-scene="undo"]   .scene[data-scene="undo"],
+.screen[data-scene="rename"] .scene[data-scene="rename"],
+.screen[data-scene="shelf"]  .scene[data-scene="shelf"] { opacity: 1; visibility: visible; }
 
 /* The pile. Real filenames, because invented ones are always tidier than the
    folder they are meant to be standing in for. */
