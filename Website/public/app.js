@@ -7,6 +7,13 @@
 // with no JavaScript still sees the point being made, and the controls simply
 // do nothing.
 
+// Each feature gets its own scope. They shared one for a while, and two of
+// them declared a function called `show` — the later declaration hoisted over
+// the earlier, so every call to reveal a section was really the shelf's
+// folder switcher being handed a <div>. It returned immediately, nothing was
+// ever revealed, and only the fallback timer in the head kept the page from
+// staying blank. Nothing here is worth sharing a scope for.
+
 (function () {
   "use strict";
 
@@ -20,16 +27,22 @@
   var root = document.documentElement;
   var stages = [].slice.call(document.querySelectorAll("[data-reveal]"));
 
-  function show(el) { el.classList.add("is-in"); }
+  function reveal(el) { el.classList.add("is-in"); }
 
   if (!("IntersectionObserver" in window)) {
     // No observer, no staged reveal. Everything at once beats nothing at all.
     root.className += " reveal-all";
   } else {
+    // The head armed a timer that reveals everything after 2.2s in case this
+    // file never ran. It has run, so stand it down — left alone it would fire
+    // mid-scroll and show every remaining section at once, which is the thing
+    // it was protecting against doing the damage instead.
+    clearTimeout(window.__hootReveal);
+
     var watcher = new IntersectionObserver(function (entries, self) {
       entries.forEach(function (entry) {
         if (!entry.isIntersecting) return;
-        show(entry.target);
+        reveal(entry.target);
         // One reveal each. A section that faded back out as you scrolled past
         // it would be an effect rather than an entrance.
         self.unobserve(entry.target);
@@ -50,14 +63,31 @@
     function openTheCurtain() {
       if (opened) return;
       opened = true;
-      stages.forEach(function (el) { if (el.hasAttribute("data-entrance")) show(el); });
+      stages.forEach(function (el) { if (el.hasAttribute("data-entrance")) reveal(el); });
     }
     if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(openTheCurtain);
     }
     setTimeout(openTheCurtain, 700);
-  }
 
+    // A narrower net than the one just stood down: on load, anything already
+    // on screen that the observer has not reported is revealed anyway. It
+    // cannot reveal what you have not scrolled to, so it costs nothing if the
+    // observer is working and saves the first screen if it is not.
+    window.addEventListener("load", function () {
+      setTimeout(function () {
+        stages.forEach(function (el) {
+          if (el.classList.contains("is-in")) return;
+          var box = el.getBoundingClientRect();
+          if (box.top < window.innerHeight && box.bottom > 0) reveal(el);
+        });
+      }, 1200);
+    });
+  }
+})();
+
+(function () {
+  "use strict";
 
   // ---- the hero window -----------------------------------------------
 
@@ -180,6 +210,11 @@
   });
 
   show("Desktop");
+
+})();
+
+(function () {
+  "use strict";
 
   // ---- "See it in action" --------------------------------------------
   //

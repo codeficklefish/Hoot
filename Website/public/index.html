@@ -21,7 +21,9 @@
      shown anyway. A page that hides its own content behind a script it cannot
      guarantee is a page that sometimes shows nothing. */
   document.documentElement.className += " js";
-  setTimeout(function () { document.documentElement.className += " reveal-all"; }, 2200);
+  window.__hootReveal = setTimeout(function () {
+    document.documentElement.className += " reveal-all";
+  }, 2200);
 </script>
 </head>
 <body>
