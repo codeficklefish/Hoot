@@ -135,39 +135,63 @@
   // ---- "See it in action" --------------------------------------------
   //
   // The design fills this with a sixty-second animation built as a React
-  // artboard. That cannot ship on a page with no framework, and an embedded
-  // third-party player is refused for the reason the privacy section exists —
-  // so the minute is five states of one mock, stepped through by a timeline
-  // that the scrubber and the chapter list both drive.
+  // artboard. That runtime cannot ship on a page with no framework, and an
+  // embedded third-party player is refused for the reason the privacy section
+  // exists — so the minute is rebuilt here from the artboard's own content:
+  // its eight scene cues, its captions word for word, and the folders and
+  // renames it actually shows.
   //
   // Nothing autoplays. A page that starts moving while you are reading it has
   // taken a decision that belongs to the reader, and `prefers-reduced-motion`
-  // is people telling us that outright.
+  // is people saying so outright.
 
-  var CHAPTERS = [
-    { id: "pile",   label: "The pile",  at: 0,  title: "Downloads",
-      caption: "Forty-nine files. Not one of these names says what the file is.",
-      foot: "49 items · 214.6 GB available" },
-    { id: "review", label: "Review",    at: 12, title: "Hoot — Review",
-      caption: "Nothing moves until you say so. Unsure files stay where they are.",
-      foot: "4 of 5 selected · nothing has moved yet" },
-    { id: "undo",   label: "Undo",      at: 26, title: "Downloads",
-      caption: "Approved. And undone again — every file back where it came from.",
-      foot: "6 folders · undo available for this batch" },
-    { id: "rename", label: "Renaming",  at: 36, title: "Hoot — Review",
-      caption: "A new name comes only from words read out of the file itself.",
-      foot: "2 renames proposed · each can be refused on its own" },
-    { id: "shelf",  label: "The shelf", at: 48, title: "",
-      caption: "Space opens a folder where it stands. The list underneath never moves.",
-      foot: "" }
-  ];
+  // The cues are the running total of the artboard's scene durations:
+  // Opening 8, Notice 5.5, Review 8, Approve 5.5, Undo 6, Rename 9, Shelf 11,
+  // Close 7 — one minute exactly, which is what the page promises.
+  var CUE = { Opening: 0, Notice: 8, Review: 13.5, Approve: 21.5,
+              Undo: 27, Rename: 33, Shelf: 42, Close: 53 };
   var RUNTIME = 60;
+
+  // What is on screen, and the line across it. Captions are the artboard's,
+  // unchanged: they are the argument the minute is making.
+  var BEATS = [
+    { at: CUE.Opening, scene: "pile",    title: "Downloads", foot: "49 items · 214.6 GB available",
+      caption: "A year of Downloads. Not one of these names says what the file is." },
+    { at: CUE.Notice,  scene: "notice",  title: "Downloads", foot: "49 items · 214.6 GB available",
+      caption: "Hoot watches the folder and reads what is inside each file." },
+    { at: CUE.Review,  scene: "review",  title: "Review",    foot: "",
+      caption: "It says where each file should go, and what it based that on." },
+    { at: CUE.Approve, scene: "approve", title: "Downloads", foot: "8 folders, 4 items · 214.6 GB available",
+      caption: "Nothing moves until you say so. Unsure files stay where they are." },
+    { at: CUE.Undo,    scene: "undo",    title: "History",   foot: "",
+      caption: "Any batch can be undone — files go back exactly where they came from." },
+    { at: CUE.Rename,  scene: "rename",  title: "Rename",    foot: "2 of 49 files",
+      caption: "A name that says nothing gets a real one, read out of the file itself." },
+    { at: CUE.Shelf,   scene: "shelf",   title: "",          foot: "",
+      caption: "And your folders sit at the notch. Space opens one where it stands." },
+    { at: CUE.Close,   scene: "close",   title: "",          foot: "", caption: "" }
+  ];
+
+  // Five labels, because that is what the page shows. They are the beats
+  // somebody would want to jump to; the other three are things that happen on
+  // the way and have no separate name.
+  var CHAPTERS = [
+    { label: "The pile",  at: CUE.Opening },
+    { label: "Review",    at: CUE.Review },
+    { label: "Undo",      at: CUE.Undo },
+    { label: "Renaming",  at: CUE.Rename },
+    { label: "The shelf", at: CUE.Shelf }
+  ];
 
   var stage = document.getElementById("stage");
   if (!stage) return;
 
-  var win = document.getElementById("win");
-  var desk = document.getElementById("desk");
+  var parts = {
+    win: document.getElementById("win"),
+    desk: document.getElementById("desk"),
+    closing: document.getElementById("closing"),
+    popover: document.getElementById("popover")
+  };
   var cap = document.getElementById("cap");
   var winTitle = document.getElementById("win-title");
   var winFoot = document.getElementById("win-foot");
@@ -181,44 +205,46 @@
   var PLAY = "M3.5 2.2 11.8 7l-8.3 4.8z";
   var PAUSE = "M3.4 2.2h2.6v9.6H3.4zM8 2.2h2.6v9.6H8z";
 
-  var at = 0;          // seconds into the minute
-  var playing = false;
-  var last = 0;
+  var at = 0, playing = false, last = 0;
 
-  function chapterAt(t) {
-    var found = CHAPTERS[0];
-    CHAPTERS.forEach(function (c) { if (t >= c.at) found = c; });
+  function beatAt(t) {
+    var found = BEATS[0];
+    BEATS.forEach(function (b) { if (t >= b.at) found = b; });
     return found;
   }
 
   function clock(t) {
-    var m = Math.floor(t / 60);
-    var rest = t - m * 60;
-    var whole = Math.floor(rest);
-    var hundredths = Math.floor((rest - whole) * 100);
-    return m + ":" + String(whole).padStart(2, "0") + "." + String(hundredths).padStart(2, "0");
+    var whole = Math.floor(t);
+    var hundredths = Math.floor((t - whole) * 100);
+    return Math.floor(whole / 60) + ":" + String(whole % 60).padStart(2, "0")
+      + "." + String(hundredths).padStart(2, "0");
   }
 
   function paint() {
-    var c = chapterAt(at);
+    var b = beatAt(at);
+    stage.dataset.scene = b.scene;
 
-    stage.dataset.scene = c.id;
     // The shelf is not a window: it hangs off the camera housing, over the
-    // desktop. Showing it inside a Finder window would be the one thing about
-    // this surface that people get wrong.
-    win.hidden = c.id === "shelf";
-    desk.hidden = c.id !== "shelf";
+    // desktop. Drawing it inside a Finder window would be the single most
+    // misleading thing this surface could say about itself.
+    parts.win.hidden = b.scene === "shelf" || b.scene === "close";
+    parts.desk.hidden = b.scene !== "shelf";
+    parts.closing.hidden = b.scene !== "close";
+    parts.popover.hidden = b.scene !== "notice";
 
-    cap.textContent = c.caption;
-    winTitle.textContent = c.title;
-    winFoot.textContent = c.foot;
-    winFoot.hidden = !c.foot;
+    cap.textContent = b.caption;
+    cap.hidden = !b.caption;
+    winTitle.textContent = b.title;
+    winFoot.textContent = b.foot;
+    winFoot.hidden = !b.foot;
 
     elapsed.textContent = clock(at);
     if (document.activeElement !== seek) seek.value = String(at);
 
-    chapterBar.querySelectorAll("button").forEach(function (b) {
-      b.setAttribute("aria-current", String(b.dataset.chapter === c.id));
+    var reached = CHAPTERS.reduce(function (acc, c) { return at >= c.at ? c.label : acc; },
+                                  CHAPTERS[0].label);
+    chapterBar.querySelectorAll("button").forEach(function (button) {
+      button.setAttribute("aria-current", String(button.dataset.chapter === reached));
     });
   }
 
@@ -251,12 +277,12 @@
   seek.addEventListener("input", function () { at = Number(seek.value); paint(); });
 
   CHAPTERS.forEach(function (c) {
-    var b = document.createElement("button");
-    b.type = "button";
-    b.dataset.chapter = c.id;
-    b.textContent = c.label;
-    b.addEventListener("click", function () { at = c.at; paint(); });
-    chapterBar.appendChild(b);
+    var button = document.createElement("button");
+    button.type = "button";
+    button.dataset.chapter = c.label;
+    button.textContent = c.label;
+    button.addEventListener("click", function () { at = c.at; paint(); });
+    chapterBar.appendChild(button);
   });
 
   paint();

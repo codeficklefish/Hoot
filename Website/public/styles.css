@@ -530,6 +530,8 @@ footer { box-shadow: inset 0 1px 0 var(--border-subtle); }
    chapters are one continuous minute rather than five slides. */
 .scene { position: absolute; inset: 0; padding: 1.8cqw; overflow: hidden; opacity: 0; visibility: hidden; transition: opacity var(--dur-base) var(--ease-standard), visibility var(--dur-base); }
 .screen[data-scene="pile"]   .scene[data-scene="pile"],
+.screen[data-scene="notice"] .scene[data-scene="pile"],
+.screen[data-scene="approve"] .scene[data-scene="approve"],
 .screen[data-scene="review"] .scene[data-scene="review"],
 .screen[data-scene="undo"]   .scene[data-scene="undo"],
 .screen[data-scene="rename"] .scene[data-scene="rename"],
@@ -582,6 +584,70 @@ footer { box-shadow: inset 0 1px 0 var(--border-subtle); }
   font-size: 1.9cqw; line-height: 1.35; color: var(--ink-1); text-align: center;
 }
 .win-foot { height: 3.4cqw; display: grid; place-items: center; font-size: 1.2cqw; color: var(--ink-4); background: var(--paper-1); box-shadow: inset 0 1px 0 var(--mac-separator); }
+
+/* The menu bar carries the mark and its count — that is how the second beat
+   says Hoot noticed, without a word of explanation. */
+.screen .mb .mb-right { margin-left: auto; display: flex; align-items: center; gap: 2cqw; }
+.screen .mb .hootmark { display: inline-flex; align-items: center; gap: .6cqw; }
+.screen .mb .hootmark img { width: 1.9cqw; height: 1.6cqw; display: block; filter: invert(1); }
+.screen .mb .hootmark i { font-style: normal; font-size: 1.25cqw; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.screen .mb .clock { margin-left: 0; }
+
+.popover {
+  position: absolute; right: 3cqw; top: 5cqw; width: 22cqw; z-index: 3;
+  background: rgba(248,248,248,.96); border-radius: 1cqw; padding: 1cqw;
+  box-shadow: 0 2cqw 4cqw rgba(0,0,0,.22), inset 0 0 0 1px rgba(0,0,0,.06);
+  display: grid; gap: .5cqw; font-size: 1.4cqw;
+}
+.popover > b { font-size: 1.5cqw; color: var(--ink-1); }
+.popover > span { font-size: 1.25cqw; color: var(--ink-3); padding-bottom: .6cqw; box-shadow: inset 0 -1px 0 var(--mac-separator); }
+.pv-row { display: flex; align-items: center; gap: .8cqw; padding: .5cqw .6cqw; border-radius: .6cqw; color: var(--ink-2); }
+.pv-row svg { width: 1.5cqw; height: 1.5cqw; }
+.pv-row em { margin-left: auto; font-style: normal; font-variant-numeric: tabular-nums; }
+.pv-row.is-on { background: var(--blue-500); color: #fff; }
+
+/* Folders, once the batch is approved. */
+.pile .dir svg { color: var(--orange-500); }
+.pile .dir figcaption { font-weight: 600; color: var(--ink-1); }
+.pile .dir figcaption b { display: block; font-weight: 400; font-size: .95cqw; color: var(--ink-4); }
+
+.mini-head { display: grid; gap: .3cqw; padding-bottom: .4cqw; }
+.mini-head b { font-size: 1.8cqw; color: var(--ink-1); }
+.mini-head span { font-size: 1.3cqw; color: var(--ink-3); }
+.mini .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mini .dot.hi { background: var(--green-500); }
+.mini .dot.lo { background: var(--yellow-500); }
+.mini .pc { font-size: 1.2cqw; color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.mini .more { font-size: 1.25cqw; color: var(--ink-4); }
+.mini-foot { display: flex; align-items: center; gap: .8cqw; margin-top: auto; padding-top: .8cqw; font-size: 1.25cqw; color: var(--ink-3); box-shadow: inset 0 1px 0 var(--mac-separator); }
+.mini-foot .btn { margin-left: 0; padding: .35cqw 1.1cqw; border-radius: .5cqw; background: var(--paper-0); box-shadow: inset 0 0 0 1px rgba(0,0,0,.16); color: var(--ink-1); }
+.mini-foot .btn:first-of-type { margin-left: auto; }
+.mini-foot .btn.go { background: var(--blue-500); color: #fff; box-shadow: none; font-weight: 600; }
+
+.mini .hist { display: flex; align-items: center; gap: 1cqw; padding: 1.2cqw; border-radius: .8cqw; background: var(--surface-card); box-shadow: inset 0 0 0 1px var(--border-subtle); }
+.mini .hist .nm { flex: 1; display: grid; gap: .2cqw; }
+.mini .hist em { font-style: normal; font-size: 1.2cqw; color: var(--ink-3); }
+.mini .hist .ok { font-size: 1.2cqw; color: var(--green-500); font-weight: 600; white-space: nowrap; }
+
+.mini .rn { display: grid; gap: .5cqw; padding: 1.2cqw; border-radius: .8cqw; background: var(--surface-card); box-shadow: inset 0 0 0 1px var(--border-subtle); }
+.mini .rn .arrow { display: flex; align-items: center; gap: .7cqw; min-width: 0; }
+.mini .rn .arrow svg { width: 1.5cqw; height: 1.5cqw; color: var(--green-500); }
+.mini .rn .why { font-size: 1.2cqw; color: var(--ink-3); }
+
+/* The shelf's own footer, and the key it is teaching. */
+.screen .desk .np .np-foot { display: flex; align-items: center; gap: 1cqw; margin-top: .8cqw; padding-top: .8cqw; box-shadow: inset 0 1px 0 var(--notch-hairline); font-size: 1.3cqw; color: var(--notch-ink-2); }
+.screen .desk .np .np-foot .hint { margin-left: auto; display: inline-flex; align-items: center; gap: .6cqw; color: var(--notch-ink-1); }
+.screen .desk .np .np-foot .hint i { font-style: normal; padding: .25cqw .8cqw; border-radius: .5cqw; background: var(--notch-tile); box-shadow: inset 0 0 0 1px var(--notch-hairline); }
+.screen .desk .np .tabs img { width: 1.8cqw; height: 1.5cqw; display: block; margin-right: auto; }
+
+/* The card the minute ends on. */
+.closing { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 2cqw; text-align: center; font-family: var(--font-display); background: #CFCDC9; z-index: 4; }
+.closing .cl-mark { display: inline-flex; align-items: center; gap: 1cqw; }
+.closing .cl-mark img { height: 3.4cqw; display: block; }
+.closing .cl-mark b { font: 800 3.2cqw/1 var(--font-display); letter-spacing: -0.03em; color: var(--ink-1); }
+.closing h3 { font: 800 4.8cqw/1.02 var(--font-display); letter-spacing: -0.025em; color: var(--ink-1); }
+.closing h3 em { font-style: normal; color: var(--orange-500); }
+.closing p { font: 500 1.7cqw/1.45 var(--font-display); color: var(--ink-3); }
 
 /* ---------- player chrome ---------- */
 .controls { display: flex; align-items: center; gap: var(--space-5); }

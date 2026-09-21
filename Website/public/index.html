@@ -129,6 +129,7 @@
   </section>
 
 
+
   <!-- ---------- see it in action ---------- -->
   <section class="band" id="demo">
     <div class="wrap demo-split">
@@ -140,7 +141,20 @@
       <figure class="player">
         <div class="bezel">
           <div class="screen" id="stage" data-scene="pile">
-            <div class="mb"><b>Finder</b><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Window</span><span>Help</span><span class="clock">Tue 9:41</span></div>
+            <div class="mb">
+              <b>Finder</b><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Window</span><span>Help</span>
+              <span class="mb-right">
+                <span class="hootmark"><img src="assets/HootMark-White.png" alt=""><i id="mb-count">45</i></span>
+                <span class="clock">Tue 9:41</span>
+              </span>
+            </div>
+
+            <div class="popover" id="popover" hidden>
+              <b>Watching Downloads</b>
+              <span>49 files. Click Review to decide.</span>
+              <div class="pv-row is-on"><svg aria-hidden="true"><use href="#i-folder"></use></svg>Review files<em>45</em></div>
+              <div class="pv-row"><svg aria-hidden="true"><use href="#i-turn"></use></svg>History</div>
+            </div>
 
             <div class="win" id="win">
               <div class="win-bar"><i></i><i></i><i></i><span id="win-title">Downloads</span></div>
@@ -150,111 +164,121 @@
                   <span>Desktop</span><span class="on">Downloads</span><span>Documents</span>
                 </div>
                 <div class="pane">
-                  <div class="scene" data-scene="pile">
-                    <div class="pile">
-            <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>Screenshot 2026-08-21 at 11.43.02.png</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>Screenshot 2026-08-29 at 2.17.44.png</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>IMG_8392.png</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>IMG_8401.jpg</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>123123123.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>123456789.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Document.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Document (1).pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Document (2).pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>download.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>download (1).pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>download (2).pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>file.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>file_2.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>final.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>final (1).pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>FINAL_FINAL.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>receipt.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>receipt (1).pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>invoice.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>invoice (1).pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>school.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>assignment.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>paper.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>research.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>manual.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>image.png</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>image (1).png</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>image.webp</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>image_2.webp</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>Screenshot.png</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>Screenshot (1).png</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-film"></use></svg><figcaption>IMG_1234.MOV</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-film"></use></svg><figcaption>video.mp4</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-film"></use></svg><figcaption>video (1).mp4</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>archive.zip</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>archive (1).zip</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>project.zip</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>assets.zip</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>files.zip</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>Untitled.zip</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-box"></use></svg><figcaption>installer.dmg</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-box"></use></svg><figcaption>setup.dmg</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-box"></use></svg><figcaption>app.dmg</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-box"></use></svg><figcaption>something.pkg</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Untitled.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Untitled (1).pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>New Document.pdf</figcaption></figure>
-            <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Copy of Document.pdf</figcaption></figure>
-                    </div>
-                  </div>
+                  <div class="scene" data-scene="pile"><div class="pile">
+                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>Screenshot 2026-08-21 at 11.43.02 AM.png</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>Screenshot 2026-08-29 at 2.17.44 PM.png</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>IMG_8392.png</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>IMG_8401.jpg</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>123123123.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>123456789.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Document.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Document (1).pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Document (2).pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>download.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>download (1).pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>download (2).pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>file.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>file_2.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>final.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>final (1).pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>FINAL_FINAL.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>receipt.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>receipt (1).pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>invoice.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>invoice (1).pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>school.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>assignment.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>paper.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>research.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>manual.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>image.png</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>image (1).png</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>image.webp</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>image_2.webp</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>Screenshot.png</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-photo"></use></svg><figcaption>Screenshot (1).png</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-film"></use></svg><figcaption>IMG_1234.MOV</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-film"></use></svg><figcaption>video.mp4</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-film"></use></svg><figcaption>video (1).mp4</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>archive.zip</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>archive (1).zip</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>project.zip</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>assets.zip</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>files.zip</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-archive"></use></svg><figcaption>Untitled.zip</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-box"></use></svg><figcaption>installer.dmg</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-box"></use></svg><figcaption>setup.dmg</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-box"></use></svg><figcaption>app.dmg</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-box"></use></svg><figcaption>something.pkg</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Untitled.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Untitled (1).pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>New Document.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Copy of Document.pdf</figcaption></figure>
+                  </div></div>
 
-                  <div class="scene" data-scene="review">
-                    <div class="mini">
-                      <div class="mv"><span class="dot" style="background:var(--green-500)"></span><span>boarding-pass-cebu.pdf</span><span class="to">Cebu Trip</span></div>
-                      <div class="mv"><span class="dot" style="background:var(--green-500)"></span><span>hotel_confirmation_cebu.pdf</span><span class="to">Cebu Trip</span></div>
-                      <div class="mv"><span class="dot" style="background:var(--green-500)"></span><span>open case summary.xlsx</span><span class="to">Finance</span></div>
-                      <div class="mv"><span class="dot" style="background:var(--yellow-500)"></span><span>FINAL_FINAL.pdf</span><span class="to grey">stays where it is</span></div>
-                      <div class="mv"><span class="dot" style="background:var(--green-500)"></span><span>123456789.pdf</span><span class="to">Electricity Bills</span></div>
-                    </div>
-                  </div>
+                  <div class="scene" data-scene="review"><div class="mini">
+                    <div class="mini-head"><b>45 files to file away</b><span>Untick anything you disagree with. Nothing moves until you apply.</span></div>
+              <div class="mv"><span class="dot hi"></span><span class="nm">Document (2).pdf</span><span class="to">Coursework</span><span class="pc">91%</span></div>
+              <div class="mv"><span class="dot hi"></span><span class="nm">download (1).pdf</span><span class="to">Receipts</span><span class="pc">86%</span></div>
+              <div class="mv"><span class="dot hi"></span><span class="nm">Untitled.zip</span><span class="to">Archives</span><span class="pc">78%</span></div>
+              <div class="mv"><span class="dot lo"></span><span class="nm">123123123.pdf</span><span class="to grey">Stays in Downloads</span><span class="pc">22%</span></div>
+                    <span class="more">and 42 more</span>
+                    <div class="mini-foot"><span>45 selected · 8 folders</span><span class="btn">Not now</span><span class="btn go">Move 45 Files</span></div>
+                  </div></div>
 
-                  <div class="scene" data-scene="undo">
-                    <div class="mini">
-                      <div class="g"><svg aria-hidden="true"><use href="#i-folder"></use></svg>Cebu Trip<em>3 files</em></div>
-                      <div class="f"><svg aria-hidden="true"><use href="#i-doc"></use></svg>boarding-pass-cebu.pdf</div>
-                      <div class="f"><svg aria-hidden="true"><use href="#i-doc"></use></svg>hotel_confirmation_cebu.pdf</div>
-                      <div class="g"><svg aria-hidden="true"><use href="#i-folder"></use></svg>Electricity Bills<em>2 files</em></div>
-                      <div class="f"><svg aria-hidden="true"><use href="#i-doc"></use></svg>123456789.pdf</div>
-                      <div class="g"><svg aria-hidden="true"><use href="#i-folder"></use></svg>Finance<em>1 file</em></div>
-                      <div class="f"><svg aria-hidden="true"><use href="#i-sheet"></use></svg>open case summary.xlsx</div>
-                    </div>
-                  </div>
+                  <div class="scene" data-scene="approve"><div class="pile">
+                <figure class="dir"><svg aria-hidden="true"><use href="#i-folder"></use></svg><figcaption>Coursework<b>14 items</b></figcaption></figure>
+                <figure class="dir"><svg aria-hidden="true"><use href="#i-folder"></use></svg><figcaption>Receipts<b>7 items</b></figcaption></figure>
+                <figure class="dir"><svg aria-hidden="true"><use href="#i-folder"></use></svg><figcaption>Photos<b>6 items</b></figcaption></figure>
+                <figure class="dir"><svg aria-hidden="true"><use href="#i-folder"></use></svg><figcaption>Screenshots<b>4 items</b></figcaption></figure>
+                <figure class="dir"><svg aria-hidden="true"><use href="#i-folder"></use></svg><figcaption>Archives<b>6 items</b></figcaption></figure>
+                <figure class="dir"><svg aria-hidden="true"><use href="#i-folder"></use></svg><figcaption>Installers<b>4 items</b></figcaption></figure>
+                <figure class="dir"><svg aria-hidden="true"><use href="#i-folder"></use></svg><figcaption>Video<b>3 items</b></figcaption></figure>
+                <figure class="dir"><svg aria-hidden="true"><use href="#i-folder"></use></svg><figcaption>Manuals<b>1 items</b></figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>123123123.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>123456789.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Untitled.pdf</figcaption></figure>
+                <figure><svg aria-hidden="true"><use href="#i-doc"></use></svg><figcaption>Untitled (1).pdf</figcaption></figure>
+                  </div></div>
 
-                  <div class="scene" data-scene="rename">
-                    <div class="mini">
-                      <div><span class="old">123456789.pdf</span></div>
-                      <div><span class="new">Electricity bill — February 2026.pdf</span></div>
-                      <div style="color:var(--ink-3)">Its text mentions an account number, a billing period and the supplier.</div>
-                      <div style="height:1.2cqw"></div>
-                      <div><span class="old">IMG_8392.png</span></div>
-                      <div><span class="new">Café menu — Marrickville.png</span></div>
-                      <div style="color:var(--ink-3)">The words in the picture name the café and read as a menu.</div>
-                    </div>
-                  </div>
+                  <div class="scene" data-scene="undo"><div class="mini">
+                    <div class="hist"><svg aria-hidden="true"><use href="#i-turn"></use></svg>
+                      <span class="nm"><b>45 files moved to 8 folders</b><em>Undone. Every file is back where it was.</em></span>
+                      <span class="ok">Put back</span></div>
+                    <span class="more">Files go back exactly where they came from. Nothing is ever deleted.</span>
+                  </div></div>
 
-                  <div class="scene" data-scene="shelf"></div>
+                  <div class="scene" data-scene="rename"><div class="mini">
+                    <span class="more">Only these two names say nothing. Every other name was left alone.</span>
+              <div class="rn"><span class="old">123123123.pdf</span><span class="arrow"><svg aria-hidden="true"><use href="#i-turn"></use></svg><span class="new">Electricity bill — February 2026.pdf</span></span><span class="why">Its text mentions an account number, a billing period and the supplier.</span></div>
+              <div class="rn"><span class="old">Untitled (1).pdf</span><span class="arrow"><svg aria-hidden="true"><use href="#i-turn"></use></svg><span class="new">ARCH 210 — final brief.pdf</span></span><span class="why">Its first page carries the course code and the words final brief.</span></div>
+                    <div class="mini-foot"><span>Undo puts every old name back.</span><span class="btn">Keep names</span><span class="btn go">Rename 2</span></div>
+                  </div></div>
                 </div>
               </div>
-              <p class="cap" id="cap">Nothing moves until you say so. Unsure files stay where they are.</p>
               <div class="win-foot" id="win-foot">49 items · 214.6 GB available</div>
             </div>
 
             <div class="desk" id="desk" hidden>
               <div class="np">
                 <div class="tabs"><span class="on">Desktop</span><span>Downloads</span><span>Documents</span></div>
-                <div class="r grp"><svg aria-hidden="true"><use href="#i-folder"></use></svg><b>Studio brief</b><em>6 items</em></div>
-                <div class="r grp kid"><svg aria-hidden="true"><use href="#i-doc"></use></svg><b>brief — v3.pdf</b><em>1.1 MB</em></div>
-                <div class="r grp kid"><svg aria-hidden="true"><use href="#i-photo"></use></svg><b>moodboard.png</b><em>4.2 MB</em></div>
-                <div class="r"><svg aria-hidden="true"><use href="#i-folder"></use></svg><b>site-photos</b><em>41 items</em></div>
-                <div class="r"><svg aria-hidden="true"><use href="#i-doc"></use></svg><b>ARCH 210 — final board.pdf</b><em>18.6 MB</em></div>
+              <div class="r grp"><svg aria-hidden="true"><use href="#i-folder"></use></svg><b>Studio brief</b><em>6 items</em><em>55m</em></div>
+              <div class="r grp kid"><svg aria-hidden="true"><use href="#i-doc"></use></svg><b>brief — v3.pdf</b><em>1.1 MB</em><em></em></div>
+              <div class="r grp kid end"><svg aria-hidden="true"><use href="#i-photo"></use></svg><b>moodboard.png</b><em>4.2 MB</em><em></em></div>
+              <div class="r "><svg aria-hidden="true"><use href="#i-doc"></use></svg><b>ARCH 210 — final brief.pdf</b><em>18.6 MB</em><em>2h</em></div>
+              <div class="r "><svg aria-hidden="true"><use href="#i-photo"></use></svg><b>Screenshot 2026-09-16 at 14.02.11.png</b><em>1.9 MB</em><em>12m</em></div>
+              <div class="r "><svg aria-hidden="true"><use href="#i-film"></use></svg><b>render-test.mov</b><em>1.1 GB</em><em>1d</em></div>
+                <div class="np-foot"><span>Date added</span><span class="hint"><i>space</i> opens it where it stands</span></div>
               </div>
             </div>
+
+            <div class="closing" id="closing" hidden>
+              <span class="cl-mark"><img src="assets/HootMark-Black.png" alt=""><b>hoot</b></span>
+              <h3>Sorted by what they’re <em>about.</em></h3>
+              <p>Runs entirely on your Mac. Version 0.6.0 · macOS 13 or later.</p>
+            </div>
+
+            <p class="cap" id="cap"></p>
           </div>
         </div>
 
