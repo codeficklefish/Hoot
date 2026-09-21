@@ -477,7 +477,7 @@ footer { box-shadow: inset 0 1px 0 var(--border-subtle); }
    refused for the reason the privacy section exists. So the five chapters are
    five states of the same mock, the timeline steps between them, and the whole
    thing is served from this origin like everything else here. */
-.demo-split { display: grid; grid-template-columns: minmax(min(240px, 100%), 280px) minmax(0, 1fr); gap: var(--space-12); align-items: center; }
+.demo-split { display: grid; grid-template-columns: minmax(min(210px, 100%), 240px) minmax(0, 1fr); gap: var(--space-10); align-items: center; }
 .demo-intro h2 { font: var(--text-display-3); font-size: clamp(26px, 2.6vw, 34px); }
 .demo-intro p { margin-top: var(--space-6); font: var(--text-body); color: var(--text-secondary); max-width: 26ch; }
 @media (max-width: 860px) { .demo-split { grid-template-columns: minmax(0, 1fr); } }
@@ -530,10 +530,10 @@ footer { box-shadow: inset 0 1px 0 var(--border-subtle); }
 
 /* The pile. Real filenames, because invented ones are always tidier than the
    folder they are meant to be standing in for. */
-.pile { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1cqw .4cqw; }
+.pile { display: grid; grid-template-columns: repeat(7, 1fr); gap: .45cqw .4cqw; align-content: start; }
 .pile figure { margin: 0; display: grid; justify-items: center; gap: .4cqw; }
-.pile svg { width: 3.2cqw; height: 3.2cqw; color: var(--ink-4); }
-.pile figcaption { font-size: 1.05cqw; line-height: 1.25; color: var(--ink-2); text-align: center; max-width: 11cqw; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-all; }
+.pile svg { width: 2.9cqw; height: 2.9cqw; color: var(--ink-4); }
+.pile figcaption { font-size: 1.12cqw; line-height: 1.25; color: var(--ink-2); text-align: center; max-width: 11cqw; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-all; }
 
 /* The sorted result, and the rename proposals, at the same scale. */
 .mini { display: grid; gap: .8cqw; align-content: start; font-size: 1.5cqw; }
