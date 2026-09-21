@@ -225,95 +225,35 @@
   // stops when it is not — nine megabytes decoding behind you is a warm phone
   // and nothing else.
   //
+  // No chrome. It loops, so it restarts itself, and a minute of silent screen
+  // recording is not something anybody needs to scrub.
+  //
   // Muted and `playsinline`, which is not a style choice: no browser will
   // autoplay a video with sound, and one that asked to would deserve the
   // refusal.
 
-  // The artboard's own scene cues, as the running total of its durations:
-  // Opening 8, Notice 5.5, Review 8, Approve 5.5, Undo 6, Rename 9, Shelf 11,
-  // Close 7. Five of them have names somebody would jump to; the rest happen
-  // on the way.
-  var CHAPTERS = [
-    { label: "The pile", at: 0 }, { label: "Review", at: 13.5 },
-    { label: "Undo", at: 27 }, { label: "Renaming", at: 33 }, { label: "The shelf", at: 42 }
-  ];
-
   var video = document.getElementById("demo-video");
   if (!video) return;
 
-  var playBtn = document.getElementById("play");
-  var playGlyph = document.getElementById("play-glyph");
-  var restartBtn = document.getElementById("restart");
-  var elapsed = document.getElementById("elapsed");
-  var total = document.getElementById("total");
-  var seek = document.getElementById("seek");
-  var chapterBar = document.getElementById("chapters");
-
-  var PLAY = "M3.5 2.2 11.8 7l-8.3 4.8z";
-  var PAUSE = "M3.4 2.2h2.6v9.6H3.4zM8 2.2h2.6v9.6H8z";
-
-  function clock(t) {
-    var whole = Math.floor(t || 0);
-    var hundredths = Math.floor(((t || 0) - whole) * 100);
-    return Math.floor(whole / 60) + ":" + String(whole % 60).padStart(2, "0")
-      + "." + String(hundredths).padStart(2, "0");
+  // A video that plays by itself and cannot be stopped is the one case this
+  // page would genuinely get wrong for somebody — so where the system has
+  // asked for less motion, it does not start, and it gets the browser's own
+  // controls instead so it can still be watched on purpose.
+  var stillness = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
+  if (stillness && stillness.matches) {
+    video.controls = true;
+    video.removeAttribute("loop");
+    return;
   }
-
-  function paint() {
-    var t = video.currentTime || 0;
-    elapsed.textContent = clock(t);
-    if (document.activeElement !== seek) seek.value = String(t);
-    var reached = CHAPTERS.reduce(function (acc, c) { return t >= c.at ? c.label : acc; },
-                                  CHAPTERS[0].label);
-    chapterBar.querySelectorAll("button").forEach(function (b) {
-      b.setAttribute("aria-current", String(b.dataset.chapter === reached));
-    });
-  }
-
-  video.addEventListener("loadedmetadata", function () {
-    // The duration comes off the file rather than being written in the markup,
-    // so re-cutting the video cannot leave the page quoting a length it no
-    // longer has.
-    if (isFinite(video.duration)) {
-      seek.max = String(video.duration);
-      total.textContent = clock(video.duration);
-    }
-  });
-  video.addEventListener("timeupdate", paint);
-  video.addEventListener("play", function () {
-    playGlyph.setAttribute("d", PAUSE);
-    playBtn.setAttribute("aria-label", "Pause");
-  });
-  video.addEventListener("pause", function () {
-    playGlyph.setAttribute("d", PLAY);
-    playBtn.setAttribute("aria-label", "Play");
-  });
 
   function start() {
     // Autoplay can be refused — a browser setting, a data saver, a policy this
     // page does not get to see. The promise rejecting is not an error; it is
-    // the visitor's answer, and the poster and the play button are already
-    // there for it.
+    // the visitor's answer, and the poster is already there for it.
     var attempt = video.play();
     if (attempt && attempt.catch) attempt.catch(function () {});
   }
 
-  playBtn.addEventListener("click", function () {
-    video.paused ? start() : video.pause();
-  });
-  restartBtn.addEventListener("click", function () { video.currentTime = 0; start(); });
-  seek.addEventListener("input", function () { video.currentTime = Number(seek.value); paint(); });
-
-  CHAPTERS.forEach(function (c) {
-    var button = document.createElement("button");
-    button.type = "button";
-    button.dataset.chapter = c.label;
-    button.textContent = c.label;
-    button.addEventListener("click", function () { video.currentTime = c.at; start(); });
-    chapterBar.appendChild(button);
-  });
-
-  // Plays itself when you arrive at it, and only then.
   if ("IntersectionObserver" in window) {
     new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
@@ -328,6 +268,4 @@
   } else {
     video.preload = "auto";
   }
-
-  paint();
 })();
