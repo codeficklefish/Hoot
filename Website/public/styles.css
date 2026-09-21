@@ -556,7 +556,13 @@ footer { box-shadow: inset 0 1px 0 var(--border-subtle); }
   min-width: 0;
 }
 .screen {
-  display: block; width: 100%; aspect-ratio: 16 / 10;
+  /* `height: auto` is load-bearing. The `width`/`height` attributes on the
+     element are there so the box is reserved before the file loads and the
+     page does not jump — but they arrive as presentational hints, which makes
+     the height definite, and a box with both dimensions set ignores
+     `aspect-ratio` entirely. Without this the video was 325 wide and 810 tall
+     on a phone. */
+  display: block; width: 100%; height: auto; aspect-ratio: 16 / 10;
   border-radius: var(--radius-lg); background: #CFCDC9;
   /* The recording is 16:9 inside a 16:10 frame, so it letterboxes rather than
      crops — the caption across the bottom is the part a crop would eat. */
