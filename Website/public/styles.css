@@ -94,6 +94,16 @@
 
 * { box-sizing: border-box; }
 
+/* `hidden` is only a `display: none` in the UA stylesheet, so any author rule
+   that sets `display` silently beats it — and everything this page hides is a
+   flex or grid container, so every one of them ignored the attribute. It put
+   the Tidy pill over a folder with no plan, and left the Finder window and its
+   status bar on screen underneath the shelf.
+ *
+ * `!important` earns its keep exactly here: the point of the attribute is that
+ * it wins. Fixed per-element twice before being fixed properly. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   background: var(--surface-page);
@@ -448,10 +458,6 @@ footer { box-shadow: inset 0 1px 0 var(--border-subtle); }
 
 .notch-foot { display: flex; align-items: center; gap: var(--space-4); margin-top: var(--space-4); padding-top: var(--space-4); box-shadow: inset 0 1px 0 var(--notch-hairline); }
 .notch-foot .sort { font: var(--text-app-caption); font-weight: 600; color: var(--notch-ink-2); }
-/* `display` on an author rule beats the UA stylesheet's `[hidden]`, so this
-   stayed on screen however often app.js set the attribute — Tidy appeared
-   over Desktop, which has no plan and therefore nothing to tidy. */
-.notch-foot .tidy[hidden] { display: none; }
 .notch-foot .tidy {
   margin-left: auto; display: inline-flex; align-items: center; height: 20px;
   padding-inline: var(--space-5); border-radius: var(--radius-pill);
