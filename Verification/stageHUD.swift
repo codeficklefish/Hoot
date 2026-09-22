@@ -738,6 +738,16 @@ func stageHUD(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) 
         return !far.isEnterable && !far.isPreviewable && !far.isOpenable
     }())
 
+    // The gesture this rule was missing on. `isOpenable` is what every way of
+    // handing a file to another process has to ask — the hold gesture asked
+    // it, the double click asked it, and the drag did not, so a placeholder
+    // could be dragged out and the receiving app would fetch it. The gate
+    // lives in the view and cannot be reached from here; what is checkable is
+    // that the rule gives the same answer to all of them, so nothing is left
+    // to decide for itself.
+    check("nothing may hand a placeholder to another application",
+          !placeholder.isOpenable && !placeholder.isPreviewable && !placeholder.isEnterable)
+
     check("but an ordinary file on this disk may be looked inside",
           shelf.rows.first { !$0.isFolder }?.isPreviewable == true)
     check("and an ordinary file does not",

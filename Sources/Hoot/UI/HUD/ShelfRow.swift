@@ -68,13 +68,7 @@ struct ShelfRow: View {
             .onHover { hovering in
                 withAnimation(HUDTokens.fade) { isHovered = hovering }
             }
-            // Carrying a file out of the shelf. A real file URL, unlike the
-            // review window's drag, which vends a move id because it is an
-            // internal correction rather than a handover to another app.
-            .onDrag {
-                onDragStart()
-                return NSItemProvider(contentsOf: entry.url) ?? NSItemProvider()
-            }
+            .onDrag(dragged)
             // Simultaneous, so that holding still previews and holding then
             // moving drags. The two gestures begin identically, which is why
             // a plain `onLongPressGesture` here would swallow the drag — the
@@ -177,6 +171,32 @@ struct ShelfRow: View {
         }
     }
 
+    /// Handing this row's file to another application.
+    ///
+    /// The only way a file leaves Hoot by this surface, and therefore the only
+    /// place safety rule 5 can be asked about a drag: a file whose contents
+    /// live in the cloud is never opened, and handing its URL to another
+    /// process *is* opening it — the receiving app resolves the URL and the
+    /// download starts, which is the download nobody asked for.
+    ///
+    /// It shipped without that check. The hold gesture had it, the double
+    /// click had it, `openShelfEntry` had it, and this one was written first
+    /// and never revisited when `isOpenable` arrived. A function rather than a
+    /// closure inline in the gesture, so there is one named place to look for
+    /// the rule instead of three gestures to remember.
+    ///
+    /// An empty provider refuses the drag without a dialog: the row simply
+    /// does not lift. The panel is not held open either — there is no drag to
+    /// keep it open for.
+    ///
+    /// A real file URL, unlike the review window's drag, which vends a move id
+    /// because it is an internal correction rather than a handover.
+    private func dragged() -> NSItemProvider {
+        guard entry.isOpenable else { return NSItemProvider() }
+        onDragStart()
+        return NSItemProvider(contentsOf: entry.url) ?? NSItemProvider()
+    }
+
     private var background: AnyShapeStyle {
         if isSelected { return AnyShapeStyle(HUDTokens.tileHover) }
         if isHovered { return AnyShapeStyle(HUDTokens.tile) }
@@ -192,9 +212,9 @@ struct ShelfRow: View {
         }
         if entry.isEnterable {
             return "\(entry.name) — space opens it here, double-click goes into it, "
-                + "drag to move it"
+                + "drag it out"
         }
-        return "\(entry.name) — space to preview, double-click to open, drag to move it"
+        return "\(entry.name) — space to preview, double-click to open, drag it out"
     }
 }
 
