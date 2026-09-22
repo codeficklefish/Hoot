@@ -14,13 +14,6 @@ struct HootApp: App {
     var body: some Scene {
         MenuBarExtra {
             MenuBarContentView(appState: appState, hud: hud)
-                .task {
-                    // First launch: introduce the app before it's handed a
-                    // folder, rather than showing an empty popover.
-                    guard appState.needsOnboarding else { return }
-                    openWindow(id: WindowID.onboarding)
-                    NSApp.activate(ignoringOtherApps: true)
-                }
         } label: {
             // The menu bar item is rendered from launch, where the popover's
             // contents are not — they wait for a click. Starting from here is
@@ -31,13 +24,21 @@ struct HootApp: App {
                     // to send you from its very first refresh.
                     appState.openReviewWindow = {
                         openWindow(id: WindowID.review)
-                        NSApp.activate(ignoringOtherApps: true)
+                        bringWindowForward(titled: "Review")
                     }
                     appState.start()
                     // Brought back here, not in the popover: the HUD should
                     // reappear on login without the menu bar being opened
                     // first, which is the same reason `start()` lives here.
                     hud.restore(appState: appState)
+
+                    // And the welcome, for the same reason again. This hung
+                    // off the popover's own `.task`, which does not run until
+                    // the popover is built — that is, until somebody has
+                    // already found the menu bar icon and clicked it. A
+                    // first-time user opened Hoot and saw nothing happen at
+                    // all: no Dock icon, by design, and no window either.
+                    bringWindowForward(titled: "Welcome to Hoot")
                 }
         }
         .menuBarExtraStyle(.window)
