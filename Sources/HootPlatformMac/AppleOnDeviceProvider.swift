@@ -54,7 +54,7 @@ public struct AppleOnDeviceProvider: AIProvider {
         var projects: [ProjectSuggestion] = []
         var loose: [String] = []
 
-        for chunk in files.chunked(into: Self.maximumFilesPerRequest) {
+        for chunk in RequestBatch.split(files) {
             let result = try await suggest(chunk: chunk)
             projects.append(contentsOf: result.projects)
             loose.append(contentsOf: result.loose)
@@ -96,7 +96,7 @@ public struct AppleOnDeviceProvider: AIProvider {
         }
 
         var suggestions: [CategorySuggestion] = []
-        for chunk in files.chunked(into: Self.maximumFilesPerRequest) {
+        for chunk in RequestBatch.split(files) {
             let session = LanguageModelSession(
                 instructions: Self.categoryInstructions(preferredFolders: preferredFolders)
             )

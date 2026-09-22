@@ -419,6 +419,44 @@ func stageNaming(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Voi
 
     check("with no text to check against, the path rules still stand",
           SuggestionValidator.sanitizeFilename("../../Escape", keepingExtensionOf: "1.pdf") == nil)
+    print("\n[a request the model can actually hold]")
+
+    // The category request used to be split eighteen files at a time, which
+    // bounds nothing: an excerpt runs from nothing to six hundred characters,
+    // so eighteen of them threw "Exceeded model context window size" on any
+    // real folder. `CategoryRefiner` caught it, logged it, and returned
+    // nothing — indistinguishable from the model having no opinion — so every
+    // file quietly fell back to filename rules while the interface went on
+    // offering to read them.
+    func described(_ name: String, excerpt: String?) -> FileDescriptor {
+        FileDescriptor(id: UUID(), filename: name, sizeDescription: "1 KB",
+                       modifiedAt: nil, excerpt: excerpt)
+    }
+
+    let long = String(repeating: "x", count: 600)
+    let fat = (0..<18).map { described("file-\($0).pdf", excerpt: long) }
+    let fatBatches = RequestBatch.split(fat)
+    check("eighteen files with real excerpts are not one request",
+          fatBatches.count > 1, "\(fatBatches.count) batches")
+    check("and no request exceeds the budget", fatBatches.allSatisfy {
+        $0.reduce(0) { $0 + RequestBatch.cost(of: $1) } <= RequestBatch.characterBudget
+    })
+    check("every file still travels exactly once",
+          fatBatches.flatMap { $0 }.count == fat.count,
+          "\(fatBatches.flatMap { $0 }.count)")
+
+    // Bare filenames cost almost nothing, so the file cap is what binds.
+    let thin = (0..<18).map { described("f\($0).pdf", excerpt: nil) }
+    check("short files are capped by count rather than length",
+          RequestBatch.split(thin).allSatisfy { $0.count <= RequestBatch.maximumFiles })
+
+    // One file over budget on its own is still sent — refusing it is the
+    // provider's business, and dropping it silently is how this hid.
+    let huge = [described("enormous.pdf", excerpt: String(repeating: "y", count: 9_000))]
+    check("a single oversized file is not dropped",
+          RequestBatch.split(huge).flatMap { $0 }.count == 1)
+    check("nothing comes back for nothing", RequestBatch.split([]).isEmpty)
+
 }
 
 /// Stands in for a provider so the renamer's contract can be checked without
@@ -449,4 +487,5 @@ final class NamingSpy: AIProvider, @unchecked Sendable {
         received = files
         return try answer(files)
     }
+
 }
