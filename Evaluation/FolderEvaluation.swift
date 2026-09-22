@@ -60,11 +60,18 @@ func evaluateFolders(_ corpus: [LabelledFile]) async {
     let unsettled = corpus.filter { !settledByModel.contains($0.file.id) }.map(\.file)
     var refined: [UUID: ClassificationResult] = [:]
     if let provider = MacPlatform.makeAIProvider(for: .default), !unsettled.isEmpty {
-        refined = await CategoryRefiner(
+        let refinement = await CategoryRefiner(
             provider: provider,
             extractor: MacPlatform.makeTextExtractor(),
             allowContentReading: true
         ).refine(unsettled, existing: effective, preferredFolders: userFolders)
+        refined = refinement.results
+
+        // The measurement this harness exists for is worthless if the model
+        // never answered, and a lower number is exactly what that looks like.
+        if let failure = refinement.failure {
+            print("\n!! the model failed and every file fell back to rules: \(failure)\n")
+        }
     }
 
     report(corpus, base: base, effective: effective, refined: refined,

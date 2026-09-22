@@ -169,12 +169,27 @@ extension AppState {
                     extractor: MacPlatform.makeTextExtractor(),
                     allowContentReading: settings.allowLocalContentReading
                 )
-                let refined = await refiner.refine(
+                let refinement = await refiner.refine(
                     pending,
                     existing: effective,
                     preferredFolders: folders
                 )
+                let refined = refinement.results
                 guard !Task.isCancelled else { return }
+
+                // A provider that threw is not a model with nothing to add.
+                // Saying nothing is what let a request too large for the
+                // context window look like agreement for two releases, while
+                // every file quietly fell back to filename rules.
+                if let failure = refinement.failure {
+                    report(
+                        UserFacingIssue(
+                            title: "The on-device model could not read these files.",
+                            suggestion: "Hoot sorted them by filename instead. \(failure)",
+                            severity: .warning
+                        )
+                    )
+                }
 
                 for file in pending {
                     guard let result = refined[file.id] else { continue }

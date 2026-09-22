@@ -41,11 +41,30 @@ public struct CategoryRefiner {
 
     /// Returns replacement classifications, keyed by file id. Files absent
     /// from the result keep whatever the rule-based classifier decided.
+    /// What refinement produced, and why it produced nothing when that was a
+    /// failure rather than an opinion.
+    ///
+    /// The two used to be the same value. A provider that threw and a model
+    /// with nothing to add both came back as an empty dictionary, so a
+    /// request that exceeded the context window on every real folder looked
+    /// exactly like a model declining to disagree — for two releases, while
+    /// Settings went on offering Apple Intelligence.
+    public struct Refinement {
+        public let results: [UUID: ClassificationResult]
+        /// Nil when the model simply had nothing to say.
+        public let failure: String?
+
+        public init(results: [UUID: ClassificationResult], failure: String? = nil) {
+            self.results = results
+            self.failure = failure
+        }
+    }
+
     public func refine(
         _ files: [FileItem],
         existing: [UUID: ClassificationResult],
         preferredFolders: [String]
-    ) async -> [UUID: ClassificationResult] {
+    ) async -> Refinement {
 
         // Only bother with files whose category came from the file type alone.
         let candidates = files.filter { file in
@@ -56,9 +75,11 @@ public struct CategoryRefiner {
         for file in candidates {
             Self.trace("  candidate: \(file.filename)")
         }
-        guard !candidates.isEmpty else { return [:] }
+        guard !candidates.isEmpty else { return Refinement(results: [:]) }
 
-        guard case .available = await provider.availability() else { return [:] }
+        // Not a failure worth reporting: the person turned it off, or this Mac
+        // cannot run it, and Settings already says which.
+        guard case .available = await provider.availability() else { return Refinement(results: [:]) }
 
         let mayReadContent = provider.isLocal && allowContentReading
         var excerpts: [UUID: String] = [:]
@@ -92,7 +113,7 @@ public struct CategoryRefiner {
         } catch {
             NSLog("Hoot: category refinement failed (\(error.localizedDescription)); keeping rules.")
             Self.trace("provider threw: \(error.localizedDescription)")
-            return [:]
+            return Refinement(results: [:], failure: error.localizedDescription)
         }
 
         Self.trace("provider returned \(suggestions.count) suggestions")
@@ -197,6 +218,6 @@ public struct CategoryRefiner {
                 reason: suggestion.reason
             )
         }
-        return refined
+        return Refinement(results: refined)
     }
 }

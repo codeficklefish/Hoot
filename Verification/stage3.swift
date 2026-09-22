@@ -149,6 +149,16 @@ struct FailingProvider: AIProvider {
     func suggestGrouping(for files: [FileDescriptor]) async throws -> GroupingSuggestion {
         throw AIProviderError.failed("simulated")
     }
+    /// It threw for grouping and not for categories, so the check named "a
+    /// provider that fails must leave rule categories intact" was exercising
+    /// the protocol's do-nothing default instead of a failure. It passed
+    /// either way, which is the problem: the real refiner swallowed a context
+    /// window error for two releases and this was the test that should have
+    /// caught it.
+    func suggestCategories(for files: [FileDescriptor],
+                           preferredFolders: [String]) async throws -> [CategorySuggestion] {
+        throw AIProviderError.failed("simulated")
+    }
 }
 
 struct UnavailableProvider: AIProvider {

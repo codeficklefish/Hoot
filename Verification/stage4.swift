@@ -63,7 +63,7 @@ func stage4(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
               "\(existing[invoice.id]!.confidence)")
 
         let refiner = CategoryRefiner(provider: OverreachingProvider(), extractor: MacPlatform.makeTextExtractor(), allowContentReading: true)
-        let refined = await refiner.refine(files, existing: existing, preferredFolders: ["Finance"])
+        let refined = await refiner.refine(files, existing: existing, preferredFolders: ["Finance"]).results
 
         check("proven keyword classification left alone", refined[invoice.id] == nil,
               "overridden to \(refined[invoice.id]?.suggestedFolder ?? "-")")
@@ -92,7 +92,7 @@ func stage4(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
                 provider: TypeSwappingProvider(), extractor: MacPlatform.makeTextExtractor(),
                 allowContentReading: true)
             let swapped = await typeSwapper.refine(
-                [archive], existing: archiveExisting, preferredFolders: ["Images", "Archives"])
+                [archive], existing: archiveExisting, preferredFolders: ["Images", "Archives"]).results
             check("a zip full of images is still a zip", swapped[archive.id] == nil,
                   "moved to \(swapped[archive.id]?.suggestedFolder ?? "-")")
 
@@ -101,7 +101,7 @@ func stage4(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
                 provider: SubjectProvider(), extractor: MacPlatform.makeTextExtractor(),
                 allowContentReading: true)
             let toSubject = await subjectProvider.refine(
-                [archive], existing: archiveExisting, preferredFolders: ["Cebu Trip"])
+                [archive], existing: archiveExisting, preferredFolders: ["Cebu Trip"]).results
             check("but a subject may still claim it",
                   toSubject[archive.id]?.suggestedFolder == "Cebu Trip",
                   toSubject[archive.id]?.suggestedFolder ?? "nil")
@@ -118,7 +118,15 @@ func stage4(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Void) {
 
         // A provider that fails must leave rule categories intact.
         let failing = CategoryRefiner(provider: FailingProvider(), extractor: MacPlatform.makeTextExtractor(), allowContentReading: true)
-        let none = await failing.refine(files, existing: existing, preferredFolders: [])
+        let refusal = await failing.refine(files, existing: existing, preferredFolders: [])
+        let none = refusal.results
+
+        // A provider that threw and a model with nothing to add used to be
+        // the same empty dictionary. That is how a request too large for the
+        // context window passed for agreement while every file fell back to
+        // filename rules.
+        check("a provider that threw says so", refusal.failure != nil,
+              refusal.failure ?? "reported nothing")
         check("provider failure keeps rule categories", none.isEmpty)
 
         sem.signal()
