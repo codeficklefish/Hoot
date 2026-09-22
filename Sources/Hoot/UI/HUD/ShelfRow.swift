@@ -185,16 +185,24 @@ struct ShelfRow: View {
     /// closure inline in the gesture, so there is one named place to look for
     /// the rule instead of three gestures to remember.
     ///
-    /// An empty provider refuses the drag without a dialog: the row simply
-    /// does not lift. The panel is not held open either — there is no drag to
-    /// keep it open for.
+    /// Refusing hands back an empty provider, which carries nothing, so a drop
+    /// receives nothing. Whether AppKit still lifts the row for it is its own
+    /// decision and is untested here — what is certain is that no URL leaves.
+    ///
+    /// The panel is held open only once there is genuinely something to drag.
+    /// `onDragStart` used to fire before the provider was built, so a file the
+    /// provider could not read still pinned the panel open until the thirty
+    /// second backstop let go of it.
     ///
     /// A real file URL, unlike the review window's drag, which vends a move id
     /// because it is an internal correction rather than a handover.
     private func dragged() -> NSItemProvider {
-        guard entry.isOpenable else { return NSItemProvider() }
+        guard entry.isOpenable,
+              let provider = NSItemProvider(contentsOf: entry.url)
+        else { return NSItemProvider() }
+
         onDragStart()
-        return NSItemProvider(contentsOf: entry.url) ?? NSItemProvider()
+        return provider
     }
 
     private var background: AnyShapeStyle {
