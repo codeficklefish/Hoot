@@ -64,7 +64,9 @@ on its own, and is put back by undo.
 
 ### The notch shelf
 
-On a Mac with a camera housing, ⌘J puts your folders at the notch. At rest it
+On a Mac with a camera housing, the shelf puts your folders at the notch. Switch it
+on once from the menu bar popover — **Notch HUD**, or ⌘J while that menu is open,
+which is where the shortcut lives rather than being system-wide. At rest it
 is a bar the height of the menu bar, reaching far enough past the camera to
 show the Hoot mark on one side and the name of the folder it is showing on the
 other. Point at it and it opens — whether or not anything needs filing.

@@ -52,19 +52,16 @@ real name, taken only from words genuinely read out of the file — never from
 the old name, never from a guess about a picture. A name you chose is never
 touched. Every rename is shown first and undone with the move.
 
-**The notch shelf — not released yet.** On a Mac with a camera housing, ⌘J
-puts your folders at the notch. At rest it is a bar the height of the menu bar
-showing the Hoot mark and the name of the folder it is on; point at it and it
-opens into a list of that folder's files. Up to three folders, added from a
-**+** beside the tabs; point at a tab and that folder is listed. A file
-previews on space and opens on double-click; a folder has a triangle and opens
-*in place*, its contents indented beneath it, while a double-click goes into
-it with a trail and a way back. Drag carries a file out.
-
-This is on `notch-file-shelf` and is in no release. **Do not put it on the
-page yet.** It is described here because the page will need it next and
-because it is what makes the one-folder sentence below false — the claim has
-to change when this ships, not before.
+**The notch shelf.** On a Mac with a camera housing the shelf puts your
+folders at the notch. It is switched on from the menu bar popover — **Notch
+HUD**, where ⌘J is the row's shortcut rather than a system-wide key, so the
+page must not tell people to press it from the desktop. At rest it is a bar
+the height of the menu bar showing the Hoot mark and the name of the folder it
+is on; point at it and it opens into a list of that folder's files. Up to
+three folders, added from a **+** beside the tabs; point at a tab and that
+folder is listed. A file previews on space and opens on double-click; a folder
+has a triangle and opens *in place*, its contents indented beneath it, while a
+double-click goes into it with a trail and a way back. Drag carries a file out.
 
 **Hoot only reads shelf folders.** It organizes one folder and reads any
 number you put on the shelf — it never moves, renames or deletes anything in
@@ -93,11 +90,12 @@ The page was rebuilt from `Hoot Landing Page.dc.html` on 21 September 2026.
 Version, links, renaming, sorting by type, the shelf and the privacy wording
 were all fixed in that pass, and the mobile overflow with them. What is left:
 
-- **Do not deploy it before 0.7.0 is tagged.** Three sections — the shelf, the
-  keycaps and the read-many-write-one privacy card — describe work that is on
-  `main` and in no release. The download button resolves to `releases/latest`,
-  so the page starts telling the truth the moment the tag exists and is a lie
-  until then.
+- **The shortcut is not system-wide.** ⌘J is a row in the menu bar popover,
+  not a global hot key, so it only fires while that menu is open — and on the
+  desktop it is Finder's Show View Options. The page said "Press ⌘J and the
+  shelf comes down at the notch", which sent people to a shortcut that does
+  something else. Making it global was rejected: it would take the combination
+  from every application on the Mac.
 
 - **The version number is written by hand.** One place, in the hero, marked
   with a comment. The links cannot rot; this can.
