@@ -132,7 +132,6 @@
     Documents: [
       { name: "Coursework", icon: "folder", size: "23 items", age: "12h" },
       { name: "Receipts", icon: "folder", size: "58 items", age: "15h" },
-      { name: "Patrick Hans Daguno — resume.pdf", icon: "doc", size: "212 KB", age: "46m" },
       { name: "Tax records — 2025.xlsx", icon: "sheet", size: "1.4 MB", age: "2h" },
       { name: "Electricity bill — February 2026.pdf", icon: "doc", size: "184 KB", age: "7h" },
       { name: "lease-2025-signed.pdf", icon: "doc", size: "640 KB", age: "4d" }
