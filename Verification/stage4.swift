@@ -1195,4 +1195,70 @@ func stageInflate(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Vo
         _ = r?.contents(of: real.name)
         return true
     }())
+    print("\n[the one thing Hoot deletes]")
+
+    // Safety rule 1 says nothing is deleted, ever. `docs/privacy.md` states
+    // the single exception: "The only thing Hoot removes is a folder it
+    // created itself, when undo leaves it empty. It cannot remove a folder
+    // you already had." That is the most consequential rule in the product
+    // and it was the only one without a test — three conditions held it up,
+    // all correct by reading, none of them covered.
+    let deleteDir = sandbox.appending(path: "deleting")
+    try? FileManager.default.createDirectory(at: deleteDir, withIntermediateDirectories: true)
+
+    func stage(_ name: String) -> URL {
+        let url = deleteDir.appending(path: name)
+        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        return url
+    }
+    func put(_ name: String, in folder: URL) -> URL {
+        let url = folder.appending(path: name)
+        FileManager.default.createFile(atPath: url.path, contents: Data("x".utf8))
+        return url
+    }
+    let exists = { (u: URL) in FileManager.default.fileExists(atPath: u.path) }
+
+    // 1. A folder Hoot made, left empty by undo, goes.
+    let source = put("moved.txt", in: deleteDir)
+    let mine = stage("MadeByHoot")
+    let landed = mine.appending(path: "moved.txt")
+    try? FileManager.default.moveItem(at: source, to: landed)
+    let ownBatch = OperationBatch(
+        id: UUID(), performedAt: Date(), rootFolder: deleteDir,
+        operations: [FileOperation(id: UUID(), source: source, destination: landed,
+                                   performedAt: Date(), createdDirectories: [mine])],
+        undoneAt: nil)
+    _ = Organizer().undo(ownBatch)
+    check("a folder Hoot created and emptied is removed", !exists(mine))
+    check("and the file is back where it came from", exists(source))
+
+    // 2. A folder that was already there is not Hoot's to remove — it never
+    // enters `createdDirectories`, which is the provenance this rests on.
+    let yours = stage("YoursAlready")
+    let source2 = put("second.txt", in: deleteDir)
+    let landed2 = yours.appending(path: "second.txt")
+    try? FileManager.default.moveItem(at: source2, to: landed2)
+    let yoursBatch = OperationBatch(
+        id: UUID(), performedAt: Date(), rootFolder: deleteDir,
+        operations: [FileOperation(id: UUID(), source: source2, destination: landed2,
+                                   performedAt: Date(), createdDirectories: [])],
+        undoneAt: nil)
+    _ = Organizer().undo(yoursBatch)
+    check("a folder you already had survives undo emptying it", exists(yours))
+
+    // 3. Something of yours in there and the folder stays, however it got there.
+    let busy = stage("HootMadeButUsed")
+    let source3 = put("third.txt", in: deleteDir)
+    let landed3 = busy.appending(path: "third.txt")
+    try? FileManager.default.moveItem(at: source3, to: landed3)
+    _ = put("yours.txt", in: busy)
+    let busyBatch = OperationBatch(
+        id: UUID(), performedAt: Date(), rootFolder: deleteDir,
+        operations: [FileOperation(id: UUID(), source: source3, destination: landed3,
+                                   performedAt: Date(), createdDirectories: [busy])],
+        undoneAt: nil)
+    _ = Organizer().undo(busyBatch)
+    check("a folder holding anything of yours is left alone", exists(busy))
+    check("and what you put there is untouched", exists(busy.appending(path: "yours.txt")))
+
 }

@@ -112,7 +112,7 @@ is now a failing check rather than something you have to notice.
 
 ```bash
 swift test              # the dependency rule
-./Verification/run.sh   # 584 behaviour and safety checks
+./Verification/run.sh   # 589 behaviour and safety checks
 ./Evaluation/run.sh     # accuracy against folders you organized yourself
 ```
 
