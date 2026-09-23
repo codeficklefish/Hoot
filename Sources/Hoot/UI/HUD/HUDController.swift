@@ -3,6 +3,10 @@ import SwiftUI
 import Combine
 import HootKit
 
+/// Over 300 lines, and deliberately: this is one object — a panel — and
+/// the five things it must do are not separable without handing a window,
+/// three event monitors and a hot key registration to each other across a
+/// seam. Splitting it would move the coupling, not remove it.
 /// What the HUD measured, where it put itself, and what is being done to it.
 /// Off unless HOOT_TRACE_HUD is set.
 ///

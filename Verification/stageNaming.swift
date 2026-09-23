@@ -87,7 +87,8 @@ func stageNaming(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Voi
     print("\n[what a model may call a file]")
 
     func sanitized(_ proposed: String, _ original: String) -> String? {
-        SuggestionValidator.sanitizeFilename(proposed, keepingExtensionOf: original)
+        SuggestionValidator.sanitizeFilename(proposed, keepingExtensionOf: original,
+                                             groundedIn: nil)
     }
 
     check("keeps the file's own extension",
@@ -418,7 +419,8 @@ func stageNaming(sandbox: URL, rawCheck: @escaping (String, Bool, String) -> Voi
           grounded("Tax receipt", in: paid, replacing: "1.pdf") ?? "nil")
 
     check("with no text to check against, the path rules still stand",
-          SuggestionValidator.sanitizeFilename("../../Escape", keepingExtensionOf: "1.pdf") == nil)
+          SuggestionValidator.sanitizeFilename("../../Escape", keepingExtensionOf: "1.pdf",
+                                              groundedIn: nil) == nil)
     print("\n[a request the model can actually hold]")
 
     // The category request used to be split eighteen files at a time, which

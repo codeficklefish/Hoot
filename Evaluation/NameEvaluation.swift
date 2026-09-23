@@ -156,8 +156,11 @@ private func match(_ suggestions: [NameSuggestion], to subjects: [NamingSubject]
         answers.append(
             Answer(
                 subject: subject,
+                // Deliberately ungrounded: this pair is what measures what
+                // the grounding check is worth, so one side has to go without.
                 ungrounded: SuggestionValidator.sanitizeFilename(
-                    suggestion.proposedName, keepingExtensionOf: subject.hidden
+                    suggestion.proposedName, keepingExtensionOf: subject.hidden,
+                    groundedIn: nil
                 ),
                 grounded: SuggestionValidator.sanitizeFilename(
                     suggestion.proposedName,

@@ -32,10 +32,16 @@ extension SuggestionValidator {
     /// - Returns: a single path component carrying the original extension, or
     ///   nil if the proposal was empty, meaningless, unsafe, ungrounded, or
     ///   the name the file already has.
+    ///
+    /// `groundedIn` has no default. Passing nil is still allowed and still
+    /// means "nothing to check the proposal against" — but it has to be
+    /// written down. A safety rule with a default argument is a safety rule
+    /// you can skip by forgetting, and forgetting is how the shelf's drag
+    /// went two releases without asking rule 5.
     public static func sanitizeFilename(
         _ raw: String,
         keepingExtensionOf original: String,
-        groundedIn excerpt: String? = nil
+        groundedIn excerpt: String?
     ) -> String? {
         // A proposal that reaches for a path is not a name that needs
         // cleaning; it is an answer to a question nobody asked. Cleaning

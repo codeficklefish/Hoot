@@ -1,4 +1,5 @@
 import SwiftUI
+import HootKit
 
 /// The Hoot design system, as far as the HUD uses it.
 ///
@@ -120,7 +121,12 @@ enum HUDTokens {
     /// the width two columns of filenames needed.
     static let shelfWidth: CGFloat = 420
     /// One file. Icon, name and two numbers on a single line.
-    static let shelfRowHeight: CGFloat = 26
+    /// The engine's number, not a second one. `FileShelf.rowHeight` is what
+    /// sizes the window through `HUDPlacement.listHeight`; this is what draws
+    /// the rows. They were both literally 26, in two modules, with nothing
+    /// holding them together — change one and the list is clipped by a window
+    /// measured from the other.
+    static let shelfRowHeight = CGFloat(FileShelf.rowHeight)
     /// The footer's pill controls.
     static let pillHeight: CGFloat = 20
 

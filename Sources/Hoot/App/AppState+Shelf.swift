@@ -3,6 +3,10 @@ import AppKit
 import HootKit
 import HootPlatformMac
 
+/// Over 300 lines, and deliberately: it is every verb the shelf has, and
+/// the point of keeping them in one file is that a reader can see there is
+/// no verb here that writes. Spread across three files, that guarantee would
+/// have to be taken on trust.
 /// The folders the notch lists, and nothing it does to them.
 ///
 /// Every operation here reads. That is the whole reason the shelf may hold
